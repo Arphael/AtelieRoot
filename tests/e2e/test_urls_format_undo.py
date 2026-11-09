@@ -3,6 +3,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, re
 from playwright.async_api import async_playwright
 from browser import URL, LAUNCH
+# on macOS Ctrl+click is a right click; links open with Cmd+click there
+MOD = 'Meta' if sys.platform == 'darwin' else 'Control'
 errs=[]; fails=[]
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '→ ' + str(extra)))
@@ -91,10 +93,10 @@ async def main():
     await pg.evaluate("window.__opened=[]; document.addEventListener('click', e => { const a=e.target.closest && e.target.closest('a[target=_blank]'); if (a){ window.__opened.push(a.href); e.preventDefault() } }, true); 0")
     box = lambda i: pg.evaluate("i=>{ const r=ed.querySelectorAll('a')[i].getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2] }", i)
     x, y = await box(0); await pg.mouse.click(x, y); await pg.wait_for_timeout(80); check('un clic normal NO abre (solo coloca el cursor)', await pg.evaluate("window.__opened.length") == 0, await pg.evaluate("window.__opened"))
-    await kb.down('Control'); await pg.mouse.click(x, y); await kb.up('Control'); await pg.wait_for_timeout(80); check('Ctrl+clic abre la dirección en otra pestaña', await pg.evaluate("window.__opened") == ['https://example.org/docs'], await pg.evaluate("window.__opened"))
-    await pg.evaluate("window.__opened.length=0"); x, y = await box(1); await kb.down('Control'); await pg.mouse.click(x, y); await kb.up('Control'); await pg.wait_for_timeout(80); check('«javascript:» no se abre nunca', await pg.evaluate("window.__opened.length") == 0, await pg.evaluate("window.__opened"))
-    x, y = await box(2); await kb.down('Control'); await pg.mouse.click(x, y); await kb.up('Control'); await pg.wait_for_timeout(80); check('mailto: sí', await pg.evaluate("window.__opened") == ['mailto:a@b.co'], await pg.evaluate("window.__opened"))
-    await pg.evaluate("window.__opened.length=0"); x, y = await box(3); await kb.down('Control'); await pg.mouse.click(x, y); await kb.up('Control'); await pg.wait_for_timeout(80); check('«www.…» sin esquema se abre como https://', await pg.evaluate("window.__opened") == ['https://www.x.com/'] or await pg.evaluate("window.__opened") == ['https://www.x.com'], await pg.evaluate("window.__opened"))
+    await kb.down(MOD); await pg.mouse.click(x, y); await kb.up(MOD); await pg.wait_for_timeout(80); check('Ctrl+clic abre la dirección en otra pestaña', await pg.evaluate("window.__opened") == ['https://example.org/docs'], await pg.evaluate("window.__opened"))
+    await pg.evaluate("window.__opened.length=0"); x, y = await box(1); await kb.down(MOD); await pg.mouse.click(x, y); await kb.up(MOD); await pg.wait_for_timeout(80); check('«javascript:» no se abre nunca', await pg.evaluate("window.__opened.length") == 0, await pg.evaluate("window.__opened"))
+    x, y = await box(2); await kb.down(MOD); await pg.mouse.click(x, y); await kb.up(MOD); await pg.wait_for_timeout(80); check('mailto: sí', await pg.evaluate("window.__opened") == ['mailto:a@b.co'], await pg.evaluate("window.__opened"))
+    await pg.evaluate("window.__opened.length=0"); x, y = await box(3); await kb.down(MOD); await pg.mouse.click(x, y); await kb.up(MOD); await pg.wait_for_timeout(80); check('«www.…» sin esquema se abre como https://', await pg.evaluate("window.__opened") == ['https://www.x.com/'] or await pg.evaluate("window.__opened") == ['https://www.x.com'], await pg.evaluate("window.__opened"))
 
     print('=== 1. barrita del enlace ===')
     chip = lambda: pg.evaluate("(()=>{ const c=document.getElementById('linkChip'); return { show: c.classList.contains('show'), url: c.querySelector('.lk-url').textContent, r: c.getBoundingClientRect().toJSON() } })()")
