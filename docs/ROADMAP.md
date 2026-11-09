@@ -18,16 +18,18 @@ Sprints from cleanup to a public, multi-platform release. Each sprint ends with
 - [x] Neutral welcome document (no artifact-era seed).
 - [x] Portable `python` in npm scripts (Windows has no `python3`).
 - [x] `.gitignore`: `release/`, `.env*`, local AI tooling, Tauri `target/`.
-- [x] `package.json`: name `atelierroot-markdown`, author, private.
+- [x] `package.json`: name `atelierroot`, author, private.
 - [x] `docs/ARCHITECTURE.md`, `docs/CONTRACT.md`, `docs/ROADMAP.md`, `CONTRIBUTING.md`.
 - [x] README in English + `README.es.md`, trademark notice.
 
 ## S1 - Public repository and CI
 
-- [ ] First commit and push to GitHub repo [`Arphael/AtelierRoot`](https://github.com/Arphael/AtelierRoot).
+- [x] First commit and push to GitHub repo [`Arphael/AtelierRoot`](https://github.com/Arphael/AtelierRoot).
+- [x] Product renamed to AtelierRoot everywhere (hidden folder `.atelierroot/`, app id `io.github.arphael.atelierroot`).
 - [x] `repository`/`homepage` in `package.json`; real clone URL in both READMEs.
 - [x] CI matrix: `ubuntu-latest`, `windows-latest`, `macos-latest`; server + e2e against `src/` and `dist/` on all three.
-- [ ] CI green on the 3 OSes (first run after push).
+- [ ] CI green on the 3 OSes. First runs: the desktop backend job, CodeQL and Scorecard (after moving to v2.5.0) pass; browser tests found path-to-code regressions, fixed one by one.
+- [ ] Review and merge the Dependabot PRs opened after the first push (npm, GitHub Actions, cargo) once `main` is green.
 - [ ] Enable Pages (Settings -> Pages -> GitHub Actions) and verify `pages.yml`.
 - [x] `CHANGELOG.md` (Keep a Changelog + SemVer), issue/PR templates, Dependabot for `github-actions`.
 - [x] `SECURITY.md` (how to report vulnerabilities).
@@ -54,15 +56,16 @@ Done when: whole interface switches live; e2e green in both languages.
 Moved ahead of S2 so a portable executable (`AtelierRoot.exe`, one file) can be tested before the first public release.
 
 - [ ] Contract tests: extract backend scenarios into a runner usable by Node and Tauri.
-- [ ] `src-tauri/` (Tauri v2), frontend = `dist/`, strict CSP, no remote URLs.
-- [ ] Rust commands implementing [CONTRACT.md](CONTRACT.md) (path validation, writable rules, atomic write, `expect` conflict).
-- [ ] File watcher (`notify`) -> events replacing SSE.
-- [ ] `TauriBackend` in `81-ws-backends.js`; choose folder via dialog; remember last folder.
-- [ ] Rust unit tests for path safety (mirrors `server/test/server.test.mjs`).
-- [ ] App icon and metadata (name "AtelierRoot" until the final name is chosen).
-- [ ] Dependabot for `cargo`.
+- [x] `src-tauri/` (Tauri v2), frontend = `dist/`, strict CSP, no remote URLs; portable `AtelierRoot.exe` (~3.4 MB).
+- [x] Rust commands implementing [CONTRACT.md](CONTRACT.md) (path validation, writable rules, atomic write, `expect` conflict).
+- [x] Outside changes detected by a 1.2 s poll that emits `ws-changed` (a `notify` watcher can replace it later).
+- [x] `TauriBackend` in `81-ws-backends.js`; choose folder via dialog; remember last folder.
+- [x] Rust unit tests for path safety (mirrors `server/test/server.test.mjs`), run in CI.
+- [x] App icon and metadata (name "AtelierRoot"); the browser tab uses the same logo.
+- [x] Dependabot for `cargo`.
+- [x] The executable and `AtelierRoot.html` are built from the same `dist/index.html`, so they always behave the same.
 
-Done when: the desktop app opens a folder, edits, autosaves and reloads external changes on Windows.
+Done when: the desktop app opens a folder, edits, autosaves and reloads external changes on Windows (verified live), and the shared contract runner exists.
 
 ## S4 - Multi-platform releases
 
@@ -78,6 +81,7 @@ Done when: a tag produces installers for 3 OSes and each passes the smoke test.
 
 - [ ] Firefox and WebKit in e2e (server mode).
 - [ ] Fix: typing `[ ] ` key by key leaves a stray `]` in the new task (`[] ` works).
+- [ ] Move pinned actions (`checkout`, `setup-node`, `setup-python`) to their Node 24 releases (CI warns that Node 20 is deprecated).
 - [ ] Unit tests (`node --test`) for pure functions: `urlAllowed`, `wsSafeName`, `isCodeLike`, `domFromMd`, `tidyMd`, `wsHash`.
 - [ ] ESLint minimal (`no-undef`, `no-unused-vars`).
 - [ ] Lazy document loading for large folders (5 000 files open in < 2 s).
@@ -102,3 +106,4 @@ Done when: a tag produces installers for 3 OSes and each passes the smoke test.
 2. Real remembered `showDirectoryPicker` handle across browser restarts.
 3. Folders with tens of thousands of files and network drives.
 4. Sync tools (OneDrive, Dropbox, iCloud) rewriting files.
+5. Browsers without folder access: Brave needs `brave://flags/#file-system-access-api`; Electron hosts (VS Code's integrated browser) are detected by user agent only.

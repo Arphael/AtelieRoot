@@ -76,7 +76,8 @@ function slashToCode(sel, withSpace){
   else { const c = chunkCore(m[2]); if (c.core && isCodeLike(c.core)){ core = c.core; kind = 'code'; } }
   if (!kind) return extendWinPath(n, off, before, withSpace, sel);
   // «Files\Git\bin» right after «C:\Program» continues that path; it is not a new relative path
-  if (kind === 'code' && core.includes('\\') && !WIN_START.test(core) && extendWinPath(n, off, before, withSpace, sel)) return true;
+  // (only for the relative rule: «.\run.bat» or «~\x» are paths of their own and never extend the previous one)
+  if (kind === 'code' && core.includes('\\') && !WIN_PATH.test(core) && extendWinPath(n, off, before, withSpace, sel)) return true;
   const base = before.length - m[2].length, start = base + lead, end = start + core.length, trail = off - end;   // la puntuación del final se queda fuera
   if (slash.open) closeSlash();
   History.snap(true); History.mark();                                      // lo escrito hasta aquí es un paso; la conversión, otro (Ctrl+Z la deshace sola)
