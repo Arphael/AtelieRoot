@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E %3Crect x='0.5' y='0.5' width='23' height='23' rx='5' fill='%2312130f'/%3E %3Cg fill='none' stroke='%238fb99a' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M12 4.5 6 17.5h12L12 4.5z'/%3E %3Cpath d='M4.5 17.5h15'/%3E %3Cpath d='M12 9 10 13.8h4L12 9z'/%3E %3C/g%3E %3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AtelierRoot</title>
+<link rel="stylesheet" href="css/01-base.css">
+<link rel="stylesheet" href="css/02-sidebar.css">
+<link rel="stylesheet" href="css/03-toolbar.css">
+<link rel="stylesheet" href="css/04-editor.css">
+<link rel="stylesheet" href="css/05-tables-base.css">
+<link rel="stylesheet" href="css/06-preview-status.css">
+<link rel="stylesheet" href="css/07-menus-dialogs.css">
+<link rel="stylesheet" href="css/08-code-highlight-panels.css">
+<link rel="stylesheet" href="css/09-small-screens.css">
+<link rel="stylesheet" href="css/10-tree-drop.css">
+<link rel="stylesheet" href="css/11-blocks.css">
+<link rel="stylesheet" href="css/12-wikilinks.css">
+<link rel="stylesheet" href="css/13-folding.css">
+<link rel="stylesheet" href="css/14-split-view.css">
+<link rel="stylesheet" href="css/15-palette.css">
+<link rel="stylesheet" href="css/16-margins-touch.css">
+<link rel="stylesheet" href="css/17-scrollbars.css">
+<link rel="stylesheet" href="css/18-numbering.css">
+<link rel="stylesheet" href="css/19-sidebar-context.css">
+<link rel="stylesheet" href="css/20-tables.css">
+<link rel="stylesheet" href="css/21-workspace.css">
+
+<script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
+<script src="vendor/prism/prism-core.min.js"></script>
+<script src="vendor/prism/components/prism-markup.min.js"></script>
+<script src="vendor/prism/components/prism-css.min.js"></script>
+<script src="vendor/prism/components/prism-clike.min.js"></script>
+<script src="vendor/prism/components/prism-javascript.min.js"></script>
+<script src="vendor/prism/plugins/prism-autoloader.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <aside id="side">
+    <div class="side-top">
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><path d="M12 3 5 18h14L12 3z"></path><path d="M3 18h18"></path><path d="M12 8.5 9.5 14h5L12 8.5z"></path></svg>
+        AtelierRoot
+      </div>
+      <div class="side-actions">
+        <button class="btn primary wide" id="newDoc">Nuevo documento</button>
+        <button class="btn" id="newFolder" title="Nueva carpeta" aria-label="Nueva carpeta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+      </div>
+      <input id="search" type="text" placeholder="Buscar" aria-label="Buscar">
+    </div>
+    <div id="tree"></div>
+    <div class="side-foot">
+      <button class="btn" id="trashBtn" style="justify-content:flex-start;gap:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 21 6"></polyline><path d="M8 6V4h8v2"></path><path d="M6 6l1 14h10l1-14"></path></svg>Papelera<span id="trashN" style="margin-left:auto;color:var(--ink-faint)"></span></button>
+      <button class="ws-chip" id="wsNote" type="button"></button>
+      <div class="foot-note" id="backupNote">Sin respaldo todavía</div>
+      <button class="btn" id="backupBtn">Exportar respaldo</button>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="mhead">
+      <button class="tb" id="mSide" aria-label="Documentos"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></button>
+      <div class="mh-t"><span id="mTitle"></span><span id="mSub"></span></div>
+      <button class="tb box" id="mCopy" style="border-color:var(--accent-line);background:var(--accent-btn);color:var(--accent-btn-ink);font-weight:600;padding:0 12px">Copiar</button>
+    </div>
+    <div id="bar">
+      <button class="tb" id="sideBtn" title="Mostrar u ocultar el panel" aria-label="Panel"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="9" y1="4" x2="9" y2="20"></line></svg></button>
+      <button class="tb" id="palBtn" title="Paleta de comandos (Ctrl+Shift+P)" aria-label="Paleta de comandos"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><polyline points="7 10 10 12 7 14"></polyline><line x1="12" y1="14" x2="16" y2="14"></line></svg></button>
+      <button class="tb" id="findBtn" title="Buscar (Ctrl+F) · Reemplazar (Ctrl+H)" aria-label="Buscar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg></button>
+      <button class="tb" id="swBtn" title="Ir a documento (Ctrl+P)" aria-label="Ir a documento"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"></path><line x1="21" y1="3" x2="11" y2="13"></line><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"></path></svg></button>
+      <button class="tb" id="splitBtn" title="Vista dividida" aria-label="Vista dividida"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="12" y1="4" x2="12" y2="20"></line></svg></button>
+      <button class="tb" id="olBtn" title="Esquema del documento" aria-label="Esquema"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="20" y2="12"></line><line x1="12" y1="18" x2="20" y2="18"></line></svg></button>
+      <button class="tb" id="focusBtn" title="Modo enfoque (Ctrl+Shift+F)" aria-label="Modo enfoque"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V5a2 2 0 0 1 2-2h3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M21 16v3a2 2 0 0 1-2 2h-3"></path><path d="M8 21H5a2 2 0 0 1-2-2v-3"></path><circle cx="12" cy="12" r="2.5"></circle></svg></button>
+      <div class="sep"></div>
+      <button class="tb" data-cmd="undo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M3.5 13a9 9 0 1 0 2.3-9.3L3 7"></path></svg></button>
+      <button class="tb" data-cmd="redo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M20.5 13a9 9 0 1 1-2.3-9.3L21 7"></path></svg></button>
+      <div class="sep"></div>
+      <button class="tb box serif" id="hBtn" title="Nivel de bloque">Párrafo<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+      <div class="sep"></div>
+      <button class="tb" data-fmt="bold" title="Negrita (Ctrl+B)" aria-label="Negrita" style="font-weight:700">B</button>
+      <button class="tb serif" data-fmt="italic" title="Cursiva (Ctrl+I)" aria-label="Cursiva" style="font-style:italic;font-size:14px">I</button>
+      <button class="tb" data-fmt="strike" title="Tachado (Ctrl+Shift+X)" aria-label="Tachado" style="text-decoration:line-through">S</button>
+      <button class="tb" data-fmt="code" title="Código en línea (Ctrl+E)" aria-label="Código en línea"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></button>
+      <button class="tb" data-fmt="clear" title="Quitar formato de la selección" aria-label="Quitar formato"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2"></path><path d="M10 5 8 19"></path><line x1="6" y1="19" x2="13" y2="19"></line><line x1="16" y1="11" x2="22" y2="17"></line><line x1="22" y1="11" x2="16" y2="17"></line></svg></button>
+      <div class="sep"></div>
+      <button class="tb" data-block="ul" title="Viñetas" aria-label="Viñetas"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4.5" cy="6" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="18" r="1.3" fill="currentColor" stroke="none"></circle></svg></button>
+      <button class="tb" data-block="ol" title="Lista numerada" aria-label="Lista numerada" style="font-size:11.5px;font-weight:600">1.</button>
+      <button class="tb" data-block="task" title="Casilla de tarea" aria-label="Casilla de tarea"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 20 6"></polyline><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"></path></svg></button>
+      <button class="tb" id="outBtn" title="Reducir sangría (Shift+Tab)" aria-label="Reducir sangría"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><polyline points="7 9 4 12 7 15"></polyline></svg></button>
+      <button class="tb" id="inBtn" title="Aumentar sangría (Tab)" aria-label="Aumentar sangría"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><polyline points="4 9 7 12 4 15"></polyline></svg></button>
+      <button class="tb serif" data-block="quote" title="Cita" aria-label="Cita" style="font-size:17px">”</button>
+      <div class="sep"></div>
+      <button class="tb" data-block="pre" title="Bloque de código" aria-label="Bloque de código"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><polyline points="9 10 7 12 9 14"></polyline><polyline points="14 10 16 12 14 14"></polyline></svg></button>
+      <button class="tb" id="linkBtn" title="Enlace (Ctrl+K)" aria-label="Enlace"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg></button>
+      <button class="tb" id="unlinkBtn" title="Quitar enlace" aria-label="Quitar enlace"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7l3-3"></path><path d="M9.5 14.5 5 19"></path><path d="M10 13a5 5 0 0 0 7 0l1-1"></path><path d="M14 11a5 5 0 0 0-7 0l-1 1"></path><line x1="3" y1="3" x2="21" y2="21"></line></svg></button>
+      <button class="tb" id="imgBtn" title="Imagen" aria-label="Imagen"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.5"></circle><polyline points="21 16 15 10 4 20"></polyline></svg></button>
+      <button class="tb" data-block="table" title="Tabla" aria-label="Tabla"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="10" y1="10" x2="10" y2="20"></line></svg></button>
+      <button class="tb" data-block="hr" title="Línea divisoria" aria-label="Línea divisoria"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"></line></svg></button>
+
+      <button class="tb box ovf" id="moreBtn" title="Más herramientas" style="border-color:var(--accent-line);color:var(--accent)">Más<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+      <div class="tb-group">
+      <button class="tb box" id="pvBtn" title="Ver el Markdown en vivo" aria-label="Ver el Markdown en vivo"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 15V9l2.5 3L12 9v6"></path><path d="M16 9v6l2-2"></path></svg></button>
+      <button class="tb box" id="phBtn" title="Rellenar marcadores [EN_MAYÚSCULAS]" aria-label="Rellenar marcadores"><span style="font-family:var(--mono);font-size:11px;color:var(--warn)">[ ]</span><span id="phCount" style="font-size:11px;color:var(--ink-faint)"></span></button>
+      <button class="tb box" id="tidyBtn" title="Normaliza espaciado, viñetas, numeración y tablas"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="17" x2="18" y2="17"></line></svg>Ordenar</button>
+      <div class="sep"></div>
+      <button class="tb box" id="copyMd" style="border-color:var(--accent-line);background:var(--accent-btn);color:var(--accent-btn-ink);font-weight:600">Copiar Markdown</button>
+      <button class="tb box" id="copyRich">Con formato</button>
+      <button class="tb box" id="exportBtn" title="Exportar" aria-label="Exportar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+      <button class="tb box" id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema"></button>
+      </div>
+    </div>
+
+    <div id="stage">
+      <div id="edcol"><div class="pane active" id="pane1"><div class="pane-head" id="p1head"><span class="ph-name" id="p1name"></span></div><div id="scroll">
+        <div id="wrap" class="wrapc"><div id="ed" class="ed" contenteditable="true" spellcheck="true"></div></div>
+        <div id="fbtn" title="Plegar o desplegar sección (Ctrl+.)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div><div id="bhandle" title="Arrastra para mover · clic para seleccionar">⋮⋮</div><div id="bline"></div>
+        <div class="tw-bar" id="tableBar">
+          <button class="mini" data-tt="tblSel" title="Seleccionar toda la tabla (Ctrl+A)" aria-label="Seleccionar toda la tabla"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="9" x2="9" y2="21"></line></svg></button>
+          <div class="sep"></div>
+          <button class="mini" data-ta="left" title="Alinear a la izquierda" aria-label="Alinear a la izquierda"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="4" y1="14" x2="13" y2="14"></line></svg></button>
+          <button class="mini" data-ta="center" title="Centrar" aria-label="Centrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="8" y1="14" x2="16" y2="14"></line></svg></button>
+          <button class="mini" data-ta="right" title="Alinear a la derecha" aria-label="Alinear a la derecha"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="11" y1="14" x2="20" y2="14"></line></svg></button>
+          <button class="mini" data-tt="scope" title="Alinear: solo la columna" aria-label="Alinear: solo la columna"></button>
+          <div class="sep"></div>
+          <button class="mini" data-tt="colAdd" title="Insertar columna a la derecha" aria-label="Insertar columna a la derecha"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+          <button class="mini" data-tt="rowAdd" title="Insertar fila debajo" aria-label="Insertar fila debajo"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line><line x1="3" y1="20" x2="21" y2="20"></line></svg></button>
+          <button class="mini" data-tt="colDel" title="Eliminar columna" aria-label="Eliminar columna"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"></line><line x1="12" y1="4" x2="12" y2="7"></line><line x1="12" y1="17" x2="12" y2="20"></line></svg></button>
+          <button class="mini" data-tt="rowDel" title="Eliminar fila" aria-label="Eliminar fila"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"></line><line x1="4" y1="6" x2="7" y2="6"></line><line x1="17" y1="6" x2="20" y2="6"></line></svg></button>
+          <button class="mini" data-tt="tblDel" title="Eliminar tabla" aria-label="Eliminar tabla"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 21 6"></polyline><path d="M8 6V4h8v2"></path><path d="M6 6l1 14h10l1-14"></path></svg></button>
+          <div class="sep"></div>
+          <button class="mini" data-tt="more" title="Más acciones de tabla (también con clic derecho)" aria-label="Más acciones de tabla"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+        <div class="lk-chip" id="linkChip"><span class="lk-url"></span><button data-lk="open" title="Abrir el enlace (Ctrl+clic)">Abrir ↗</button><button data-lk="copy" title="Copiar la dirección">Copiar</button><button data-lk="unlink" title="Quitar el enlace y dejar el texto">Quitar</button></div>
+      </div>
+      </div>
+      <div class="pane" id="pane2">
+        <div class="pane-head" id="p2head"><span class="ph-name" id="p2name"></span>
+          <button class="mini" id="p2pick" title="Abrir otro documento en este panel" aria-label="Cambiar documento"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
+          <button class="mini" id="p2close" title="Cerrar vista dividida" aria-label="Cerrar vista dividida"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <div id="scroll2"><div id="wrap2" class="wrapc"><div id="ed2" class="ed" contenteditable="true" spellcheck="true"></div></div></div>
+      </div>
+      <div id="findBar">
+        <div class="fb-row">
+          <input id="fq" placeholder="Buscar" aria-label="Buscar" autocomplete="off">
+          <span id="fcount">0/0</span>
+          <button class="mini" id="fcase" title="Distinguir mayúsculas">Aa</button>
+          <button class="mini" id="fprev" title="Anterior (Shift+Enter)" aria-label="Anterior"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></button>
+          <button class="mini" id="fnext" title="Siguiente (Enter)" aria-label="Siguiente"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+          <button class="mini" id="frepT" title="Mostrar reemplazo (Ctrl+H)" aria-label="Reemplazar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></button>
+          <button class="mini" id="fclose" title="Cerrar (Esc)" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <div class="fb-row fb-rep">
+          <input id="fr" placeholder="Reemplazar con" aria-label="Reemplazar con" autocomplete="off">
+          <button class="btn" id="fr1">Reemplazar</button>
+          <button class="btn" id="frAll">Todos</button>
+        </div>
+      </div>
+      </div>
+      <div id="outline"><div class="pv-head">Esquema</div><div id="olList"></div><div class="bl-head">Enlazado desde</div><div id="blList" style="padding:6px 6px 12px"></div></div>
+      <div id="preview">
+        <div class="pv-head">Markdown en vivo<span class="grow"></span><button class="mini" id="pvCopy" title="Copiar" aria-label="Copiar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div>
+        <pre id="pvText"></pre>
+      </div>
+    </div>
+
+    <div id="status">
+      <span id="wc">0 palabras</span>
+      <span id="cc">0 caracteres</span>
+      <button id="nlBtn" title="Mostrar saltos de línea (Ctrl+Shift+8)" aria-label="Mostrar saltos de línea"><span aria-hidden="true">↵</span> Saltos de línea</button>
+      <span id="path"></span>
+      <button class="ws-chip" id="wsState" type="button"></button>
+      <span id="saved"></span>
+    </div>
+  </div>
+</div>
+
+<div class="menu" id="hMenu"></div>
+<div class="menu" id="slashMenu"></div>
+<div class="menu" id="moreMenu"></div>
+<div class="menu" id="ctxMenu"></div>
+<div class="menu" id="tblMenu"></div>
+<div class="menu" id="wlMenu"></div>
+<div class="menu" id="convMenu">
+  <button data-c="p">Texto</button><button data-c="h1">Encabezado 1</button><button data-c="h2">Encabezado 2</button><button data-c="h3">Encabezado 3</button>
+  <button data-c="quote">Cita</button><button data-c="ul">Lista con viñetas</button><button data-c="ol">Lista numerada</button><button data-c="task">Lista de tareas</button>
+</div>
+<div id="bbar"><span class="bb-n" id="bbN"></span><button data-b="up" title="Alt+↑">↑</button><button data-b="down" title="Alt+↓">↓</button><button data-b="dup" title="Ctrl+D">Duplicar</button><button data-b="conv">Convertir ▾</button><button data-b="copy" title="Ctrl+C">Copiar</button><button data-b="del" class="bb-del" title="Supr">Eliminar</button></div>
+<div id="band"></div>
+<div id="scrim"></div>
+<button class="btn" id="focusExit">Salir del enfoque · Esc</button>
+<input type="file" id="mdFile" accept=".md,.markdown,.txt,text/markdown,text/plain" multiple style="display:none">
+<div class="menu" id="langMenu"></div>
+<div class="menu" id="exportMenu">
+  <button data-x="md">Markdown (.md)</button>
+  <button data-x="txt">Texto plano (.txt)</button>
+  <button data-x="html">HTML (.html)</button>
+  <div class="hr"></div>
+  <button data-x="json">Respaldo completo (.json)</button>
+  <button data-x="import">Restaurar desde respaldo…</button>
+  <div class="hr"></div>
+  <button data-x="importmd">Importar archivos .md…</button>
+</div>
+<input type="file" id="file" accept="application/json" style="display:none">
+<div id="veil"><div class="card" id="card"></div></div>
+<div id="toast"></div>
+
+<script src="js/00-base.js"></script>
+<script src="js/10-markdown.js"></script>
+<script src="js/20-storage-local.js"></script>
+<script src="js/21-history.js"></script>
+<script src="js/22-tree.js"></script>
+<script src="js/23-document.js"></script>
+<script src="js/30-blocks-cursor.js"></script>
+<script src="js/31-keyboard.js"></script>
+<script src="js/32-toolbar.js"></script>
+<script src="js/33-code-blocks.js"></script>
+<script src="js/34-paste.js"></script>
+<script src="js/35-copy-sort-md.js"></script>
+<script src="js/36-links-images.js"></script>
+<script src="js/37-export-theme.js"></script>
+<script src="js/38-menus-dialogs.js"></script>
+<script src="js/40-lists.js"></script>
+<script src="js/41-syntax-highlight.js"></script>
+<script src="js/42-placeholders.js"></script>
+<script src="js/43-find-replace.js"></script>
+<script src="js/44-toolbar-menu.js"></script>
+<script src="js/45-outline-focus-switcher.js"></script>
+<script src="js/46-import-md.js"></script>
+<script src="js/47-autopair-shortcuts.js"></script>
+<script src="js/48-responsive-ui.js"></script>
+<script src="js/49-tree-ui-trash.js"></script>
+<script src="js/50-wikilinks.js"></script>
+<script src="js/51-block-selection.js"></script>
+<script src="js/52-folding.js"></script>
+<script src="js/53-split-view.js"></script>
+<script src="js/54-command-palette.js"></script>
+<script src="js/55-enter-paragraphs.js"></script>
+<script src="js/56-tab-sync.js"></script>
+<script src="js/57-scroll-position.js"></script>
+<script src="js/58-line-moves.js"></script>
+<script src="js/59-enter-shortcuts.js"></script>
+<script src="js/60-numbering.js"></script>
+<script src="js/61-linebreak-marks.js"></script>
+<script src="js/62-format-selection.js"></script>
+<script src="js/63-delete-line.js"></script>
+<script src="js/64-copy-cut-line.js"></script>
+<script src="js/65-text-to-table.js"></script>
+<script src="js/66-inline-code.js"></script>
+<script src="js/67-sidebar-context.js"></script>
+<script src="js/68-move-sort.js"></script>
+<script src="js/69-autobackup.js"></script>
+<script src="js/70-normalize.js"></script>
+<script src="js/71-tables.js"></script>
+<script src="js/72-hr-pipes-selection.js"></script>
+<script src="js/73-table-extras.js"></script>
+<script src="js/74-outline-current.js"></script>
+<script src="js/75-slash-code.js"></script>
+<script src="js/76-links-urls.js"></script>
+<script src="js/77-exit-inline.js"></script>
+<script src="js/80-enter-pushdown.js"></script>
+<script src="js/81-ws-backends.js"></script>
+<script src="js/82-ws-core.js"></script>
+<script src="js/83-ws-ui.js"></script>
+<script src="js/99-boot.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+
+:root{
+  --bg:#12130f; --bg-side:#0d0e0b; --bg-soft:#15160f; --bg-hi:#1c1e17;
+  --line:#262820; --line-soft:#2b2d24;
+  --ink:#e8e4d8; --ink-strong:#f4f0e4; --ink-soft:#cfcabb; --ink-dim:#a9a495; --ink-faint:#85806f;
+  --accent:#8fb99a; --accent-bg:#1a2b1f; --accent-line:#3d5c46; --accent-btn:#2a4431; --accent-btn-ink:#cfe5d5;
+  --warn:#c9a961; --danger:#c98080;
+  --serif:ui-serif,Georgia,"Times New Roman",serif;
+  --sans:ui-sans-serif,system-ui,"Segoe UI",Helvetica,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="light"]{
+  --bg:#faf5e9; --bg-side:#eee3cb; --bg-soft:#faf5e9; --bg-hi:#e5d8ba;
+  --line:#ddd0b4; --line-soft:#d5c6a6;
+  --ink:#241f16; --ink-strong:#241f16; --ink-soft:#342e22; --ink-dim:#55503f; --ink-faint:#6b6350;
+  --accent:#3f6b4c; --accent-bg:#dce8dc; --accent-line:#9cb8a3; --accent-btn:#3f6b4c; --accent-btn-ink:#f7f2e6;
+  --warn:#8a6d1f; --danger:#a33c3c;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;overflow:hidden}
+button,input,select,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+#app{display:flex;height:100%}
+

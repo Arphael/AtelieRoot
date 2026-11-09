@@ -1,0 +1,12 @@
+/* ---- barras de desplazamiento ---- */
+:root{--sb-thumb:#42463a;--sb-hover:#5a8566;--sb-active:#7fb08c;color-scheme:dark}
+:root[data-theme="light"]{--sb-thumb:#c2b48f;--sb-hover:#7fa68b;--sb-active:#4f7d5f;color-scheme:light}
+@supports selector(::-webkit-scrollbar){
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--sb-thumb);border:3px solid transparent;background-clip:padding-box;border-radius:8px;min-height:36px;min-width:36px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--sb-hover);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:active{background:var(--sb-active);background-clip:padding-box}
+  ::-webkit-scrollbar-corner{background:transparent}
+}
+@supports not selector(::-webkit-scrollbar){ *{scrollbar-width:thin;scrollbar-color:var(--sb-thumb) transparent} }

@@ -1,0 +1,28 @@
+#side{width:272px;flex-shrink:0;background:var(--bg-side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#side.off{display:none}
+.side-top{padding:16px 14px 10px;display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink-strong);letter-spacing:.02em}
+.side-actions{display:flex;gap:6px}
+.btn{height:33px;padding:0 10px;border:1px solid var(--line-soft);background:var(--bg-soft);color:var(--ink-dim);border-radius:3px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover{border-color:var(--accent-line);color:var(--ink)}
+.btn.primary{border-color:var(--accent-line);background:var(--accent-btn);color:var(--accent-btn-ink);font-weight:600}
+.btn.wide{flex:1}
+#search{height:31px;padding:0 10px;border:1px solid var(--line-soft);border-radius:3px;background:var(--bg-soft);font-size:12.5px;color:var(--ink)}
+#tree{flex:1;overflow:auto;padding:4px 8px 12px}
+.row{display:flex;align-items:center;gap:6px;padding:6px 7px;border-radius:3px;font-size:12.5px;color:var(--ink-dim);user-select:none}
+.row:hover{background:var(--bg-hi)}
+.row.sel{background:var(--accent-bg);color:var(--ink-strong);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
+.row.folder{font-weight:600;color:var(--ink-soft)}
+.row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .tw{width:12px;height:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.row .tw.open{transform:rotate(90deg)}
+.row .act{opacity:0;display:flex;gap:2px}
+.row:hover .act{opacity:1}
+.mini{width:20px;height:20px;border:none;background:transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;padding:0}
+.mini:hover{background:var(--line)}
+.row.drop{outline:1px dashed var(--accent);outline-offset:-1px}
+.row.drag{opacity:.4}
+.side-foot{margin-top:auto;padding:11px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
+.foot-note{font-size:11px;color:var(--ink-faint)}
+.foot-note.warn{color:var(--warn)}
+

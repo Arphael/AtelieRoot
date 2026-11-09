@@ -1,0 +1,15 @@
+/* ---- árbol: asa y zonas de soltar ---- */
+.row .grip{width:10px;flex-shrink:0;color:var(--ink-faint);font-size:11px;letter-spacing:-2px;opacity:0;cursor:grab;user-select:none}
+.row:hover .grip{opacity:1}
+.row.dz-before{box-shadow:inset 0 2px 0 var(--accent)}
+.row.dz-after{box-shadow:inset 0 -2px 0 var(--accent)}
+.row.dz-in{outline:1.5px solid var(--accent);outline-offset:-1px;background:var(--accent-bg)}
+#tree.dz-root{box-shadow:inset 0 -2px 0 var(--accent)}
+.trash-row{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--line)}
+.trash-row .t-n{flex:1;min-width:0;display:flex;flex-direction:column}
+.trash-row .t-n b{font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trash-row .t-n span{font-size:11px;color:var(--ink-faint)}
+.trash-list{max-height:48vh;overflow:auto}
+.pick-list{display:flex;flex-direction:column;gap:2px;max-height:48vh;overflow:auto}
+.pick-list button{text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:3px;font-size:13px;color:var(--ink-soft)}
+.pick-list button:hover{background:var(--bg-hi);color:var(--ink)}

@@ -1,0 +1,6 @@
+/* ---- paleta de comandos ---- */
+.pal-item{display:flex;align-items:center;gap:10px;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:3px;font-size:13px;color:var(--ink-soft)}
+.pal-item.on,.pal-item:hover{background:var(--bg-hi);color:var(--ink)}
+.pal-item .pk{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+.pal-item .pg{font-size:10.5px;color:var(--accent);min-width:72px}
+

@@ -1,0 +1,4 @@
+/* ---- menú contextual del panel lateral ---- */
+.row.ctx{background:var(--bg-hi);outline:1px solid var(--line-soft);outline-offset:-1px}
+#ctxMenu{min-width:210px;position:fixed}
+@media (hover:hover) and (pointer:fine){ .row .act [data-act="menu"]{display:none!important} }

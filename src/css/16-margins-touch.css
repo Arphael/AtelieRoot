@@ -1,0 +1,21 @@
+/* ---- margen izquierdo suficiente para el botón de plegar y el asa de bloque ---- */
+@media (hover: hover) and (min-width: 601px){
+  .wrapc{max-width:900px;padding-left:56px;padding-right:56px}
+  #edcol.split .wrapc{padding-left:56px;padding-right:28px}
+}
+/* ---- táctil o ventana estrecha: la flecha de plegado vive dentro del margen, siempre visible ---- */
+@media (hover: none), (max-width: 600px){
+  .wrapc,#edcol.split .wrapc{padding-left:42px;padding-right:16px}
+  .ed :is(h1,h2,h3,h4,h5,h6){position:relative}
+  .ed :is(h1,h2,h3,h4,h5,h6)::before{content:'';position:absolute;left:-40px;top:calc(.625em - 18px);width:36px;height:36px;border-radius:4px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2385806f' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") center/16px 16px no-repeat;cursor:pointer}
+  .ed :is(h1,h2,h3,h4,h5,h6)[data-fold]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fb99a' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 6 15 12 9 18'/%3E%3C/svg%3E")}
+  :root[data-theme="light"] .ed :is(h1,h2,h3,h4,h5,h6)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6350' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")}
+  :root[data-theme="light"] .ed :is(h1,h2,h3,h4,h5,h6)[data-fold]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233f6b4c' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 6 15 12 9 18'/%3E%3C/svg%3E")}
+  body.focus .ed :is(h1,h2,h3,h4,h5,h6)::before{display:none}
+}
+#nlBtn{height:20px;padding:0 7px;border:1px solid transparent;background:transparent;color:var(--ink-faint);border-radius:3px;font-size:11px;display:inline-flex;align-items:center;gap:5px}
+#nlBtn:hover{color:var(--ink);background:var(--bg-hi)}
+#nlBtn.on{color:var(--accent);border-color:var(--accent-line);background:var(--accent-bg)}
+.nl-layer{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2}
+.nl-mark{position:absolute;color:var(--ink-faint);opacity:.3;font-family:var(--sans);font-size:12px;line-height:13px;white-space:nowrap;user-select:none;pointer-events:none}
+

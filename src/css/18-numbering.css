@@ -1,0 +1,9 @@
+/* ---- enumeración: cada nivel con su propio estilo (1 · a · i · A) ---- */
+.ed ol{list-style-type:decimal}
+.ed ol ol{list-style-type:lower-alpha}
+.ed ol ol ol{list-style-type:lower-roman}
+.ed ol ol ol ol{list-style-type:upper-alpha}
+.ed ol ol ol ol ol{list-style-type:decimal}
+.ed ol ol ol ol ol ol{list-style-type:lower-alpha}
+.ed ol ol ol ol ol ol ol{list-style-type:lower-roman}
+.ed ol ol ol ol ol ol ol ol{list-style-type:upper-alpha}

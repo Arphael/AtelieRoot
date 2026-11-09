@@ -1,0 +1,15 @@
+{
+ "h1 en medio del texto": "<h1>Título</h1><h1>&nbsp;largo</h1>",
+ "h1 al final": "<h1>Título</h1><p>X</p>",
+ "h1 vacío": "<h1><br></h1><p><br></p>",
+ "cita de 2 líneas, inicio de la 2ª": "<p data-quote=\"\">uno</p><p>dos</p>",
+ "cita al final": "<p data-quote=\"\">cita<br>X<br></p>",
+ "párrafo normal al inicio": "<p><br></p><p>texto</p>",
+ "sublista: punto al inicio (sin cambio)": "<ul><li>a<ul><li>sub1</li><li><br></li><li>sub2</li></ul></li></ul>",
+ "viñeta: punto vacío (sin cambio)": "<ul><li>a</li></ul><p><br></p>",
+ "viñeta: en medio del texto (sin cambio)": "<ul><li>uno</li><li>&nbsp;dos</li></ul>",
+ "viñeta: al final (sin cambio)": "<ul><li>uno</li><li>X</li></ul>",
+ "bloque de código al inicio": "<div class=\"cb\" data-lang=\"js\"><div class=\"cb-body\"><pre class=\"cb-hl\" aria-hidden=\"true\"><code></code></pre><pre class=\"cb-src\" contenteditable=\"true\" spellcheck=\"false\">codigo</pre></div></div>",
+ "celda de tabla al inicio": "<table><thead><tr><th>a</th></tr></thead><tbody><tr><td><br>texto</td></tr></tbody></table>",
+ "con texto seleccionado": "<h1><br></h1><h1>ulo</h1>"
+}

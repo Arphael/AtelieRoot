@@ -1,0 +1,24 @@
+/* ---- tablas ---- */
+.ed th{text-align:left}
+.ed *+table{margin-top:34px}   /* hueco para la barra de la tabla: así no tapa la línea de arriba */
+.ed.tsel table ::selection,.ed.tsel table::selection{background:transparent;color:inherit}
+.tsel-layer{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:3}
+.tsel-box{position:absolute;box-sizing:border-box;background:rgba(143,185,154,.2);border:1.5px solid var(--accent-line);border-radius:2px}
+#tblMenu{min-width:270px;position:fixed;max-height:min(82vh,640px)}
+#tblMenu button{display:flex;justify-content:space-between;align-items:center;gap:22px}
+#tblMenu .k{color:var(--ink-faint);font-size:11px}
+.tw-bar .mini.on{background:var(--bg-hi);color:var(--accent)}
+.ts-sq{width:22px;height:22px;padding:0;border:1px solid var(--line-soft);border-radius:2px;background:transparent;cursor:pointer}
+.ts-sq.on{background:rgba(143,185,154,.35);border-color:var(--accent)}
+#card input[type=number]{padding:7px 9px}
+.ed table[data-cw]{table-layout:fixed}
+.ed table[data-cw] th,.ed table[data-cw] td{overflow-wrap:anywhere}
+.ed.colrs,.ed.colrs td,.ed.colrs th{cursor:col-resize}
+body.colresizing,body.colresizing *{cursor:col-resize!important;user-select:none!important}
+.lk-chip{position:absolute;z-index:30;display:none;align-items:center;gap:2px;padding:3px 4px;border:1px solid var(--line);border-radius:7px;background:var(--bg-side);box-shadow:0 6px 18px rgba(0,0,0,.35);font-size:12px;max-width:min(560px,94%)}
+.lk-chip.show{display:flex}
+.lk-url{color:var(--ink-dim);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 7px 0 5px}
+.lk-chip button{border:none;background:transparent;color:var(--ink-soft);padding:3px 8px;border-radius:4px;font-size:12px;cursor:pointer;white-space:nowrap}
+.lk-chip button:hover{background:var(--bg-hi);color:var(--ink)}
+.ol-item.cur,.ol-item.cur:hover{background:var(--accent-bg);color:var(--ink);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
+

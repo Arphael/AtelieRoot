@@ -1,0 +1,7 @@
+.ed table{border-collapse:collapse;font-size:14.5px;margin:0 0 13px;width:100%}
+.ed th,.ed td{border:1px solid var(--line-soft);padding:7px 10px;min-width:48px}
+.ed th{background:var(--bg-hi);font-family:var(--serif);font-weight:600;color:var(--ink)}
+.ed td{color:var(--ink-soft)}
+.tw-bar{position:absolute;z-index:20;display:none;gap:2px;padding:3px;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:3px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.tw-bar.show{display:flex}
+

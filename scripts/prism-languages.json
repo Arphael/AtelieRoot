@@ -1,0 +1,8 @@
+{
+  "version": "1.29.0",
+  "languages": [
+    "javascript", "typescript", "jsx", "tsx", "python", "bash", "powershell", "batch", "sql", "json", "yaml", "toml", "ini", "markup", "css", "scss",
+    "markdown", "diff", "java", "kotlin", "swift", "c", "cpp", "csharp", "go", "rust", "php", "ruby", "dart", "r", "lua", "matlab",
+    "vhdl", "verilog", "nasm", "arduino", "makefile", "cmake", "docker", "latex", "regex", "git", "properties", "csv", "graphql"
+  ]
+}

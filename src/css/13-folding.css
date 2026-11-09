@@ -1,0 +1,8 @@
+/* ---- plegar secciones ---- */
+.ed [data-hid]{display:none!important}
+.ed h1[data-fold]::after,.ed h2[data-fold]::after,.ed h3[data-fold]::after,.ed h4[data-fold]::after,.ed h5[data-fold]::after,.ed h6[data-fold]::after{content:"  ···";color:var(--ink-faint);font-weight:400;letter-spacing:.12em}
+#fbtn{position:absolute;z-index:18;display:none;width:20px;height:24px;align-items:center;justify-content:center;border-radius:3px;color:var(--ink-faint);cursor:pointer;user-select:none}
+#fbtn:hover{background:var(--bg-hi);color:var(--accent)}
+#fbtn.show{display:flex}
+#fbtn svg{transition:transform .12s}
+#fbtn.folded svg{transform:rotate(-90deg)}

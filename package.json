@@ -1,0 +1,48 @@
+{
+  "name": "atelierroot",
+  "version": "1.0.0",
+  "description": "Local-first Markdown editor: every document is a .md file in a folder on your computer.",
+  "author": "Alejandro Reyes",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arphael/AtelierRoot.git"
+  },
+  "homepage": "https://github.com/Arphael/AtelierRoot#readme",
+  "bugs": {
+    "url": "https://github.com/Arphael/AtelierRoot/issues"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/atelierroot-server.js --dir ./notas --app src --open",
+    "start:dist": "node server/atelierroot-server.js --dir ./notas --app dist --open",
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
+    "vendor:prism": "node scripts/vendor-prism.mjs",
+    "test:server": "node --test server/test/server.test.mjs",
+    "test:e2e": "python tests/run.py --skip-server",
+    "test": "npm run check && python tests/run.py",
+    "test:dist": "npm run build && python tests/run.py --dist",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build --no-bundle"
+  },
+  "keywords": [
+    "markdown",
+    "editor",
+    "local-first",
+    "notes"
+  ],
+  "files": [
+    "src",
+    "server",
+    "scripts",
+    "dist"
+  ],
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4"
+  }
+}

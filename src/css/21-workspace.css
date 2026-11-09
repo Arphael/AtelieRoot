@@ -1,0 +1,9 @@
+/* ---- carpeta de trabajo: indicador de estado ---- */
+.ws-chip{border:none;background:none;padding:2px 6px;border-radius:4px;font-size:11px;color:var(--ink-faint);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.ws-chip:hover{text-decoration:underline}
+.ws-chip:empty{display:none}
+.ws-chip[data-ws="ok"]{color:var(--accent)}
+.ws-chip[data-ws="error"],.ws-chip[data-ws="denied"],.ws-chip[data-ws="offline"]{color:var(--danger)}
+.ws-chip[data-ws="off"]{color:var(--warn,#c9a227)}
+#wsNote{margin:0 0 6px -6px;display:block}
+body.ws-on #backupNote,body.ws-on #backupBtn{display:none}

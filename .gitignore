@@ -1,0 +1,15 @@
+node_modules/
+dist/
+notas/
+*.log
+__pycache__/
+.DS_Store
+Thumbs.db
+release/
+.env
+.env.*
+# Local working notes (not published)
+Plan/
+# Tauri build output
+src-tauri/target/
+src-tauri/gen/
