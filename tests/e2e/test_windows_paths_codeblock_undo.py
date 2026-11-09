@@ -43,6 +43,7 @@ async def main():
     d = await typed([r'C:\Program Files\Git\bin ', 'fin']); check('con espacios en los nombres (C:\\Program Files\\Git\\bin): UN solo código', d == f'<p>{CODE(r"C:\Program Files\Git\bin")} fin</p>', d)
     d = await typed([r'C:\Program Files (x86)\Foo\bar ', 'fin']); check('...también con «Program Files (x86)»', d == f'<p>{CODE(r"C:\Program Files (x86)\Foo\bar")} fin</p>', d)
     d = await typed([r'C:\Program Files y luego sigo']); check('si lo que sigue no continúa la ruta, no se traga el resto de la frase', 'y luego sigo' in re.sub(r'<[^>]+>', '', d) and 'y luego' not in ''.join(re.findall(r'<span data-code="">([^<]*)</span>', d)), d)
+    d = await typed([r'ver src-tauri\app-icon.svg ', 'fin']); check('relative path typed (src-tauri\\app-icon.svg): inline code', d == f'<p>ver {CODE(r"src-tauri\app-icon.svg")} fin</p>', d)
     d = await typed([r'Mira C:\Users\ana y /usr/bin y src/app ', 'fin']); check('conviven con las rutas con «/» y los comandos', d.count('data-code') == 3, d)
     d = await typed([r'texto con \n y 50% y a:b ', 'fin']); check('lo que no es ruta no se toca', 'data-code' not in d, d)
     await fresh(); await kb.type(r'C:\Users\ana'); await kb.press(' '); await kb.press('Control+z'); await pg.wait_for_timeout(100); d = await dom()

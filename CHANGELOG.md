@@ -12,7 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Docs: user guide, FAQ, building guide, architecture decision records, docs index, `CODE_OF_CONDUCT.md`, `SUPPORT.md`.
 - Security: Content-Security-Policy on every local server response; CodeQL and OpenSSF Scorecard workflows.
 - Desktop app `AtelierRoot.exe` (Tauri v2, Rust backend with the same contract).
-- Relative Windows paths with a file extension (`src\app.js`) become inline code like other paths.
+- Relative Windows paths (`src\app.js`, `docs\adr\`) become inline code like other paths; a path with spaces such as `C:\Program Files\Git\bin` stays one piece.
 - Brave: the welcome screen explains how to enable folder access (`brave://flags/#file-system-access-api`).
 - Browser tab icon uses the app logo.
 - Folder picker errors are shown (only a real cancel stays silent); Electron hosts such as VS Code's integrated browser get an explanation instead of a button that cannot work. Long messages stay on screen longer.
@@ -21,7 +21,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Changed
 - Renamed to **AtelierRoot** everywhere, including the hidden folder (`.atelierroot/`), local storage keys and the app identifier.
 - Release downloads are `AtelierRoot.exe` and `AtelierRoot.html` (same app); the Node ZIP was dropped and the server is for development only.
-- Workflow actions pinned by commit SHA with least-privilege permissions.
+- Workflow actions pinned by commit SHA with least-privilege permissions; OpenSSF Scorecard action updated to v2.5.0.
 - Neutral welcome document in temporary mode.
 - npm test scripts call `python` instead of `python3` (works on Windows).
 
