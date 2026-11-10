@@ -28,14 +28,15 @@ Sprints from cleanup to a public, multi-platform release. Each sprint ends with
 - [x] Product renamed to AtelierRoot everywhere (hidden folder `.atelierroot/`, app id `io.github.arphael.atelierroot`).
 - [x] `repository`/`homepage` in `package.json`; real clone URL in both READMEs.
 - [x] CI matrix: `ubuntu-latest`, `windows-latest`, `macos-latest`; server + e2e against `src/` and `dist/` on all three.
-- [ ] CI green on the 3 OSes. First runs: the desktop backend job, CodeQL and Scorecard (after moving to v2.5.0) pass; browser tests found path-to-code regressions, fixed one by one.
-- [ ] Review and merge the Dependabot PRs opened after the first push (npm, GitHub Actions, cargo) once `main` is green.
-- [ ] Enable Pages (Settings -> Pages -> GitHub Actions) and verify `pages.yml`.
+- [x] CI green on the 3 OSes (`504468a`): path-to-code regressions, UTF-8 output on Windows, Cmd+click on macOS and 8.3 short paths in the dev server fixed along the way.
+- [x] Dependabot PRs #1-#5 (GitHub Actions) applied on `main` in one commit; the PRs close themselves.
+- [x] Dependabot alert #1 (moderate, GHSA-wrw7-89jp-8q8g, `glib` < 0.20): reviewed. `glib` 0.18 comes only from Tauri's Linux stack (gtk3 / webkit2gtk) and is not compiled into the Windows executable; it cannot be bumped until Tauri moves off gtk 0.18. Dismissed as "vulnerable code is not used"; revisit with S4 (Linux builds) or the next Tauri release.
+- [x] Pages enabled; `pages.yml` deploys to <https://arphael.github.io/AtelierRoot/>.
 - [x] `CHANGELOG.md` (Keep a Changelog + SemVer), issue/PR templates, Dependabot for `github-actions`.
 - [x] `SECURITY.md` (how to report vulnerabilities).
 - [x] Security in the repo: CodeQL, OpenSSF Scorecard, actions pinned by commit SHA, least-privilege workflow permissions, Content-Security-Policy on the local server.
 - [x] Community docs: `CODE_OF_CONDUCT.md`, `SUPPORT.md`, issue template config, `docs/README.md`, `USER_GUIDE.md`, `FAQ.md`, `BUILDING.md`, ADRs.
-- [ ] GitHub settings after the push: private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection, code scanning, ruleset on `main`, read-only default `GITHUB_TOKEN`.
+- [x] GitHub settings after the push: private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection, code scanning, ruleset on `main`, read-only default `GITHUB_TOKEN`.
 
 Done when: CI green on 3 OSes, Pages URL works, repo public, security settings on.
 
@@ -70,6 +71,7 @@ Done when: the desktop app opens a folder, edits, autosaves and reloads external
 ## S4 - Multi-platform releases
 
 - [ ] `release.yml` with `tauri-apps/tauri-action`: `.msi`/`.exe` (Windows), `.dmg` (macOS universal), `.AppImage`/`.deb` (Linux) on tag `vX.Y.Z`.
+- [ ] First release `v1.0.0` (tag) with `AtelierRoot.exe` + `AtelierRoot.html` attached.
 - [x] Release assets: `AtelierRoot.exe` + `AtelierRoot.html` (the Node ZIP was dropped; the server is for development only).
 - [ ] Optional code signing (Windows / Apple notarization) documented; unsigned builds warn the user in README.
 - [ ] Manual smoke test checklist per OS in `CONTRIBUTING.md`.
@@ -81,7 +83,7 @@ Done when: a tag produces installers for 3 OSes and each passes the smoke test.
 
 - [ ] Firefox and WebKit in e2e (server mode).
 - [ ] Fix: typing `[ ] ` key by key leaves a stray `]` in the new task (`[] ` works).
-- [ ] Move pinned actions (`checkout`, `setup-node`, `setup-python`) to their Node 24 releases (CI warns that Node 20 is deprecated).
+- [ ] Move pinned actions (`checkout`, `setup-node`; `setup-python` done) to their Node 24 releases (CI warns that Node 20 is deprecated).
 - [ ] Unit tests (`node --test`) for pure functions: `urlAllowed`, `wsSafeName`, `isCodeLike`, `domFromMd`, `tidyMd`, `wsHash`.
 - [ ] ESLint minimal (`no-undef`, `no-unused-vars`).
 - [ ] Lazy document loading for large folders (5 000 files open in < 2 s).
