@@ -21,6 +21,8 @@ SCEN = [
  ('after a nested bullet, 4 spaces -> level 3', '<ul><li>a<ul><li>b</li></ul></li></ul>' + P, '    * X', '<ul><li>a<ul><li>b<ul><li>X</li></ul></li></ul></li></ul>'),
  ('after a numbered list, 2 spaces -> nested', '<ol><li>a</li></ol>' + P, '  1. X', '<ol><li>a<ol><li>X</li></ol></li></ol>'),
  ('no spaces still works', P, '* X', '<ul><li>X</li></ul>'),
+ ('[ ] typed key by key -> task (R2-H1)', P, '[ ] X', '<ul data-task=""><li data-task="0">X</li></ul>'),
+ ('spaces + [ ] typed key by key -> task', P, '  [ ] X', '<ul data-task=""><li data-task="0">X</li></ul>'),
 ]
 async def main():
   async with async_playwright() as p:

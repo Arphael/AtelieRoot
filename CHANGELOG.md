@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-09
+
+### Added
+- `docs/TEMPLATE.md`: template to request a fix or improvement, and the steps every change follows up to the release.
+- Docs: writing assistant extensions (spelling/grammar) only run on `http`/`https` pages; use the web version for them.
+- Browser test: corrections made by writing assistant extensions reach the Markdown, keep inline format and can be undone.
+
+### Fixed
+- Typing `[ ] ` key by key left a stray `]` in the new task.
+
 ## [1.0.0] - 2026-11-09
 
 First public release. Downloads: `AtelierRoot.exe` (Windows desktop app) and `AtelierRoot.html` (the same app as one HTML file).

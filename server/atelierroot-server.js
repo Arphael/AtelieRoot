@@ -20,7 +20,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
 const MAX_ENTRIES = 50000;
 const RESTORE_EXT = /\.(?:png|jpe?g|gif|webp|bmp|ico|svg|pdf|txt|csv|tsv|json|ya?ml|toml|ini|log|docx?|xlsx?|pptx?|odt|ods|odp|zip|mp3|mp4|wav|webm)$/i;   // lo único que no es .md y puede volver de la papelera

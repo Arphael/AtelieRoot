@@ -2,7 +2,7 @@
 /* ====== 60. Copia automática antes de actualizar ====== */
 // La primera vez que se abre una versión nueva, se guarda aparte una copia de todo lo que había (en este mismo navegador).
 // Se puede bajar como respaldo con el comando «Descargar la copia automática previa a la actualización».
-const APP_VERSION = '2026-11-05';
+const APP_VERSION = '2026-11-09';
 async function snapKeys(){
   const db = await DB.open();
   return new Promise(res => {

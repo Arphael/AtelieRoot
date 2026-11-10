@@ -113,7 +113,8 @@ ed.addEventListener('keydown', e => {
     txt = txt.replace(/^[ \u00a0\t]+/, '');
     const nx = document.createRange();
     nx.selectNodeContents(host); nx.setStart(r.startContainer, r.startOffset);
-    const paired = /^\[[xX]?$/.test(txt) && nx.toString().replace(/\u200b/g, '')[0] === ']';
+    // «[x» + space with the auto-closed «]» → checked task; «[» + space is the start of «[ ]», so the space goes inside
+    const paired = /^\[[xX]$/.test(txt) && nx.toString().replace(/\u200b/g, '')[0] === ']';
     if (paired) txt += ']';
     const restHtml = () => {
       const a = document.createRange();

@@ -47,6 +47,14 @@ Brave ships folder access turned off. Open `brave://flags/#file-system-access-ap
 **VS Code's integrated browser stays in temporary mode.**
 It is built on Electron, which lets you pick a folder but never grants access to it, so AtelierRoot does not offer the button there. Open the file in Chrome, Edge or Brave, or use the desktop app.
 
+**My spelling or grammar extension does nothing in `AtelierRoot.html`.**
+Most writing assistant extensions only run on `http`/`https` pages, so they never load in a
+file opened from disk (`file://`), even with "Allow access to file URLs" turned on. Open the
+same app from the web instead: <https://arphael.github.io/AtelierRoot/>. Your documents still
+stay in your local folder. In the extension's details, set **Site access** to "On all sites"
+(or add `arphael.github.io`). The desktop app does not run browser extensions; the editor's
+built-in spell check (`spellcheck`) works everywhere.
+
 **It asks for permission every time.**
 Browsers grant folder access per session. The desktop app does not ask.
 

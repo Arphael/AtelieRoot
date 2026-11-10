@@ -56,7 +56,7 @@ Done when: whole interface switches live; e2e green in both languages.
 
 Moved ahead of S2 so a portable executable (`AtelierRoot.exe`, one file) can be tested before the first public release.
 
-- [ ] Contract tests: extract backend scenarios into a runner usable by Node and Tauri.
+- [ ]   : extract backend scenarios into a runner usable by Node and Tauri.
 - [x] `src-tauri/` (Tauri v2), frontend = `dist/`, strict CSP, no remote URLs; portable `AtelierRoot.exe` (~3.4 MB).
 - [x] Rust commands implementing [CONTRACT.md](CONTRACT.md) (path validation, writable rules, atomic write, `expect` conflict).
 - [x] Outside changes detected by a 1.2 s poll that emits `ws-changed` (a `notify` watcher can replace it later).
@@ -71,7 +71,7 @@ Done when: the desktop app opens a folder, edits, autosaves and reloads external
 ## S4 - Multi-platform releases
 
 - [ ] `release.yml` with `tauri-apps/tauri-action`: `.msi`/`.exe` (Windows), `.dmg` (macOS universal), `.AppImage`/`.deb` (Linux) on tag `vX.Y.Z`.
-- [ ] First release `v1.0.0` (tag) with `AtelierRoot.exe` + `AtelierRoot.html` attached.
+- [x] First release [`v1.0.0`](https://github.com/Arphael/AtelierRoot/releases/tag/v1.0.0) with `AtelierRoot.exe` + `AtelierRoot.html` attached.
 - [x] Release assets: `AtelierRoot.exe` + `AtelierRoot.html` (the Node ZIP was dropped; the server is for development only).
 - [ ] Optional code signing (Windows / Apple notarization) documented; unsigned builds warn the user in README.
 - [ ] Manual smoke test checklist per OS in `CONTRIBUTING.md`.
@@ -82,7 +82,8 @@ Done when: a tag produces installers for 3 OSes and each passes the smoke test.
 ## S5 - Quality and browser coverage
 
 - [ ] Firefox and WebKit in e2e (server mode).
-- [ ] Fix: typing `[ ] ` key by key leaves a stray `]` in the new task (`[] ` works).
+- [x] Fix: typing `[ ] ` key by key left a stray `]` in the new task (fixed in v1.0.1).
+- [x] Writing assistant extensions: the editor accepts their corrections (Markdown, autosave, undo; e2e test). They load only on `http`/`https`, so the docs point to the web version for them.
 - [ ] Move pinned actions (`checkout`, `setup-node`; `setup-python` done) to their Node 24 releases (CI warns that Node 20 is deprecated).
 - [ ] Unit tests (`node --test`) for pure functions: `urlAllowed`, `wsSafeName`, `isCodeLike`, `domFromMd`, `tidyMd`, `wsHash`.
 - [ ] ESLint minimal (`no-undef`, `no-unused-vars`).

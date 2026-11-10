@@ -1,6 +1,6 @@
 {
   "name": "atelierroot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local-first Markdown editor: every document is a .md file in a folder on your computer.",
   "author": "Alejandro Reyes",
   "license": "MIT",

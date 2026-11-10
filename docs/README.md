@@ -7,6 +7,7 @@
 | [User guide](USER_GUIDE.md)       | Opening a folder, writing, shortcuts, autosave, trash, export |
 | [FAQ and troubleshooting](FAQ.md) | Common questions and fixes                                    |
 | [Support](../SUPPORT.md)          | Where to ask for help                                         |
+| [Change request template](TEMPLATE.md) | Ask for a fix or improvement; how it is built, tested and released |
 
 ## For developers
 

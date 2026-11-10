@@ -37,6 +37,9 @@ Type Markdown and it turns into formatting as you write:
 
 Other blocks from the toolbar: tables, images, links.
 
+Spelling and grammar: the browser's spell check is on. Writing assistant extensions work when
+AtelierRoot is opened from `https` (<https://arphael.github.io/AtelierRoot/>); see the [FAQ](FAQ.md).
+
 ## 3. Keyboard shortcuts
 
 On macOS use `Cmd` instead of `Ctrl`.
