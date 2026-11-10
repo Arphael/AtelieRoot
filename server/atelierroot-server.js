@@ -54,7 +54,8 @@ function findAppDir(explicit) {
 
 /** Crea el servidor. Devuelve { server, token, root, listen(), close() }. */
 function createServer(opts) {
-  const root = fs.realpathSync(path.resolve(opts.dir));
+  // native, like fsp.realpath below: the JS version keeps 8.3 short names (C:\Users\RUNNER~1) and every path would look "outside"
+  const root = fs.realpathSync.native(path.resolve(opts.dir));
   const appDir = findAppDir(opts.app);
   const token = crypto.randomBytes(24).toString('hex');
   const sseClients = new Set();

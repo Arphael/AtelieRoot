@@ -25,6 +25,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Neutral welcome document in temporary mode.
 - npm test scripts call `python` instead of `python3` (works on Windows).
 
+### Fixed
+- Dev server: a folder opened through a Windows 8.3 short path (`C:\Users\RUNNER~1\...`) rejected every file as "outside the folder" (403).
+
 ## [1.0.0] - 2026-11-05
 
 ### Added
