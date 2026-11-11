@@ -36,7 +36,8 @@ async def main():
           return [Math.round(tb - last), Math.round(smallest)] }""")
         check(f'{w}px: no tool left in «More» that would fit in the free space', gap[0] - 8 <= gap[1] + 4, gap)
       if w == 1100:
-        await pg.click('#toolsBtn'); await pg.wait_for_timeout(400)
+        if not await pg.evaluate("document.body.classList.contains('tools-open')"): await pg.click('#toolsBtn')
+        await pg.wait_for_timeout(400)
         xs = await pg.evaluate("""async () => { document.getElementById('toolsClose').click(); const xs = [];
           for (let i = 0; i < 6; i++){ await new Promise(r => setTimeout(r, 40)); const cs = getComputedStyle(document.getElementById('tools')); xs.push([new DOMMatrix(cs.transform).m41, cs.visibility]); }
           return xs }""")
