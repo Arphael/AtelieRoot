@@ -28,7 +28,7 @@ async def main():
     t = T(); tmp = Path(tempfile.mkdtemp(prefix='atelierroot-ws-')); work = tmp / 'Mis notas'; work.mkdir()
     disk = Disk(work); await seed(disk)
     await disk.write('notas.txt', 'no soy .md'); await disk.write('.git/x.md', 'oculto')
-    port = free_port(); srv = start_server(work, port); url = f'http://localhost:{port}/'
+    port = free_port(); srv = start_server(work, port); url = f'http://localhost:{port}/?lang=es'
     try:
         async with async_playwright() as p:
             b = await p.chromium.launch(**LAUNCH)

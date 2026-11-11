@@ -60,7 +60,7 @@ function foldAll(on){
   [...ed.children].forEach(h => { if (headLevel(h)){ if (on) h.setAttribute('data-fold', ''); else h.removeAttribute('data-fold'); } });
   applyFolds(); stash(); save();
   if (on){ const b = currentBlock(); if (b && b.hasAttribute('data-hid')) caretInto(sectionHeadOf(b) || ed.firstElementChild, true); }
-  toast(on ? 'Todo plegado' : 'Todo desplegado');
+  toast(T(on ? 'msg.all-folded' : 'msg.all-unfolded'));
 }
 // botón de plegado junto al encabezado bajo el ratón
 const fbtn = $('#fbtn');

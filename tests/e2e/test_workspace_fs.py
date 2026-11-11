@@ -37,7 +37,7 @@ def serve():
 
 
 async def main():
-    t = T(); srv, port = serve(); url = f'http://localhost:{port}/index.html'
+    t = T(); srv, port = serve(); url = f'http://localhost:{port}/index.html?lang=es'
     async with async_playwright() as p:
         b = await p.chromium.launch(**LAUNCH)
         ctx = await b.new_context(viewport={'width': 1300, 'height': 700}); await ctx.add_init_script(INIT)

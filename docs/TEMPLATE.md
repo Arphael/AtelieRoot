@@ -38,8 +38,9 @@ Every item goes through the same steps, so a request only has to describe the pr
 2. **Plan.** A short plan lists each item, the files it touches and how it will be checked. Work starts after it is approved.
 3. **Test first.** A test that reproduces the bug (or fixes the new behavior) is written and seen failing before the change:
    - editor behavior: Playwright test in `tests/e2e/test_*.py`;
-   - server and file access: `server/test/server.test.mjs` (Node) and the Rust unit tests in
-     `src-tauri/src` (desktop), kept equivalent as described in [CONTRACT.md](CONTRACT.md).
+   - server and file access: a case in `tests/contract/scenarios.json`, run by both backends
+     (Node and desktop, see [CONTRACT.md](CONTRACT.md#7-contract-tests-both-backends)); backend-specific
+     checks in `server/test/server.test.mjs` or the Rust tests in `src-tauri/src`.
 4. **Change.**
    - Frontend: `src/js/NN-*.js`, `src/css/`, `src/index.html`.
    - Backend, when the change touches files or folders: the Node dev server (`server/atelierroot-server.js`) **and** the desktop backend (`src-tauri/src`), always both, following [CONTRACT.md](CONTRACT.md).
@@ -57,7 +58,7 @@ Every item goes through the same steps, so a request only has to describe the pr
 8. **Publish** (after explicit approval).
    1. Commit and push to `main`.
    2. Wait for CI green on Windows, macOS and Linux.
-   3. Tag `vX.Y.Z` and push it. The release workflow attaches `AtelierRoot.exe` and `AtelierRoot.html` to the GitHub release; the web version updates by itself.
+   3. Tag `vX.Y.Z` and push it. The release workflow attaches `AtelierRoot.exe` and `AtelierRoot.html` to the GitHub release, with the CHANGELOG section of that version as its text; the web version updates by itself.
 9. **Report.** What changed, where to see it (screen, menu, shortcut), the test evidence and the release link.
 
 Security problems are not reported with this template; see [SECURITY.md](../SECURITY.md).

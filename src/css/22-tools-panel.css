@@ -1,0 +1,25 @@
+/* ---- panel de herramientas (derecha): lo que no cabe en la barra ---- */
+#tools{position:fixed;right:0;top:0;bottom:0;z-index:39;width:min(320px,88vw);display:flex;flex-direction:column;background:var(--bg-side);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.5);transform:translateX(102%);visibility:hidden;transition:transform .18s ease,visibility 0s linear .18s}
+/* same slide as the left sidebar; visibility waits for the slide-out to finish */
+body.tools-open #tools{transform:none;visibility:visible;transition:transform .18s ease,visibility 0s}
+body.tools-open #scrim{display:block}
+.tl-head{display:flex;align-items:center;gap:8px;padding:12px 10px 12px 16px;border-bottom:1px solid var(--line)}
+.tl-head h2{flex:1;margin:0;font-size:15px;font-weight:600;color:var(--ink-strong)}
+#toolsBody{flex:1;min-height:0;overflow:auto;padding:4px 8px 16px}
+.tl-sec{margin:14px 8px 6px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint)}
+.tl-row{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:8px 10px;border:none;border-radius:6px;background:transparent;color:var(--ink-soft);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.tl-row:hover,.tl-row:focus-visible{background:var(--bg-hi);color:var(--ink)}
+.tl-row .tl-ico{display:inline-flex;width:20px;justify-content:center;flex-shrink:0;color:var(--ink-dim)}
+.tl-row .tl-k{margin-left:auto;font-size:11px;color:var(--ink-faint)}
+.tl-row.on{color:var(--accent)}
+.tl-row.on .tl-ico{color:var(--accent)}
+.tl-pref{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:4px 10px;font-size:14px;color:var(--ink-soft)}
+.tl-seg{display:inline-flex;border:1px solid var(--line-soft);border-radius:6px;overflow:hidden}
+.tl-seg button{min-width:48px;min-height:34px;padding:0 12px;border:none;background:transparent;color:var(--ink-dim);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.tl-seg button+button{border-left:1px solid var(--line-soft)}
+.tl-seg button[aria-pressed="true"]{background:var(--accent-btn);color:var(--accent-btn-ink)}
+.tl-foot{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-faint)}
+.tl-foot:empty{display:none}
+#mTools{display:none}
+@media (max-width:600px){ #mTools{display:inline-flex} }
+#bar .tb-group.ovf + #toolsBtn{margin-left:auto}

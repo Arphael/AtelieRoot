@@ -21,7 +21,7 @@ function fallbackCopy(t){
   ta.remove();
 }
 $('#tidyBtn').onclick = () => tidyDocument();
-$('#copyMd').onclick = () => { copyText(withFills(selectionMd() || docMd())); toast('Copiado en Markdown'); };
+$('#copyMd').onclick = () => { copyText(withFills(selectionMd() || docMd())); toast(T('msg.copied-md')); };
 $('#copyRich').onclick = async () => {
   const s = getSelection();
   const host = document.createElement('div');
@@ -34,14 +34,14 @@ $('#copyRich').onclick = async () => {
       'text/html': new Blob(['<meta charset="utf-8">' + host.innerHTML], {type:'text/html'}),
       'text/plain': new Blob([text], {type:'text/plain'})
     })]);
-    toast('Copiado con formato');
-  } catch(_){ copyText(text); toast('Copiado como texto'); }
+    toast(T('msg.copied-rich'));
+  } catch(_){ copyText(text); toast(T('msg.copied-text')); }
 };
 ed.addEventListener('copy', e => {
   const trc = tableRect();
   if (trc && trc.multi){ e.preventDefault(); lineClip = null; writeTableClip(e, trc); return; }
   const md = selectionMd();
-  if (md === null){ if (getSelection().isCollapsed && setLineClipboard(e)){ e.preventDefault(); toast('Línea copiada'); } return; }
+  if (md === null){ if (getSelection().isCollapsed && setLineClipboard(e)){ e.preventDefault(); toast(T('msg.line-copied')); } return; }
   lineClip = null;
   const host = document.createElement('div');
   host.appendChild(getSelection().getRangeAt(0).cloneContents());
@@ -57,5 +57,5 @@ $('#pvBtn').onclick = () => {
   $('#pvBtn').classList.toggle('on', state.preview);
   paintPreview(); save();
 };
-$('#pvCopy').onclick = () => { copyText(withFills(docMd())); toast('Copiado en Markdown'); };
+$('#pvCopy').onclick = () => { copyText(withFills(docMd())); toast(T('msg.copied-md')); };
 

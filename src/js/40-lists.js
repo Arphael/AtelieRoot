@@ -34,7 +34,7 @@ function unlistItem(li){
 }
 function toggleList(kind){
   const s = getSelection();
-  if (!s.rangeCount || !ed.contains(s.anchorNode)) return toast('Pon el cursor en el texto');
+  if (!s.rangeCount || !ed.contains(s.anchorNode)) return toast(T('msg.cursor-in-text'));
   const r = s.getRangeAt(0);
   const startLi = closestFrom(r.startContainer, 'li'), endLi = closestFrom(r.endContainer, 'li');
   let lis;
@@ -80,7 +80,7 @@ function toggleList(kind){
   }
   const blocks = (s.isCollapsed ? [currentBlock()] : [...ed.children].filter(b => r.intersectsNode(b)))
     .filter(b => b && /^(P|H[1-6]|BLOCKQUOTE)$/.test(b.tagName));
-  if (!blocks.length) return toast('Ese bloque no puede convertirse en lista');
+  if (!blocks.length) return toast(T('msg.cannot-list'));
   const list = document.createElement(kind === 'ol' ? 'ol' : 'ul');
   if (kind === 'task') list.setAttribute('data-task', '');
   blocks.forEach(b => {

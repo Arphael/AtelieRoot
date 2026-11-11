@@ -145,16 +145,24 @@ by `src/index.html`:
 | `82-ws-core.js`                | Working folder: load, sync, save, outside changes, journal             |
 | `83-ws-ui.js`                  | Working folder: screens and boot                                       |
 | `99-boot.js`                   | Boot                                                                   |
-| `05-i18n.js` (S2, planned)     | Dictionaries and `t(key)`                                              |
 
 CSS lives in `src/css/01-base.css` ... `21-workspace.css`, same ordering rule.
 
-## i18n (roadmap S2)
+## Interface language (i18n)
 
-- `src/js/05-i18n.js` loads before any UI code: `I18N = { es: {...}, en: {...} }`, `t(key, vars)`.
-- Static HTML uses `data-i18n`, `data-i18n-title`, `data-i18n-aria`, `data-i18n-ph`;
-  `applyI18n()` repaints them on switch. Dynamic strings call `t()` at render time.
-- `<html lang>` and the export template follow the current language.
+- `src/js/05-i18n.js` loads right after `00-base.js`. Every interface text lives in `STR` as
+  `'key': [spanish, english]`; code calls `T('key', { var })` (`T`, not `t`: many modules use `t` as a local name).
+- Static HTML carries `data-i18n` (own text, icons kept), `data-i18n-title`, `data-i18n-aria`, `data-i18n-ph`.
+  HTML built in code that stays on screen (code-block buttons, tree buttons) carries the same attributes.
+- `I18n.set(lang)` saves the choice in `atelierroot.ui`, repaints those attributes and fires `langchange`;
+  modules that paint text themselves (status bar, block-type button, backup note, folder chip) listen to it.
+  Dialogs, menus and toasts are built on open, so they already use the current language.
+- Language: `?lang=es|en` in the URL (this load only, used by tests) > saved choice > system language
+  (`es*` -> Spanish, anything else -> English).
+- Documents and `.atelierroot/` are never translated. New names that the app creates (conflict copies,
+  "Untitled", the welcome document) use the active language. Backend errors are shown by code (`WsError`).
+- `npm run check` rejects a literal text in `toast`/`dialog`/`confirmBox`/`askName`/`flag` and any
+  `data-i18n*` key missing from the dictionary.
 
 ## Desktop app (`src-tauri/`)
 

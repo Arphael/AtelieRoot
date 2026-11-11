@@ -3,7 +3,7 @@
 // orden en que se esconden: primero lo menos usado
 const OVF_ORDER = ['#unlinkBtn','#imgBtn','[data-block="hr"]','[data-fmt="clear"]','[data-fmt="strike"]','#focusBtn','#swBtn','#splitBtn',
   '#outBtn','#inBtn','[data-cmd="redo"]','[data-block="quote"]','[data-block="table"]','#findBtn','[data-block="pre"]','#linkBtn',
-  '[data-block="task"]','#copyRich','#pvBtn','#olBtn','#phBtn','#exportBtn','#themeBtn','[data-fmt="code"]','#tidyBtn',
+  '[data-block="task"]','#copyRich','#pvBtn','#olBtn','#phBtn','#exportBtn','#langBtn','#themeBtn','[data-fmt="code"]','#tidyBtn',
   '[data-block="ol"]','[data-block="ul"]','[data-fmt="italic"]','[data-fmt="bold"]','[data-cmd="undo"]','#hBtn'];
 const bar = $('#bar'), moreBtn = $('#moreBtn'), moreMenu = $('#moreMenu');
 function fixSeps(){
@@ -19,19 +19,32 @@ function fixSeps(){
   });
   if (prevVisible && prevVisible.classList.contains('sep')) prevVisible.classList.add('ovf');
 }
-function fitBar(){
+// the right-hand group (live Markdown ... language) goes whole to the tools panel (84-tools-panel.js) when it does not fit;
+// the view tools that overflow are also there, so «More» keeps only formatting and insert tools
+const toolGroup = bar.querySelector('.tb-group'), toolsBtn = $('#toolsBtn');
+const VIEW_TOOLS = ['#findBtn', '#swBtn', '#splitBtn', '#olBtn', '#focusBtn'];
+const overflowing = () => bar.scrollWidth > bar.clientWidth + 1;
+// hides tools in OVF_ORDER until the bar fits; returns true if it reached a tool of the right-hand group
+function fitPass(groupOut){
   OVF_ORDER.forEach(sel => { const el = bar.querySelector(sel); if (el) el.classList.remove('ovf'); });
+  toolGroup.classList.toggle('ovf', groupOut); toolsBtn.classList.toggle('ovf', !groupOut);
   moreBtn.classList.add('ovf');
   fixSeps();
   let i = 0;
-  while (bar.scrollWidth > bar.clientWidth + 1 && i < OVF_ORDER.length){
+  while (overflowing() && i < OVF_ORDER.length){
     const el = bar.querySelector(OVF_ORDER[i++]);
     if (!el) continue;
+    if (toolGroup.contains(el)){ if (!groupOut) return true; continue; }
     el.classList.add('ovf');
-    moreBtn.classList.remove('ovf');
+    if (VIEW_TOOLS.some(s => el.matches(s))) toolsBtn.classList.remove('ovf');
+    else moreBtn.classList.remove('ovf');
     fixSeps();
   }
+  return false;
 }
+// when the group's turn comes it leaves whole, and the bar is laid out again without it: the freed space
+// brings back the tools hidden before (no empty gap with half the tools in «More»)
+function fitBar(){ if (fitPass(false)) fitPass(true); }
 let fitRaf = 0;
 const scheduleFit = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitBar); };
 if (window.ResizeObserver) new ResizeObserver(scheduleFit).observe(bar);
@@ -44,7 +57,7 @@ moreBtn.onclick = e => {
   e.stopPropagation();
   moreMenu.innerHTML = '';
   // se listan en el orden en que aparecen en la barra
-  [...bar.querySelectorAll('.tb.ovf')].filter(el => el !== moreBtn).forEach(el => {
+  [...bar.querySelectorAll('.tb.ovf')].filter(el => el !== moreBtn && el !== toolsBtn && !VIEW_TOOLS.some(s => el.matches(s))).forEach(el => {
     const b = document.createElement('button');
     const label = (el.getAttribute('title') || el.getAttribute('aria-label') || el.textContent).trim();
     b.innerHTML = '<span style="display:inline-flex;width:20px;justify-content:center;vertical-align:middle;margin-right:8px;color:var(--ink-dim)"></span><span></span>';

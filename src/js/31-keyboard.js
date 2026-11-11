@@ -11,7 +11,7 @@ ed.addEventListener('keydown', e => {
     if (k === 'e'){ e.preventDefault(); toggleWrap('code'); return; }
     if (k === 'x' && e.shiftKey){ e.preventDefault(); toggleWrap('s'); return; }
     if (k === 'k'){ e.preventDefault(); $('#linkBtn').click(); return; }
-    if (k === 's'){ e.preventDefault(); stash(); save(true); toast('Guardado'); return; }
+    if (k === 's'){ e.preventDefault(); stash(); save(true); toast(T('msg.saved')); return; }
   }
   if (slash.open && slashMenu.classList.contains('show')){
     if (e.key === 'ArrowDown'){ e.preventDefault(); slash.i = (slash.i + 1) % slash.items.length; paintSlash(slashQuery() || ''); return; }
@@ -243,7 +243,7 @@ function nestByLead(lead){
 }
 function indent(li){
   const prev = li.previousElementSibling;
-  if (!prev || prev.tagName !== 'LI') return toast('Necesita un elemento encima para anidarse');
+  if (!prev || prev.tagName !== 'LI') return toast(T('msg.need-item-above'));
   const list = li.closest('ul,ol');
   let sub = [...prev.children].find(c => c.tagName === 'UL' || c.tagName === 'OL');
   if (!sub){

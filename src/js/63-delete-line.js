@@ -80,7 +80,7 @@ function deleteParaLines(b){
 }
 function deleteTableRow(cell){
   const tr = cell.closest('tr'), tbl = cell.closest('table');
-  if (tr.parentElement.tagName === 'THEAD') return toast('No se puede borrar el encabezado de la tabla');
+  if (tr.parentElement.tagName === 'THEAD') return toast(T('msg.cannot-delete-header'));
   History.mark();
   const next = tr.nextElementSibling, prev = tr.previousElementSibling;
   tr.remove();

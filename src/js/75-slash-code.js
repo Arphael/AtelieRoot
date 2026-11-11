@@ -9,9 +9,21 @@ const WS_ = String.raw`[^\s\\/:*?"<>|]`;
 const WIN_PATH = new RegExp(String.raw`^(?:[A-Za-z]:\\(?:${WS_}+\\?)*|\\\\${WS_}+(?:\\${WS_}+)+\\?|%[A-Za-z_][\w()]*%(?:\\${WS_}*)*|(?:\.{1,2}|~)\\${WS_}+(?:\\${WS_}+)*\\?)$`);
 const WIN_START = /^(?:[A-Za-z]:\\|\\\\|%[A-Za-z_][\w()]*%\\)/;
 const WIN_SPACED = new RegExp(String.raw`^(?:[A-Za-z]:\\|\\\\)[^\\/:*?"<>|\r\n]+(?:\\[^\\/:*?"<>|\r\n]*)*$`);       // con espacios dentro de los nombres (Program Files)
+// file names become code too (Fix.prompt.md, app.py, .gitignore); only known extensions, so «p.ej.», «v1.2» or «google.com» stay text
+const FILE_EXT = new Set(('md markdown txt rtf pdf doc docx xls xlsx ppt pptx odt csv tsv json jsonc yaml yml toml ini cfg conf env xml html htm css scss less ' +
+  'js mjs cjs jsx ts tsx vue svelte py ipynb rb php java kt kts swift go rs c h cpp hpp cs fs dart lua r sql sh bash zsh ps1 psm1 bat cmd ' +
+  'exe msi dll so dylib app apk dmg deb rpm appimage zip tar gz tgz 7z rar lock log bak tmp png jpg jpeg gif svg webp ico bmp tif tiff ' +
+  'mp3 wav ogg flac mp4 mov mkv avi webm ttf otf woff woff2 wasm map patch diff gradle tf proto graphql prisma').split(' '));
+const DOTFILES = new Set(['gitignore', 'gitattributes', 'env', 'npmrc', 'nvmrc', 'editorconfig', 'prettierrc', 'eslintrc', 'dockerignore', 'bashrc', 'zshrc']);
+function isFileName(t){
+  if (t[0] === '.') return DOTFILES.has(t.slice(1).toLowerCase());
+  const m = t.match(/^[\w-]+(?:\.[\w-]+)*\.([A-Za-z0-9]{1,10})$/);
+  return !!m && /[A-Za-z]/.test(t.slice(0, t.length - m[1].length - 1)) && FILE_EXT.has(m[1].toLowerCase());
+}
 function isCodeLike(t){
   if (t.length < 3 || !/[A-Za-z]/.test(t)) return false;
   if (WIN_PATH.test(t)) return true;
+  if (t.indexOf('/') < 0 && t.indexOf('\\') < 0 && isFileName(t)) return true;
   // relative Windows path (src-tauri\app-icon.svg, docs\adr\): needs a file extension or 2+ backslashes
   if (/^[\w.~-]+(?:\\[\w.~-]+)+\\?$/.test(t) && (/\.[A-Za-z0-9]{1,8}$/.test(t) || (t.match(/\\/g) || []).length >= 2)) return true;
   if (t[0] === '/') return /^\/[A-Za-z_](?:[\w\-:./]*[\w/])?$/.test(t);              // comando o ruta absoluta

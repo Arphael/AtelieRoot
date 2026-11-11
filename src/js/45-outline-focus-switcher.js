@@ -6,7 +6,7 @@ function paintOutline(){
   const heads = [...ed.children].filter(x => /^H[1-6]$/.test(x.tagName) && x.textContent.replace(/\u200b/g,'').trim());
   const list = $('#olList');
   list.innerHTML = '';
-  if (!heads.length){ olHeads = []; olBtns = []; olCur = -2; list.innerHTML = '<div class="ol-empty">Sin encabezados todavía. Usa # al inicio de una línea.</div>'; return; }
+  if (!heads.length){ olHeads = []; olBtns = []; olCur = -2; list.innerHTML = '<div class="ol-empty">' + esc(T('ol.empty')) + '</div>'; return; }
   heads.forEach((h, hi) => {
     const lvl = +h.tagName[1];
     const b = document.createElement('button');
@@ -34,7 +34,7 @@ function markCur(){
 function toggleFocus(force){
   const on = force === undefined ? !document.body.classList.contains('focus') : force;
   document.body.classList.toggle('focus', on);
-  if (on){ markCur(); toast('Modo enfoque · Esc para salir'); }
+  if (on){ markCur(); toast(T('msg.focus-on')); }
   else ed.querySelectorAll('[data-cur]').forEach(x => x.removeAttribute('data-cur'));
   ed.focus({ preventScroll: true });
 }
@@ -45,7 +45,7 @@ $('#focusExit').onclick = () => toggleFocus(false);
 function openSwitcher(onPick, title){
   const docs = [];
   walk(state.tree, n => { if (n.type === 'doc') docs.push({ id: n.id, name: n.name, path: pathOf(n.id) }); });
-  card.innerHTML = '<h2>' + esc(title || 'Ir a documento') + '</h2><input id="swq" placeholder="Escribe para buscar…" autocomplete="off" aria-label="Buscar documento"><div class="sw-list" id="swl"></div>';
+  card.innerHTML = '<h2>' + esc(title || T('pal.go-to-document')) + '</h2><input id="swq" placeholder="' + esc(T('sw.ph')) + '" autocomplete="off" aria-label="' + esc(T('sw.aria')) + '"><div class="sw-list" id="swl"></div>';
   veil.classList.add('show');
   const q = card.querySelector('#swq'), l = card.querySelector('#swl');
   let sel = 0, res = [];
@@ -55,7 +55,7 @@ function openSwitcher(onPick, title){
     res = docs.filter(d => !t || norm(d.path).includes(t)).slice(0, 40);
     sel = Math.min(sel, Math.max(0, res.length - 1));
     l.innerHTML = '';
-    if (!res.length){ l.innerHTML = '<div class="ol-empty">Sin resultados</div>'; return; }
+    if (!res.length){ l.innerHTML = '<div class="ol-empty">' + esc(T('sw.empty')) + '</div>'; return; }
     res.forEach((d, i) => {
       const b = document.createElement('button');
       b.className = 'sw-item' + (i === sel ? ' on' : '');

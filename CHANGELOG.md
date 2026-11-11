@@ -5,6 +5,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-10
+
+### Added
+- Interface in English and Spanish. It follows the system language the first time; the **EN/ES** toolbar button (or "Language" in the command palette) switches it live, without reloading, and the choice is remembered. `?lang=en` / `?lang=es` in the address forces a language for one visit.
+- Everything is translated: toolbar, sidebar, menus, dialogs, messages, command palette, folder screens, table tools, status bar, and the buttons inside code blocks. Exported HTML carries the active language.
+- `npm run check` rejects literal interface texts in messages and dialogs and `data-i18n` keys missing from the dictionary.
+- Tools panel for small screens: when the right-hand tools (live Markdown, placeholders, tidy, copy, export, language, theme) do not fit, they move together to a panel that opens from the right (button at the end of the toolbar, and in the phone header). It also holds the view tools that do not fit and, on phones, the status bar. «More» keeps only formatting and insert tools.
+- File names become inline code when you type a space after them, like paths: `Fix.prompt.md`, `app.py`, `.gitignore`. Only known file extensions count, so abbreviations (`p.ej.`), versions (`v1.2`) and domains stay text.
+
+### Changed
+- Names the app creates (conflict copies such as `name (disk version hh:mm)`, "Untitled", the welcome document) use the active language. Your documents are never translated.
+- Errors from the folder backends are shown in the interface language.
+- The `/` menu also finds blocks by their English names.
+- Each GitHub release shows the changes of its version (taken from this file).
+
+### Fixed
+- Dev server: names with `:` inside (`nota:alt.md`) are refused, like in the desktop app (on Windows they would write a hidden NTFS stream).
+
+### Tests
+- Shared contract tests: one set of scenarios (`tests/contract/scenarios.json`) that both the Node server and the desktop backend must pass.
+
 ## [1.0.1] - 2026-11-09
 
 ### Added

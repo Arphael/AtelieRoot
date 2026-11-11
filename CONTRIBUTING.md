@@ -48,8 +48,10 @@ Browser tests load the page with `?test=1` (no welcome screen).
 ## Recipes
 
 - **New JS file**: `src/js/NN-name.js` (number = load order), starts with `"use strict";`, add its `<script>` to `src/index.html` in order, run `npm run check`.
+- **New interface text**: add `'area.name': ['Texto', 'Text']` to `STR` in `src/js/05-i18n.js`; use `T('area.name', { n })` in code or `data-i18n*="area.name"` in HTML. If the module paints the text itself, repaint it on `langchange`.
 - **New highlight language**: add it to `scripts/prism-languages.json`, run `npm run vendor:prism`.
-- **New server permission**: test in `server/test/server.test.mjs` first; explain in the PR why it is safe.
+- **New server permission**: add the case to `tests/contract/scenarios.json` first (both backends run it), then change `server/atelierroot-server.js` and `src-tauri/src/fsops.rs`; explain in the PR why it is safe.
+- **Release**: add the `## [X.Y.Z] - date` section to `CHANGELOG.md`, bump the version, push, then tag `vX.Y.Z`; that section becomes the release text.
 - **Working-folder test**: add the scene to `tests/e2e/ws_common.py` (runs against both backends).
 - **Golden values** (`tests/e2e/golden/`): `UPDATE_GOLDEN=1 python tests/e2e/test_enter_pushdown.py`, review the diff.
 
@@ -66,7 +68,7 @@ Do not change the on-disk format or conflict logic (`wsFlushDocs`, `wsRefreshOnc
 ## Style
 
 - New docs and code comments in English; existing Spanish comments stay until touched.
-- Interface text in Spanish, informal "tú" ("tu carpeta"), until the i18n sprint (S2) moves it to dictionaries.
+- Interface text goes in `src/js/05-i18n.js` as `'key': [spanish, english]` and is used with `T('key')` (Spanish with informal "tú"). `npm run check` rejects literal texts in toasts and dialogs.
 - No new dependencies without a strong reason.
 - Small functions with a one-line comment that says _why_.
 - Keep the numbered section headers `/* ====== N. title ====== */`: they act as each file's index.

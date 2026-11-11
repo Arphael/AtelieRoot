@@ -53,7 +53,7 @@ const History = {
     clearTimeout(this.t);
     if (ed.innerHTML !== this.last){ this.past.push({ html: this.last, caret: this.caretBefore }); this.last = ed.innerHTML; }
     const prev = this.past.pop();
-    if (!prev) return toast('Nada que deshacer');
+    if (!prev) return toast(T('msg.nothing-undo'));
     this.future.push({ html: ed.innerHTML, caret: this.caret() });
     const y = scroll.scrollTop, sig = [...ed.children].map(c => c.outerHTML);
     ed.innerHTML = prev.html; this.last = prev.html;
@@ -66,7 +66,7 @@ const History = {
   },
   redo(){
     const next = this.future.pop();
-    if (!next) return toast('Nada que rehacer');
+    if (!next) return toast(T('msg.nothing-redo'));
     this.past.push({ html: ed.innerHTML, caret: this.caret() });
     const y = scroll.scrollTop, sig = [...ed.children].map(c => c.outerHTML);
     ed.innerHTML = next.html; this.last = next.html;

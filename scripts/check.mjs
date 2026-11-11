@@ -20,6 +20,18 @@ for (const [kind, re] of [['js', /<script src="(js\/[^"]+)"><\/script>/g], ['css
     if (!f.endsWith('00-base.js') && !code.startsWith('"use strict";')) errors.push(`${f}: debe empezar con "use strict";`);
   }
 }
+// interface texts go through T('key') (src/js/05-i18n.js); a literal in these calls would not change language (best effort)
+const i18nCalls = /\b(toast|confirmBox|dialog|askName|flag)\(\s*(['"`])[^'"`]*[A-Za-zÁÉÍÓÚáéíóúñÑ]{3,}/;
+for (const f of fs.readdirSync(path.join(src, 'js')).filter(f => f.endsWith('.js') && f !== '05-i18n.js')) {
+  fs.readFileSync(path.join(src, 'js', f), 'utf8').split('\n').forEach((line, i) => {
+    if (!line.trim().startsWith('//') && i18nCalls.test(line)) errors.push(`js/${f}:${i + 1}: texto de interfaz sin T('clave'): ${line.trim().slice(0, 80)}`);
+  });
+}
+// every data-i18n key in index.html exists in the dictionary
+const dict = fs.readFileSync(path.join(src, 'js', '05-i18n.js'), 'utf8');
+for (const m of html.matchAll(/data-i18n(?:-title|-aria|-ph)?="([^"]+)"/g)) {
+  if (!dict.includes(`'${m[1]}': [`)) errors.push(`index.html usa la clave ${m[1]}, que no está en js/05-i18n.js`);
+}
 const external = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].map(m => m[1]);
 external.forEach(u => errors.push(`index.html pide un recurso externo: ${u}`));
 if (errors.length) { console.error(errors.map(e => '✗ ' + e).join('\n')); process.exit(1); }

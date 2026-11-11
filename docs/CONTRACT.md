@@ -136,8 +136,23 @@ Markdown fidelity: `wsMdText(wsHtml(md))` is stable (round-trip changes nothing)
 **first edit normalizes the whole file** (`*` -> `-`, aligned tables, numeric columns
 right-aligned).
 
-## 6. UI language (roadmap S2)
+## 6. UI language
 
-- Supported: `es`, `en`. Default: system language (`navigator.language`), fallback `en`.
+- Supported: `es`, `en`. Default: system language (`navigator.language`: `es*` -> Spanish, anything else -> English);
+  `?lang=es|en` in the URL forces one for that load.
 - Switching is live (no reload) and persisted in `localStorage` `atelierroot.ui`.
-- Changing the language never changes documents, file names or `state.json`.
+- Changing the language never changes documents, file names or `state.json`. Names the app creates from then on
+  (conflict copies, "Untitled") use the active language. Backend errors are shown by code (section 1).
+
+## 7. Contract tests (both backends)
+
+The rules above are checked by one set of scenarios that both backends run:
+
+- `tests/contract/scenarios.json`: a fixture folder and cases made of steps (`list`, `read`, `write`, `mkdir`,
+  `move`, `delete`) with the expected result: `ok`, an error code (`denied` = refused, `missing`, `exists`,
+  `conflict`), a text, or the sorted entries.
+- Node server: `server/test/contract.test.mjs` (part of `npm test` / `npm run test:server`).
+- Desktop app: `src-tauri/src/contract_tests.rs` (part of `cargo test`).
+
+A rule change goes in the scenarios first; both runners must stay green. What depends on the OS or the
+transport (symlinks and junctions; token, Host, CSP and events of the HTTP server) stays in each backend's own tests.

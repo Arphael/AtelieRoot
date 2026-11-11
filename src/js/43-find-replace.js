@@ -75,7 +75,7 @@ function replaceAll(){
   }
   ed.normalize();
   after(); History.snap(true); runFind();
-  toast(total + (total === 1 ? ' reemplazo' : ' reemplazos'));
+  toast(T(total === 1 ? 'msg.replaced-1' : 'msg.replaced', { n: total }));
 }
 $('#fq').addEventListener('input', () => runFind());
 $('#fq').addEventListener('keydown', e => {

@@ -3,7 +3,7 @@
 function moveTopBlocks(tops, dir){
   const group = withSections(tops);
   const ref = dir < 0 ? group[0].previousElementSibling : group[group.length - 1].nextElementSibling;
-  if (!ref) return toast(dir < 0 ? 'Ya está arriba del todo' : 'Ya está abajo del todo');
+  if (!ref) return toast(T(dir < 0 ? 'msg.at-top' : 'msg.at-bottom'));
   const pt = capSel();
   History.mark();
   moveBlocks(group, dir);
@@ -46,7 +46,7 @@ function tidyDocument(){
   renumberLists(true);
   scroll.scrollTop = y;
   after(); History.snap(true);
-  toast(tables ? 'Documento ordenado · ' + tables + (tables === 1 ? ' tabla creada' : ' tablas creadas') : 'Documento ordenado');
+  toast(tables ? T(tables === 1 ? 'msg.tidied-tables-1' : 'msg.tidied-tables', { n: tables }) : T('msg.tidied'));
 }
 
 /* ====== 59. Subniveles de la enumeración en Markdown (1. · a. · i. · A.) ====== */

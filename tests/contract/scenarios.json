@@ -1,0 +1,103 @@
+{
+  "about": "Shared backend contract (docs/CONTRACT.md). Run by server/test/contract.test.mjs (Node HTTP server) and src-tauri/src/contract_tests.rs (desktop app). Every case starts from a fresh copy of the fixture. Step expect: \"ok\", an error code (\"denied\" = refused: invalid path or not allowed, \"missing\", \"exists\", \"conflict\"), {\"text\"}, {\"absent\": true} (optional read of a missing file) or {\"entries\"} (sorted \"d:dir\" / \"f:file\"). write expect_mtime: \"current\" (the mtime just read) or \"stale\".",
+  "fixture": {
+    "a.md": "# A\n",
+    "Carpeta/b.md": "B",
+    "notas.txt": "no md",
+    ".git/x.md": "oculto",
+    ".atelierroot/state.json": "{}",
+    ".atelierroot/trash/t1/foto.png": "png",
+    ".atelierroot/trash/t1/informe.pdf": "pdf",
+    ".atelierroot/trash/t1/run.sh": "echo hola",
+    ".atelierroot/trash/t1/tool.exe": "MZ",
+    ".atelierroot/trash/t1/c.md": "C"
+  },
+  "cases": [
+    { "name": "list shows .md files and visible folders only", "steps": [
+      { "op": "list", "expect": { "entries": ["d:Carpeta", "f:Carpeta/b.md", "f:a.md"] } } ] },
+    { "name": "list with hidden adds .atelierroot/ (never .git)", "steps": [
+      { "op": "list", "hidden": true, "expect": { "entries": ["d:.atelierroot", "d:.atelierroot/trash", "d:.atelierroot/trash/t1", "d:Carpeta", "f:.atelierroot/state.json", "f:.atelierroot/trash/t1/c.md", "f:.atelierroot/trash/t1/foto.png", "f:.atelierroot/trash/t1/informe.pdf", "f:.atelierroot/trash/t1/run.sh", "f:.atelierroot/trash/t1/tool.exe", "f:Carpeta/b.md", "f:a.md"] } } ] },
+    { "name": "read a .md", "steps": [ { "op": "read", "path": "Carpeta/b.md", "expect": { "text": "B" } } ] },
+    { "name": "read .atelierroot/ files", "steps": [ { "op": "read", "path": ".atelierroot/state.json", "expect": { "text": "{}" } } ] },
+    { "name": "read a missing file", "steps": [ { "op": "read", "path": "nada.md", "expect": "missing" } ] },
+    { "name": "optional read of a missing file is not an error", "steps": [ { "op": "read", "path": "nada.md", "optional": true, "expect": { "absent": true } } ] },
+    { "name": "only .md is read outside .atelierroot/", "steps": [
+      { "op": "read", "path": "notas.txt", "expect": "denied" },
+      { "op": "read", "path": ".git/x.md", "expect": "denied" } ] },
+    { "name": "dangerous paths are refused", "steps": [
+      { "op": "write", "path": "../fuera.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "Carpeta/../../fuera.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "/etc/x.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "C:/x.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "Carpeta\\x.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "./a.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "nota:alt.md", "text": "x", "expect": "denied" },
+      { "op": "read", "path": "../a.md", "expect": "denied" } ] },
+    { "name": "write .md (new and nested) and read it back", "steps": [
+      { "op": "write", "path": "nuevo.md", "text": "hola", "expect": "ok" },
+      { "op": "read", "path": "nuevo.md", "expect": { "text": "hola" } },
+      { "op": "write", "path": "Nueva/Sub/c.markdown", "text": "sub", "expect": "ok" },
+      { "op": "read", "path": "Nueva/Sub/c.markdown", "expect": { "text": "sub" } } ] },
+    { "name": "only .md and .atelierroot/ are writable", "steps": [
+      { "op": "write", "path": "notas.txt", "text": "x", "expect": "denied" },
+      { "op": "write", "path": "script.js", "text": "x", "expect": "denied" },
+      { "op": "write", "path": ".git/x.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": ".oculto.md", "text": "x", "expect": "denied" },
+      { "op": "write", "path": ".atelierroot/state.json", "text": "{\"a\":1}", "expect": "ok" },
+      { "op": "write", "path": ".atelierroot/.gitignore", "text": "*", "expect": "ok" },
+      { "op": "write", "path": ".atelierroot/.secreto", "text": "x", "expect": "denied" },
+      { "op": "write", "path": ".atelierroot", "text": "x", "expect": "denied" } ] },
+    { "name": "write with the mtime just read succeeds", "steps": [
+      { "op": "write", "path": "a.md", "text": "nuevo", "expect_mtime": "current", "expect": "ok" },
+      { "op": "read", "path": "a.md", "expect": { "text": "nuevo" } } ] },
+    { "name": "write with a stale mtime is a conflict and does not overwrite", "steps": [
+      { "op": "write", "path": "a.md", "text": "pisado", "expect_mtime": "stale", "expect": "conflict" },
+      { "op": "read", "path": "a.md", "expect": { "text": "# A\n" } } ] },
+    { "name": "write with expect on a new file is allowed", "steps": [
+      { "op": "write", "path": "otro.md", "text": "x", "expect_mtime": "stale", "expect": "ok" } ] },
+    { "name": "mkdir: visible folders and inside .atelierroot/ only", "steps": [
+      { "op": "mkdir", "path": "Proyectos/2026", "expect": "ok" },
+      { "op": "list", "expect": { "entries": ["d:Carpeta", "d:Proyectos", "d:Proyectos/2026", "f:Carpeta/b.md", "f:a.md"] } },
+      { "op": "mkdir", "path": ".atelierroot/trash/t2", "expect": "ok" },
+      { "op": "mkdir", "path": ".oculta", "expect": "denied" },
+      { "op": "mkdir", "path": ".atelierroot", "expect": "denied" },
+      { "op": "mkdir", "path": "../fuera", "expect": "denied" } ] },
+    { "name": "move a file and a folder", "steps": [
+      { "op": "move", "from": "a.md", "to": "Carpeta/a.md", "expect": "ok" },
+      { "op": "read", "path": "Carpeta/a.md", "expect": { "text": "# A\n" } },
+      { "op": "read", "path": "a.md", "expect": "missing" },
+      { "op": "move", "from": "Carpeta", "to": "Renombrada", "expect": "ok" },
+      { "op": "read", "path": "Renombrada/b.md", "expect": { "text": "B" } } ] },
+    { "name": "move refuses an occupied destination", "steps": [
+      { "op": "write", "path": "Carpeta/a.md", "text": "ya", "expect": "ok" },
+      { "op": "move", "from": "a.md", "to": "Carpeta/a.md", "expect": "exists" },
+      { "op": "read", "path": "a.md", "expect": { "text": "# A\n" } } ] },
+    { "name": "move of a missing source", "steps": [ { "op": "move", "from": "nada.md", "to": "x.md", "expect": "missing" } ] },
+    { "name": "move cannot turn a .md into another type or hide it", "steps": [
+      { "op": "move", "from": "a.md", "to": "a.txt", "expect": "denied" },
+      { "op": "move", "from": "a.md", "to": ".git/a.md", "expect": "denied" },
+      { "op": "move", "from": "notas.txt", "to": "notas.md", "expect": "denied" } ] },
+    { "name": "documents go to the trash and come back", "steps": [
+      { "op": "move", "from": "a.md", "to": ".atelierroot/trash/t2/a.md", "expect": "ok" },
+      { "op": "move", "from": ".atelierroot/trash/t1/c.md", "to": "c.md", "expect": "ok" },
+      { "op": "read", "path": "c.md", "expect": { "text": "C" } } ] },
+    { "name": "from the trash, images and similar come back; scripts and executables never", "steps": [
+      { "op": "move", "from": ".atelierroot/trash/t1/foto.png", "to": "Carpeta/foto.png", "expect": "ok" },
+      { "op": "move", "from": ".atelierroot/trash/t1/informe.pdf", "to": "informe.pdf", "expect": "ok" },
+      { "op": "move", "from": ".atelierroot/trash/t1/run.sh", "to": "run.sh", "expect": "denied" },
+      { "op": "move", "from": ".atelierroot/trash/t1/tool.exe", "to": "tool.exe", "expect": "denied" } ] },
+    { "name": "a restored image cannot go into a hidden folder", "steps": [
+      { "op": "move", "from": ".atelierroot/trash/t1/foto.png", "to": ".oculta/foto.png", "expect": "denied" } ] },
+    { "name": "delete a .md (and deleting it again is fine)", "steps": [
+      { "op": "delete", "path": "a.md", "expect": "ok" },
+      { "op": "read", "path": "a.md", "expect": "missing" },
+      { "op": "delete", "path": "a.md", "expect": "ok" } ] },
+    { "name": "delete never touches other files or visible folders", "steps": [
+      { "op": "delete", "path": "notas.txt", "expect": "denied" },
+      { "op": "delete", "path": "Carpeta", "expect": "denied" },
+      { "op": "delete", "path": "../a.md", "expect": "denied" } ] },
+    { "name": "delete inside .atelierroot/ (emptying the trash)", "steps": [
+      { "op": "delete", "path": ".atelierroot/trash/t1", "recursive": true, "expect": "ok" },
+      { "op": "list", "hidden": true, "expect": { "entries": ["d:.atelierroot", "d:.atelierroot/trash", "d:Carpeta", "f:.atelierroot/state.json", "f:Carpeta/b.md", "f:a.md"] } } ] }
+  ]
+}

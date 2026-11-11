@@ -2,7 +2,7 @@
 /* ====== 29. Importar archivos .md ====== */
 function importFiles(files){
   const list = [...files].filter(f => /\.(md|markdown|txt)$/i.test(f.name));
-  if (!list.length) return toast('Solo archivos .md, .markdown o .txt');
+  if (!list.length) return toast(T('msg.only-md'));
   let host = state.tree;
   walk(state.tree, (n, p) => { if (n.id === state.current && p) host = p.children; });
   stash();
@@ -16,7 +16,7 @@ function importFiles(files){
       lastId = d.id;
       if (++done === list.length){
         renderTree(); openDoc(lastId); save(true);
-        toast(done === 1 ? 'Documento importado' : done + ' documentos importados');
+        toast(T(done === 1 ? 'msg.imported-1' : 'msg.imported', { n: done }));
       }
     };
     rd.readAsText(f);

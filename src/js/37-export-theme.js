@@ -7,7 +7,7 @@ exportMenu.addEventListener('click', e => {
   const x = e.target.closest('[data-x]') && e.target.closest('[data-x]').dataset.x;
   if (!x) return;
   hide(exportMenu);
-  const name = ((findNode(state.current) || {}).name || 'documento').replace(/[\\/:*?"<>|]/g,'-');
+  const name = ((findNode(state.current) || {}).name || T('name.document')).replace(/[\\/:*?"<>|]/g,'-');
   if (x === 'md')   download(name + '.md', withFills(docMd()), 'text/markdown');
   if (x === 'importmd') $('#mdFile').click();
   if (x === 'txt')  download(name + '.txt', ed.innerText, 'text/plain');
@@ -18,7 +18,7 @@ exportMenu.addEventListener('click', e => {
 function htmlDoc(title){
   const host = document.createElement('div'); host.innerHTML = ed.innerHTML;
   forOutsideHtml(host);
-  return '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>'+esc(title)+'</title>' +
+  return '<!doctype html><html lang="'+I18n.lang+'"><head><meta charset="utf-8"><title>'+esc(title)+'</title>' +
     '<style>body{max-width:760px;margin:40px auto;padding:0 20px;font:16px/1.65 Georgia,serif;color:#222}' +
     'code,pre{font-family:ui-monospace,Menlo,monospace;background:#f4f4f0;border-radius:3px}' +
     'pre{padding:12px;overflow:auto}code{padding:1px 5px}img{max-width:100%}' +
@@ -40,7 +40,7 @@ function backup(){
   return download('atelierroot-respaldo-' + new Date().toISOString().slice(0,10) + '.json',
     JSON.stringify({ v:1, at: Date.now(), tree: state.tree, docs: (() => { const o = {}; walk(state.tree, n => { if (n.type === 'doc') o[n.id] = state.docs[n.id]; }); return o; })() }, null, 1), 'application/json').then(ok => {
     if (!ok) return;                                          // solo cuenta como respaldo si de verdad se guardó el archivo
-    state.lastBackup = Date.now(); save(true); updateBackupNote(); toast('Respaldo descargado');
+    state.lastBackup = Date.now(); save(true); updateBackupNote(); toast(T('msg.backup-downloaded'));
   });
 }
 $('#backupBtn').onclick = backup;
@@ -51,7 +51,7 @@ $('#file').onchange = e => {
     try {
       const d = JSON.parse(rd.result);
       if (!d.tree || !d.docs) throw 0;
-      confirmBox('Restaurar respaldo', 'Se añadirán ' + Object.keys(d.docs).length + ' documentos a los que ya tienes. Nada se borra.', () => {
+      confirmBox(T('dlg.restore-backup'), T('dlg.restore-backup-body', { n: Object.keys(d.docs).length }), () => {
         const newDocs = {};
         const cp = n => {
           const c = { id: uid(), type: n.type, name: n.name, open: false };
@@ -61,20 +61,21 @@ $('#file').onchange = e => {
         };
         const restored = d.tree.map(cp);
         Object.assign(state.docs, newDocs);
-        state.tree.push({ id: uid(), type:'folder', name:'Restaurado ' + new Date(d.at||Date.now()).toLocaleDateString(), open:true, children: restored });
-        renderTree(); save(true); toast('Respaldo restaurado');
+        state.tree.push({ id: uid(), type:'folder', name:T('tree.restored', { date: new Date(d.at||Date.now()).toLocaleDateString(I18n.lang) }), open:true, children: restored });
+        renderTree(); save(true); toast(T('msg.backup-restored'));
       });
-    } catch(_){ toast('El archivo no es un respaldo válido'); }
+    } catch(_){ toast(T('msg.not-a-backup')); }
   };
   rd.readAsText(f); e.target.value = '';
 };
 function updateBackupNote(){
   const n = $('#backupNote');
-  if (!state.lastBackup){ n.textContent = 'Sin respaldo todavía'; n.classList.add('warn'); return; }
+  if (!state.lastBackup){ n.textContent = T('backupNote'); n.classList.add('warn'); return; }
   const days = Math.floor((Date.now() - state.lastBackup) / 86400000);
-  n.textContent = days === 0 ? 'Respaldo: hoy' : 'Respaldo: hace ' + days + (days === 1 ? ' día' : ' días');
+  n.textContent = days === 0 ? T('backup.today') : T(days === 1 ? 'backup.day' : 'backup.days', { n: days });
   n.classList.toggle('warn', days >= 10);
 }
+document.addEventListener('langchange', () => updateBackupNote());
 addEventListener('beforeunload', e => {
   flushNow();
   const days = state.lastBackup ? (Date.now() - state.lastBackup) / 86400000 : 99;

@@ -31,7 +31,7 @@ function paintPaneNames(){
   panes.forEach((p, k) => {
     const id = k === active ? state.current : p.doc;
     const n = id ? findNode(id) : null;
-    $(k === 0 ? '#p1name' : '#p2name').textContent = n ? pathOf(n.id) : 'Sin documento';
+    $(k === 0 ? '#p1name' : '#p2name').textContent = n ? pathOf(n.id) : T('split.no-doc');
   });
   state.split = { doc2: active === 1 ? state.current : panes[1].doc };
 }
@@ -45,7 +45,7 @@ function splitGuard(id){
 }
 function enableSplit(docId, focusIt){
   if (!docId) return;
-  if (docId === state.current) return toast('Ese documento ya está abierto en este panel');
+  if (docId === state.current) return toast(T('msg.already-open'));
   split = true;
   $('#edcol').classList.add('split');
   $('#splitBtn').classList.add('on');
@@ -87,8 +87,8 @@ document.addEventListener('focusin', e => {
 });
 $('#splitBtn').onclick = () => {
   if (split) return closeSplit();
-  openSwitcher(id => enableSplit(id, true), 'Abrir al lado');
+  openSwitcher(id => enableSplit(id, true), T('msg.open-beside'));
 };
 $('#p2close').onclick = e => { e.stopPropagation(); closeSplit(); };
-$('#p2pick').onclick = e => { e.stopPropagation(); activate(1); openSwitcher(id => { activate(1); openDoc(id); paintPaneNames(); }, 'Abrir en este panel'); };
+$('#p2pick').onclick = e => { e.stopPropagation(); activate(1); openSwitcher(id => { activate(1); openDoc(id); paintPaneNames(); }, T('split.open-here')); };
 

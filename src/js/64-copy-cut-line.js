@@ -65,7 +65,7 @@ ed.addEventListener('cut', e => {
   if (trx && trx.multi){ e.preventDefault(); lineClip = null; writeTableClip(e, trx); History.mark(); clearCells(trx.cells); after(); History.snap(true); return; }
   if (s.isCollapsed){
     if (!setLineClipboard(e)) return;
-    e.preventDefault(); deleteCaretUnit(); toast('Línea cortada'); return;
+    e.preventDefault(); deleteCaretUnit(); toast(T('msg.line-cut')); return;
   }
   if (closestFrom(s.anchorNode, '.cb')) return;                      // dentro de un bloque de código lo corta el propio navegador
   const md = selectionMd(); if (md === null) return;

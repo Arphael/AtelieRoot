@@ -86,7 +86,7 @@ function setBreaks(on){
   state.breaks = !!on;
   $('#nlBtn').classList.toggle('on', state.breaks);
   scheduleBreaks(); saveUi();
-  toast(state.breaks ? 'Saltos de línea visibles' : 'Saltos de línea ocultos');
+  toast(T(state.breaks ? 'msg.breaks-on' : 'msg.breaks-off'));
 }
 $('#nlBtn').onclick = () => setBreaks(!state.breaks);
 document.addEventListener('keydown', e => {

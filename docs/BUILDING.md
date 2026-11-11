@@ -47,6 +47,10 @@ npm run tauri:build           # release executable
 ```
 
 Output: `src-tauri/target/release/AtelierRoot.exe` (Windows) - one portable file.
+
+Releases: pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`, which attaches `AtelierRoot.exe` and
+`AtelierRoot.html` and uses the `## [X.Y.Z]` section of `CHANGELOG.md` as the release text
+(`node scripts/release-notes.mjs vX.Y.Z` shows it locally). Without that section the release fails.
 On macOS/Linux the binary is `src-tauri/target/release/atelierroot`. Installers (`.msi`, `.dmg`,
 `.AppImage`, `.deb`) are produced in CI (roadmap S4).
 

@@ -4,6 +4,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod fsops;
+#[cfg(test)]
+mod contract_tests;
 
 use fsops::{Entry, FileData, Root, Stat};
 use serde::Serialize;

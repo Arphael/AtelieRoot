@@ -39,7 +39,7 @@ function setItemNumber(li, n){
   if (!list || list.tagName !== 'OL') return;
   const items = [...list.children].filter(x => x.tagName === 'LI');
   const idx = items.indexOf(li);
-  if (n === (Number.isFinite(list.start) ? list.start : 1) + idx) return toast('Ya tiene ese número');
+  if (n === (Number.isFinite(list.start) ? list.start : 1) + idx) return toast(T('msg.same-number'));
   History.mark();
   let target = list;
   if (idx > 0){
@@ -55,9 +55,9 @@ function setItemNumber(li, n){
 function editItemNumber(li){
   const list = li.parentElement, idx = [...list.children].indexOf(li);
   const cur = (Number.isFinite(list.start) ? list.start : 1) + idx;
-  dialog('Número de este punto', [{ id: 'n', label: 'Los puntos siguientes continúan desde él', value: String(cur) }], v => {
+  dialog(T('num.title'), [{ id: 'n', label: T('num.label'), value: String(cur) }], v => {
     const n = parseInt(v.n, 10);
-    if (!(n >= 0)) return toast('Escribe un número entero');
+    if (!(n >= 0)) return toast(T('msg.integer'));
     ed.focus({ preventScroll: true }); setItemNumber(li, n);
   });
 }

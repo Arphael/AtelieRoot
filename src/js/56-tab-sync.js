@@ -196,7 +196,7 @@ function resolveDocConflict(id, remote){
   placeNode({ id: cid, type: 'doc', name: (node ? node.name : 'Documento') + ' (conflicto ' + hh + ')', mod: Date.now() }, node, 'after');
   adoptDoc(id, remote);
   renderTree();
-  toast('Otra pestaña cambió «' + (node ? node.name : 'el documento') + '» a la vez. Tu versión quedó en una copia de conflicto.');
+  toast(T('msg.tab-conflict', { name: node ? node.name : T('sync.the-doc') }));
 }
 
 /* ---- guardar ---- */
@@ -294,7 +294,7 @@ function runPersist(){
   persistFirst = 0;
   if (Workspace.active){ wsSchedule(true); return; }          // con una carpeta abierta se guarda en ella (82-ws-core.js)
   if (!Sync.ready) return;
-  Sync.q = Sync.q.then(doPersist).then(() => flag('Guardado')).catch(e => { console.error(e); flag('Error al guardar'); });
+  Sync.q = Sync.q.then(doPersist).then(() => flag(T('msg.saved'))).catch(e => { console.error(e); flag(T('msg.save-error')); });
 }
 function saveUi(){
   const d = Ui.data;
@@ -397,7 +397,7 @@ async function loadStore(){
     if (old.length){ old.forEach(t => purgeDocs(t.docIds)); state.trash = state.trash.filter(t => !old.includes(t)); }
   }
   const recovered = recoverJournals() + await recoverLegacyEdits();
-  if (recovered) setTimeout(() => toast('Se recuperó lo último que escribiste en una pestaña que se cerró o era antigua'), 700);
+  if (recovered) setTimeout(() => toast(T('msg.recovered')), 700);
   if (Ui.data.scroll){ const keep = {}; Object.keys(Ui.data.scroll).forEach(k => { if (state.docs[k] !== undefined) keep[k] = Ui.data.scroll[k]; }); Ui.data.scroll = keep; }
 }
 

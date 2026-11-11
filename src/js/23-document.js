@@ -2,6 +2,8 @@
 /* ====== 7. Documento ====== */
 function save(now){ saveUi(); schedulePersist(now); }
 function flag(t){ $('#saved').innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + t; }
+// the save indicator keeps its text when the language changes
+document.addEventListener('langchange', () => { const s = $('#saved'), t = s.textContent.trim(); if (t) flag(retranslate(t)); });
 function openDoc(id){
   if (id && splitGuard(id)) return;
   if (!id){ ed.innerHTML = '<p><br></p>'; History.init(); return; }
@@ -31,9 +33,10 @@ function stash(){
 function setPath(){ const p = pathOf(state.current); $('#path').textContent = p; const n = findNode(state.current); $('#mTitle').textContent = n ? n.name : ''; $('#mSub').textContent = p; paintPaneNames(); }
 function counts(){
   const t = ed.innerText.replace(/\s+/g,' ').trim();
-  $('#wc').textContent = (t ? t.split(' ').length : 0) + ' palabras';
-  $('#cc').textContent = ed.innerText.length + ' caracteres';
+  $('#wc').textContent = T('status.words', { n: t ? t.split(' ').length : 0 });
+  $('#cc').textContent = T('status.chars', { n: ed.innerText.length });
 }
+document.addEventListener('langchange', () => counts());
 function ensureBlocks(){
   if (!ed.firstChild){ ed.innerHTML = '<p><br></p>'; return; }
   [...ed.childNodes].forEach(n => {

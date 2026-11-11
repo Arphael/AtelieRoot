@@ -82,7 +82,7 @@ function tableFromSelection(){
   const nodes = replaceBlock(tops[0], domFromMd(built.md) + (needTail ? '<p><br></p>' : ''));
   tops.slice(1).forEach(b => b.remove());
   caretInto(nodes[0]);
-  toast('Tabla creada: ' + built.rows + ' filas × ' + built.cols + ' columnas');
+  toast(T('msg.table-created', { r: built.rows, c: built.cols }));
   return true;
 }
 

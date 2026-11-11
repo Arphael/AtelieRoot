@@ -97,8 +97,8 @@ $('#bbar').addEventListener('click', e => {
   if (a === 'up') blockOp(l => { moveBlocks(l, -1); });
   if (a === 'down') blockOp(l => { moveBlocks(l, 1); });
   if (a === 'dup') blockOp(l => { const c = l.map(x => { const k = x.cloneNode(true); k.removeAttribute('data-bsel'); return k; }); l[l.length - 1].after(...c); return c; });
-  if (a === 'copy'){ copyBlocks(selOrdered()); toast('Bloques copiados en Markdown'); }
-  if (a === 'del'){ blockOp(deleteBlocks); toast('Bloques eliminados · Ctrl+Z para deshacer'); }
+  if (a === 'copy'){ copyBlocks(selOrdered()); toast(T('msg.blocks-copied')); }
+  if (a === 'del'){ blockOp(deleteBlocks); toast(T('msg.blocks-deleted')); }
   if (a === 'conv') popup($('#convMenu'), b);
 });
 $('#convMenu').addEventListener('mousedown', e => e.preventDefault());
@@ -115,8 +115,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){ e.preventDefault(); clearBlockSel(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); blockOp(deleteBlocks); return; }
   if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){ e.preventDefault(); blockOp(l => { moveBlocks(l, e.key === 'ArrowUp' ? -1 : 1); }); return; }
-  if (mod && e.key.toLowerCase() === 'c'){ e.preventDefault(); copyBlocks(selOrdered()); toast('Bloques copiados en Markdown'); return; }
-  if (mod && e.key.toLowerCase() === 'x'){ e.preventDefault(); copyBlocks(selOrdered()); blockOp(deleteBlocks); toast('Bloques cortados'); return; }
+  if (mod && e.key.toLowerCase() === 'c'){ e.preventDefault(); copyBlocks(selOrdered()); toast(T('msg.blocks-copied')); return; }
+  if (mod && e.key.toLowerCase() === 'x'){ e.preventDefault(); copyBlocks(selOrdered()); blockOp(deleteBlocks); toast(T('msg.blocks-cut')); return; }
   if (mod && e.key.toLowerCase() === 'd'){ e.preventDefault(); $('#bbar [data-b="dup"]').click(); return; }
   if (e.key === 'Enter'){ e.preventDefault(); const l = selOrdered(); clearBlockSel(); ed.focus({ preventScroll: true }); caretInto(l[l.length - 1], true); return; }
   // moverse por la página no deshace la selección: las flechas y Av Pág/Re Pág desplazan; con Mayús + ↑/↓ la selección crece

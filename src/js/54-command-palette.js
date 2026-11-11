@@ -3,74 +3,77 @@
 const clickSel = sel => () => { const el = document.querySelector(sel); if (el) el.click(); };
 const COMMANDS = [
   // documento
-  { g:'Documento', t:'Nuevo documento', run: clickSel('#newDoc') },
-  { g:'Documento', t:'Nueva carpeta', run: clickSel('#newFolder') },
-  { g:'Documento', t:'Ir a documento', k:'Ctrl+P', run: () => openSwitcher() },
-  { g:'Documento', t:'Renombrar documento actual', run: () => { const n = findNode(state.current); if (n) renameNode(n); } },
-  { g:'Documento', t:'Mover documento actual a…', run: () => { const n = findNode(state.current); if (n) moveToDialog(n); } },
-  { g:'Documento', t:'Mover documento actual a la papelera', run: () => { const n = findNode(state.current); if (n) moveToTrash(n); } },
-  { g:'Documento', t:'Abrir papelera', run: () => openTrash() },
-  { g:'Documento', t:'Importar archivos .md', run: () => $('#mdFile').click() },
+  { g:'pal.g.document', t:'pal.new-document', run: clickSel('#newDoc') },
+  { g:'pal.g.document', t:'pal.new-folder', run: clickSel('#newFolder') },
+  { g:'pal.g.document', t:'pal.go-to-document', k:'Ctrl+P', run: () => openSwitcher() },
+  { g:'pal.g.document', t:'pal.rename-current-document', run: () => { const n = findNode(state.current); if (n) renameNode(n); } },
+  { g:'pal.g.document', t:'pal.move-current-document-to', run: () => { const n = findNode(state.current); if (n) moveToDialog(n); } },
+  { g:'pal.g.document', t:'pal.move-current-document-to-the-trash', run: () => { const n = findNode(state.current); if (n) moveToTrash(n); } },
+  { g:'pal.g.document', t:'pal.open-trash', run: () => openTrash() },
+  { g:'pal.g.document', t:'pal.import-md-files', run: () => $('#mdFile').click() },
   // copiar y exportar
-  { g:'Copiar', t:'Copiar Markdown', run: clickSel('#copyMd') },
-  { g:'Copiar', t:'Copiar con formato', run: clickSel('#copyRich') },
-  { g:'Exportar', t:'Exportar como Markdown (.md)', run: () => exportMenu.querySelector('[data-x="md"]').click() },
-  { g:'Exportar', t:'Exportar como texto plano (.txt)', run: () => exportMenu.querySelector('[data-x="txt"]').click() },
-  { g:'Exportar', t:'Exportar como HTML (.html)', run: () => exportMenu.querySelector('[data-x="html"]').click() },
-  { g:'Exportar', t:'Exportar respaldo completo (.json)', run: () => backup() },
-  { g:'Exportar', t:'Descargar la copia automática previa a la actualización', run: () => downloadPreviousCopy() },
-  { g:'Exportar', t:'Restaurar desde respaldo', run: () => $('#file').click() },
+  { g:'pal.g.copy', t:'pal.copy-markdown', run: clickSel('#copyMd') },
+  { g:'pal.g.copy', t:'pal.copy-with-formatting', run: clickSel('#copyRich') },
+  { g:'pal.g.export', t:'pal.export-as-markdown-md', run: () => exportMenu.querySelector('[data-x="md"]').click() },
+  { g:'pal.g.export', t:'pal.export-as-plain-text-txt', run: () => exportMenu.querySelector('[data-x="txt"]').click() },
+  { g:'pal.g.export', t:'pal.export-as-html-html', run: () => exportMenu.querySelector('[data-x="html"]').click() },
+  { g:'pal.g.export', t:'pal.export-full-backup-json', run: () => backup() },
+  { g:'pal.g.export', t:'pal.download-the-automatic-copy-made-before', run: () => downloadPreviousCopy() },
+  { g:'pal.g.export', t:'pal.restore-from-backup', run: () => $('#file').click() },
   // edición
-  { g:'Editar', t:'Deshacer', k:'Ctrl+Z', run: () => History.undo() },
-  { g:'Editar', t:'Rehacer', k:'Ctrl+Shift+Z', run: () => History.redo() },
-  { g:'Editar', t:'Buscar', k:'Ctrl+F', run: () => openFind(false) },
-  { g:'Editar', t:'Buscar y reemplazar', k:'Ctrl+H', run: () => openFind(true) },
-  { g:'Editar', t:'Ordenar documento', run: clickSel('#tidyBtn') },
-  { g:'Editar', t:'Borrar la línea', k:'Shift+Supr', run: () => deleteCaretUnit() },
-  { g:'Editar', t:'Rellenar marcadores', run: clickSel('#phBtn') },
+  { g:'pal.g.edit', t:'pal.undo', k:'Ctrl+Z', run: () => History.undo() },
+  { g:'pal.g.edit', t:'pal.redo', k:'Ctrl+Shift+Z', run: () => History.redo() },
+  { g:'pal.g.edit', t:'pal.find', k:'Ctrl+F', run: () => openFind(false) },
+  { g:'pal.g.edit', t:'pal.find-and-replace', k:'Ctrl+H', run: () => openFind(true) },
+  { g:'pal.g.edit', t:'pal.tidy-document', run: clickSel('#tidyBtn') },
+  { g:'pal.g.edit', t:'pal.delete-the-line', k:'Shift+Supr', run: () => deleteCaretUnit() },
+  { g:'pal.g.edit', t:'pal.fill-in-placeholders', run: clickSel('#phBtn') },
   // formato
-  { g:'Formato', t:'Párrafo', run: () => setBlockLevel(0) },
-  ...[1,2,3,4,5,6].map(n => ({ g:'Formato', t:'Encabezado ' + n, run: () => setBlockLevel(n) })),
-  { g:'Formato', t:'Negrita', k:'Ctrl+B', run: () => toggleWrap('strong') },
-  { g:'Formato', t:'Cursiva', k:'Ctrl+I', run: () => toggleWrap('em') },
-  { g:'Formato', t:'Tachado', k:'Ctrl+Shift+X', run: () => toggleWrap('s') },
-  { g:'Formato', t:'Código en línea', k:'Ctrl+E', run: () => toggleWrap('code') },
-  { g:'Formato', t:'Quitar formato', run: () => clearFormat() },
-  { g:'Insertar', t:'Lista con viñetas', run: () => insertBlock('ul') },
-  { g:'Insertar', t:'Lista numerada', run: () => insertBlock('ol') },
-  { g:'Insertar', t:'Cambiar el número del punto de lista', run: () => {
+  { g:'pal.g.format', t:'pal.paragraph', run: () => setBlockLevel(0) },
+  ...[1,2,3,4,5,6].map(n => ({ g:'pal.g.format', t: () => T('pal.heading', { n }), run: () => setBlockLevel(n) })),
+  { g:'pal.g.format', t:'pal.bold', k:'Ctrl+B', run: () => toggleWrap('strong') },
+  { g:'pal.g.format', t:'pal.italic', k:'Ctrl+I', run: () => toggleWrap('em') },
+  { g:'pal.g.format', t:'pal.strikethrough', k:'Ctrl+Shift+X', run: () => toggleWrap('s') },
+  { g:'pal.g.format', t:'pal.inline-code', k:'Ctrl+E', run: () => toggleWrap('code') },
+  { g:'pal.g.format', t:'pal.clear-formatting', run: () => clearFormat() },
+  { g:'pal.g.insert', t:'pal.bulleted-list', run: () => insertBlock('ul') },
+  { g:'pal.g.insert', t:'pal.numbered-list', run: () => insertBlock('ol') },
+  { g:'pal.g.insert', t:'pal.change-the-list-item-number', run: () => {
       const li = closestFrom(getSelection().anchorNode, 'li');
-      if (!li || !li.parentElement || li.parentElement.tagName !== 'OL') return toast('Pon el cursor en un punto de una lista numerada');
+      if (!li || !li.parentElement || li.parentElement.tagName !== 'OL') return toast(T('msg.put-the-cursor-on-an-item-of-a-numbered'));
       editItemNumber(li);
   } },
-  { g:'Insertar', t:'Lista de tareas', run: () => insertBlock('task') },
-  { g:'Insertar', t:'Cita', run: () => insertBlock('quote') },
-  { g:'Insertar', t:'Bloque de código', run: () => insertBlock('pre') },
-  { g:'Insertar', t:'Tabla', run: () => insertBlock('table') },
-  { g:'Insertar', t:'Línea divisoria', run: () => insertBlock('hr') },
-  { g:'Insertar', t:'Enlace', k:'Ctrl+K', run: clickSel('#linkBtn') },
-  { g:'Insertar', t:'Imagen', run: clickSel('#imgBtn') },
+  { g:'pal.g.insert', t:'pal.task-list', run: () => insertBlock('task') },
+  { g:'pal.g.insert', t:'pal.quote', run: () => insertBlock('quote') },
+  { g:'pal.g.insert', t:'pal.code-block', run: () => insertBlock('pre') },
+  { g:'pal.g.insert', t:'pal.table', run: () => insertBlock('table') },
+  { g:'pal.g.insert', t:'pal.divider', run: () => insertBlock('hr') },
+  { g:'pal.g.insert', t:'pal.link', k:'Ctrl+K', run: clickSel('#linkBtn') },
+  { g:'pal.g.insert', t:'pal.image', run: clickSel('#imgBtn') },
   // secciones
-  { g:'Secciones', t:'Plegar o desplegar la sección actual', k:'Ctrl+.', run: () => { const b = currentBlock(); toggleFold(b && sectionHeadOf(b)); } },
-  { g:'Secciones', t:'Plegar todas las secciones', run: () => foldAll(true) },
-  { g:'Secciones', t:'Desplegar todas las secciones', run: () => foldAll(false) },
+  { g:'pal.g.sections', t:'pal.fold-or-unfold-the-current-section', k:'Ctrl+.', run: () => { const b = currentBlock(); toggleFold(b && sectionHeadOf(b)); } },
+  { g:'pal.g.sections', t:'pal.fold-all-sections', run: () => foldAll(true) },
+  { g:'pal.g.sections', t:'pal.unfold-all-sections', run: () => foldAll(false) },
   // vista
-  { g:'Vista', t:'Abrir vista dividida', when: () => !split, run: () => openSwitcher(id => enableSplit(id, true), 'Abrir al lado') },
-  { g:'Vista', t:'Cerrar vista dividida', when: () => split, run: () => closeSplit() },
-  { g:'Vista', t:'Cambiar de panel', when: () => split, run: () => { activate(1 - active); ed.focus({ preventScroll: true }); } },
-  { g:'Vista', t:'Mostrar u ocultar el panel lateral', run: () => toggleSide() },
-  { g:'Vista', t:'Mostrar u ocultar el esquema', run: clickSel('#olBtn') },
-  { g:'Vista', t:'Mostrar u ocultar el Markdown en vivo', run: clickSel('#pvBtn') },
-  { g:'Vista', t:'Modo enfoque', k:'Ctrl+Shift+F', run: () => toggleFocus() },
-  { g:'Vista', t:'Mostrar u ocultar los saltos de línea', k:'Ctrl+Shift+8', run: () => setBreaks(!state.breaks) },
-  { g:'Vista', t:'Cambiar entre tema claro y oscuro', run: clickSel('#themeBtn') }
+  { g:'pal.g.view', t:'pal.open-split-view', when: () => !split, run: () => openSwitcher(id => enableSplit(id, true), T('msg.open-beside')) },
+  { g:'pal.g.view', t:'pal.close-split-view', when: () => split, run: () => closeSplit() },
+  { g:'pal.g.view', t:'pal.switch-pane', when: () => split, run: () => { activate(1 - active); ed.focus({ preventScroll: true }); } },
+  { g:'pal.g.view', t:'pal.show-or-hide-the-sidebar', run: () => toggleSide() },
+  { g:'pal.g.view', t:'pal.show-or-hide-the-outline', run: clickSel('#olBtn') },
+  { g:'pal.g.view', t:'pal.show-or-hide-the-live-markdown', run: clickSel('#pvBtn') },
+  { g:'pal.g.view', t:'pal.focus-mode', k:'Ctrl+Shift+F', run: () => toggleFocus() },
+  { g:'pal.g.view', t:'pal.show-or-hide-line-breaks', k:'Ctrl+Shift+8', run: () => setBreaks(!state.breaks) },
+  { g:'pal.g.view', t:'pal.switch-between-light-and-dark-theme', run: clickSel('#themeBtn') },
+  { g:'pal.g.view', t:'pal.lang', run: () => I18n.set(I18n.lang === 'es' ? 'en' : 'es') }
 ];
+// command texts are i18n keys (or a function for texts with a value)
+const palLabel = c => typeof c.t === 'function' ? c.t() : T(c.t);
 function setBlockLevel(lvl){ applyBlockType(lvl); }
 function openPalette(){
   // se guarda la selección para que los comandos de formato actúen sobre ella
   const s = getSelection();
   const saved = s.rangeCount && ed.contains(s.anchorNode) ? s.getRangeAt(0).cloneRange() : null;
-  card.innerHTML = '<h2>Paleta de comandos</h2><input id="palq" placeholder="Escribe una acción: exportar, tema, plegar…" autocomplete="off" aria-label="Buscar comando"><div class="sw-list" id="pall"></div>';
+  card.innerHTML = '<h2>' + esc(T('pal.title')) + '</h2><input id="palq" placeholder="' + esc(T('pal.ph')) + '" autocomplete="off" aria-label="' + esc(T('pal.aria')) + '"><div class="sw-list" id="pall"></div>';
   veil.classList.add('show');
   const q = card.querySelector('#palq'), l = card.querySelector('#pall');
   let sel = 0, res = [];
@@ -82,16 +85,16 @@ function openPalette(){
   };
   const paint = () => {
     const words = norm(q.value).split(/\s+/).filter(Boolean);
-    res = COMMANDS.filter(c => (!c.when || c.when()) && words.every(w => norm(c.g + ' ' + c.t).includes(w)));
+    res = COMMANDS.filter(c => (!c.when || c.when()) && words.every(w => norm(T(c.g) + ' ' + palLabel(c)).includes(w)));
     sel = Math.min(sel, Math.max(0, res.length - 1));
     l.innerHTML = '';
-    if (!res.length){ l.innerHTML = '<div class="ol-empty">Ningún comando coincide</div>'; return; }
+    if (!res.length){ l.innerHTML = '<div class="ol-empty">' + esc(T('pal.empty')) + '</div>'; return; }
     res.forEach((c, i) => {
       const b = document.createElement('button');
       b.className = 'pal-item' + (i === sel ? ' on' : '');
       b.innerHTML = '<span class="pg"></span><span class="pt"></span><span class="pk"></span>';
-      b.querySelector('.pg').textContent = c.g;
-      b.querySelector('.pt').textContent = c.t;
+      b.querySelector('.pg').textContent = T(c.g);
+      b.querySelector('.pt').textContent = palLabel(c);
       b.querySelector('.pk').textContent = c.k || '';
       b.onclick = () => run(c);
       l.appendChild(b);

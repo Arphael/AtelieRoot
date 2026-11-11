@@ -17,8 +17,8 @@ $('#bar').addEventListener('click', e => {
   }
   if (block) insertBlock(block);
 });
-$('#inBtn').onclick = () => { const li = closestFrom(getSelection().anchorNode, 'li'); if (li){ History.mark(); indent(li); after(); History.snap(true);} else toast('Pon el cursor en una lista'); };
-$('#outBtn').onclick = () => { const li = closestFrom(getSelection().anchorNode, 'li'); if (li){ History.mark(); outdent(li); after(); History.snap(true);} else toast('Pon el cursor en una lista'); };
+$('#inBtn').onclick = () => { const li = closestFrom(getSelection().anchorNode, 'li'); if (li){ History.mark(); indent(li); after(); History.snap(true);} else toast(T('msg.cursor-in-list')); };
+$('#outBtn').onclick = () => { const li = closestFrom(getSelection().anchorNode, 'li'); if (li){ History.mark(); outdent(li); after(); History.snap(true);} else toast(T('msg.cursor-in-list')); };
 $('#sideBtn').onclick = () => $('#side').classList.toggle('off');
 
 function insertBlock(kind){
@@ -48,8 +48,10 @@ function insertBlock(kind){
   after(); History.snap(true); refreshBar();
 }
 const hMenu = $('#hMenu');
-hMenu.innerHTML = ['Párrafo','Encabezado 1','Encabezado 2','Encabezado 3','Encabezado 4','Encabezado 5','Encabezado 6']
-  .map((t,i) => '<button data-h="'+i+'">'+t+'</button>').join('');
+const paintHMenu = () => { hMenu.innerHTML = [0,1,2,3,4,5,6]
+  .map(i => '<button data-h="'+i+'">'+esc(i ? T('pal.heading', { n: i }) : T('pal.paragraph'))+'</button>').join(''); };
+paintHMenu();
+document.addEventListener('langchange', () => { paintHMenu(); refreshBar(); });
 $('#hBtn').onclick = e => { e.stopPropagation(); popup(hMenu, $('#hBtn')); };
 hMenu.addEventListener('mousedown', e => e.preventDefault());
 hMenu.onclick = e => {
@@ -61,7 +63,7 @@ hMenu.onclick = e => {
 function refreshBar(){
   const b = currentBlock();
   const t = (b && b.tagName) || 'P';
-  $('#hBtn').firstChild.nodeValue = /^H[1-6]$/.test(t) ? 'Encabezado ' + t[1] : 'Párrafo';
+  $('#hBtn').firstChild.nodeValue = /^H[1-6]$/.test(t) ? T('pal.heading', { n: t[1] }) : T('pal.paragraph');
   // los botones de formato se iluminan cuando el cursor está dentro de ese formato
   const an = getSelection().anchorNode, inEd = !!an && ed.contains(an);
   document.querySelectorAll('[data-fmt]').forEach(btn => {

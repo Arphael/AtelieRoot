@@ -11,7 +11,8 @@
 //   mkdir(p) · move(a, b) · remove(p, recursive)
 //   watch(cb)              → empieza a avisar de cambios (devuelve una función para parar)
 // Los errores son WsError con un code: 'conflict' | 'exists' | 'missing' | 'denied' | 'offline' | 'io'.
-class WsError extends Error { constructor(code, msg){ super(msg || code); this.code = code; } }
+// known codes are shown in the interface language (the backend text stays in .detail); 'io' keeps the backend text
+class WsError extends Error { constructor(code, msg){ const k = 'ws.err.' + code; super(code !== 'io' && STR[k] ? T(k) : (msg || code)); this.code = code; this.detail = msg; } }
 const wsIsMd = n => /\.(md|markdown)$/i.test(n);
 
 class HttpBackend {
@@ -19,7 +20,7 @@ class HttpBackend {
   async api(method, path, body){
     let r;
     try { r = await fetch('/api/' + path, { method, headers: { 'X-AtelierRoot-Token': this.token, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }); }
-    catch(_){ throw new WsError('offline', 'No hay conexión con el servidor de AtelierRoot'); }
+    catch(_){ throw new WsError('offline', T('ws.err.offline')); }
     let j = {}; try { j = await r.json(); } catch(_){}
     if (r.ok) return j;
     const code = r.status === 409 ? (/destino/.test(j.error || '') ? 'exists' : 'conflict') : r.status === 404 ? 'missing' : (r.status === 401 || r.status === 403) ? 'denied' : 'io';
@@ -89,7 +90,7 @@ class FsBackend {
   async write(p, text, expect){
     if (expect){                                                                    // ¿sigue siendo el archivo que leímos?
       let cur = 0; try { cur = (await (await this.fileH(p, false)).getFile()).lastModified; } catch(_){}
-      if (cur && cur !== Number(expect)) throw new WsError('conflict', 'el archivo cambió en el disco');
+      if (cur && cur !== Number(expect)) throw new WsError('conflict', T('ws.err.conflict'));
     }
     const h = await this.fileH(p, true);
     try { const w = await h.createWritable(); await w.write(text); await w.close(); } catch(e){ throw fsErr(e); }   // el navegador escribe en un temporal y lo sustituye al cerrar
@@ -110,8 +111,8 @@ class FsBackend {
     }
   }
   async move(a, b){
-    if (await this.handleOf(b)) throw new WsError('exists', 'el destino ya existe');
-    const src = await this.handleOf(a); if (!src) throw new WsError('missing', 'no existe');
+    if (await this.handleOf(b)) throw new WsError('exists', T('ws.err.exists'));
+    const src = await this.handleOf(a); if (!src) throw new WsError('missing', T('ws.err.missing'));
     try {                                                                           // el navegador no tiene «mover» fiable para carpetas locales: se copia y se borra el original
       if (src.kind === 'file'){ const buf = await (await src.h.getFile()).arrayBuffer(); const w = await (await this.fileH(b, true)).createWritable(); await w.write(buf); await w.close(); await this.remove(a, false); }
       else { await this.copyDir(src.h, b); await this.remove(a, true); }

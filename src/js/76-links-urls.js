@@ -13,7 +13,7 @@ function trimUrl(u){                                              // quita la pu
 function openLink(href){
   let u = (href || '').trim();
   if (/^www\./i.test(u)) u = 'https://' + u;
-  if (!/^(https?:|mailto:|tel:)/i.test(u)) return toast('Este enlace no se puede abrir desde aquí');
+  if (!/^(https?:|mailto:|tel:)/i.test(u)) return toast(T('msg.link-cannot-open'));
   const a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.style.display = 'none';
   document.body.appendChild(a); a.click(); a.remove();
 }
@@ -71,7 +71,7 @@ lkChip.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !lkA) return;
   const href = lkA.getAttribute('href') || '', k = b.dataset.lk;
   if (k === 'open') openLink(href);
-  else if (k === 'copy'){ copyText(href); toast('Enlace copiado'); }
+  else if (k === 'copy'){ copyText(href); toast(T('msg.link-copied')); }
   else if (k === 'unlink'){ $('#unlinkBtn').click(); lkChip.classList.remove('show'); }
 });
 

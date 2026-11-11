@@ -19,7 +19,7 @@ function siblingsOf(id){
   rec(state.tree); return res;
 }
 function renameNode(n){
-  askName('Renombrar', n.name, v => {
+  askName(T('tree.rename'), n.name, v => {
     const old = n.name;
     n.name = v;
     if (n.type === 'doc' && old !== v){
@@ -31,7 +31,7 @@ function renameNode(n){
         const h = state.docs[id];
         if (h.includes(from)){ count += h.split(from).length - 1; state.docs[id] = h.split(from).join(to); }
       });
-      if (count){ ed.innerHTML = state.docs[state.current]; ensureBlocks(); History.init(); toast(count + (count === 1 ? ' enlace actualizado' : ' enlaces actualizados')); }
+      if (count){ ed.innerHTML = state.docs[state.current]; ensureBlocks(); History.init(); toast(T(count === 1 ? 'msg.links-updated-1' : 'msg.links-updated', { n: count })); }
     }
     renderTree(); save(true); setPath(); sideRefresh();
   });
@@ -43,13 +43,13 @@ function cloneTree(n){
   return c;
 }
 function moveToDialog(n){
-  const folders = [{ id: null, label: 'Raíz' }];
+  const folders = [{ id: null, label: T('tree.root') }];
   walk(state.tree, f => {
     if (f.type !== 'folder' || f.id === n.id || isInside(n, f.id)) return;
     folders.push({ id: f.id, label: pathOf(f.id) });
   });
-  card.innerHTML = '<h2></h2><div class="pick-list"></div><div class="btns"><button class="btn" data-no>Cancelar</button></div>';
-  card.querySelector('h2').textContent = 'Mover «' + n.name + '» a…';
+  card.innerHTML = '<h2></h2><div class="pick-list"></div><div class="btns"><button class="btn" data-no>' + esc(T('btn.cancel')) + '</button></div>';
+  card.querySelector('h2').textContent = T('dlg.move-to', { name: n.name });
   const list = card.querySelector('.pick-list');
   folders.forEach(f => {
     const b = document.createElement('button');
@@ -58,7 +58,7 @@ function moveToDialog(n){
       veil.classList.remove('show');
       const moving = removeNode(n.id);
       placeNode(moving, f.id ? findNode(f.id) : null, f.id ? 'in' : 'root');
-      renderTree(); save(true); toast('Movido a ' + f.label);
+      renderTree(); save(true); toast(T('msg.moved-to', { place: f.label }));
     };
     list.appendChild(b);
   });
@@ -81,27 +81,27 @@ function moveToTrash(n){
   if (!findNode(state.current)){ const f = firstDoc(); if (f) openDoc(f); else { state.current = null; ed.innerHTML = '<p><br></p>'; } }
   splitCheck();
   renderTree(); updateTrashN(); save(true);
-  toast('«' + gone.name + '» está en la papelera');
+  toast(T('msg.in-trash', { name: gone.name }));
 }
 function restoreTrash(t){
   const parent = t.parentId ? findNode(t.parentId) : null;
   placeNode(t.node, parent, parent ? 'in' : 'root');
   state.trash = state.trash.filter(x => x !== t);
   renderTree(); updateTrashN(); save(true);
-  toast('Restaurado' + (t.parentId && !parent ? ' en la raíz' : ''));
+  toast(T(t.parentId && !parent ? 'msg.restored-root' : 'msg.restored'));
 }
 function openTrash(){
   const list = state.trash || [];
-  card.innerHTML = '<h2>Papelera</h2><p>' + (trashDaysPlan() ? 'Lo eliminado se guarda ' + trashDaysPlan() + ' días y después se borra solo.' : 'Lo eliminado se queda aquí hasta que lo borres.') + '</p><div class="trash-list"></div><div class="btns"><button class="btn" data-empty style="color:var(--danger)">Vaciar papelera</button><button class="btn primary" data-no>Cerrar</button></div>';
+  card.innerHTML = '<h2>' + esc(T('trashBtn')) + '</h2><p>' + esc(trashDaysPlan() ? T('trash.auto', { n: trashDaysPlan() }) : T('trash.keep')) + '</p><div class="trash-list"></div><div class="btns"><button class="btn" data-empty style="color:var(--danger)">' + esc(T('trash.empty-btn')) + '</button><button class="btn primary" data-no>' + esc(T('btn.close')) + '</button></div>';
   const host = card.querySelector('.trash-list');
-  if (!list.length) host.innerHTML = '<div class="ol-empty">La papelera está vacía.</div>';
+  if (!list.length) host.innerHTML = '<div class="ol-empty">' + esc(T('trash.is-empty')) + '</div>';
   list.forEach(t => {
     const row = document.createElement('div');
     row.className = 'trash-row';
     const days = Math.max(0, (trashDaysPlan() || 30) - Math.floor((Date.now() - t.at) / 86400000));
-    row.innerHTML = '<div class="t-n"><b></b><span></span></div><button class="btn" data-a="r">Restaurar</button><button class="btn" data-a="x" style="color:var(--danger)">Borrar</button>';
+    row.innerHTML = '<div class="t-n"><b></b><span></span></div><button class="btn" data-a="r">' + esc(T('trash.restore')) + '</button><button class="btn" data-a="x" style="color:var(--danger)">' + esc(T('trash.delete')) + '</button>';
     row.querySelector('b').textContent = (t.node.type === 'folder' ? '📁 ' : '') + t.node.name;
-    row.querySelector('span').textContent = trashDaysPlan() ? 'Se borra en ' + days + (days === 1 ? ' día' : ' días') : 'Se queda hasta que lo borres';
+    row.querySelector('span').textContent = trashDaysPlan() ? T(days === 1 ? 'trash.in-1' : 'trash.in', { n: days }) : T('trash.until');
     row.querySelector('[data-a="r"]').onclick = () => { restoreTrash(t); openTrash(); };
     row.querySelector('[data-a="x"]').onclick = () => { purgeDocs(t.docIds); state.trash = state.trash.filter(x => x !== t); updateTrashN(); save(true); openTrash(); };
     host.appendChild(row);
@@ -109,8 +109,8 @@ function openTrash(){
   card.querySelector('[data-no]').onclick = () => veil.classList.remove('show');
   card.querySelector('[data-empty]').onclick = () => {
     if (!list.length) return;
-    confirmBox('Vaciar la papelera', 'Se borrarán para siempre ' + list.length + (list.length === 1 ? ' elemento.' : ' elementos.'), () => {
-      list.forEach(t => purgeDocs(t.docIds)); state.trash = []; updateTrashN(); save(true); toast('Papelera vaciada');
+    confirmBox(T('trash.empty-title'), T(list.length === 1 ? 'trash.empty-body-1' : 'trash.empty-body', { n: list.length }), () => {
+      list.forEach(t => purgeDocs(t.docIds)); state.trash = []; updateTrashN(); save(true); toast(T('msg.trash-emptied'));
     });
   };
   veil.classList.add('show');

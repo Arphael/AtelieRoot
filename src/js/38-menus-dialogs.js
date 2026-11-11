@@ -16,7 +16,7 @@ const veil = $('#veil'), card = $('#card');
 function dialog(title, fields, ok){
   card.innerHTML = '<h2></h2>' + fields.map(f =>
     '<div style="display:flex;flex-direction:column;gap:5px"><label for="f_'+f.id+'" style="font-size:11px;color:var(--ink-faint)"></label><input id="f_'+f.id+'"></div>').join('') +
-    '<div class="btns"><button class="btn" data-no>Cancelar</button><button class="btn primary" data-yes>Aceptar</button></div>';
+    '<div class="btns"><button class="btn" data-no>' + esc(T('btn.cancel')) + '</button><button class="btn primary" data-yes>' + esc(T('btn.ok')) + '</button></div>';
   card.querySelector('h2').textContent = title;
   fields.forEach(f => {
     card.querySelector('label[for="f_'+f.id+'"]').textContent = f.label;
@@ -35,9 +35,9 @@ function dialog(title, fields, ok){
     if (ev.key === 'Escape') veil.classList.remove('show');
   });
 }
-const askName = (title, value, ok) => dialog(title, [{ id:'n', label:'Nombre', value }], v => { if (v.n) ok(v.n); });
+const askName = (title, value, ok) => dialog(title, [{ id:'n', label:T('dlg.name'), value }], v => { if (v.n) ok(v.n); });
 function confirmBox(title, body, ok){
-  card.innerHTML = '<h2></h2><p></p><div class="btns"><button class="btn" data-no>Cancelar</button><button class="btn primary" data-yes>Continuar</button></div>';
+  card.innerHTML = '<h2></h2><p></p><div class="btns"><button class="btn" data-no>' + esc(T('btn.cancel')) + '</button><button class="btn primary" data-yes>' + esc(T('btn.continue')) + '</button></div>';
   card.querySelector('h2').textContent = title;
   card.querySelector('p').textContent = body;
   veil.classList.add('show');

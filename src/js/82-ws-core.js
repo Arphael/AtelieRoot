@@ -21,7 +21,7 @@ const wsClock = () => { const d = new Date(); return String(d.getHours()).padSta
 /** Nombre válido en Windows, macOS y Linux (sin / \ : * ? " < > |, sin punto inicial ni espacios/puntos al final, sin nombres reservados). */
 function wsSafeName(name, isDoc){
   let n = String(name == null ? '' : name).replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-').replace(/\s+/g, ' ').trim().replace(/^\.+/, '').replace(/[. ]+$/, '');
-  if (!n) n = isDoc ? 'Sin título' : 'Carpeta';
+  if (!n) n = T(isDoc ? 'name.untitled' : 'name.folder');
   if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(n)) n += '_';
   return n.slice(0, 120);
 }
@@ -71,20 +71,22 @@ const Workspace = {
   metaJson: '', q: Promise.resolve(), stopWatch: null, refreshT: 0,
   status: 'off', msg: '', lastOk: 0, errT: 0, lastToast: {},
 };
-const WS_LABEL = { off: 'Modo temporal', ok: 'Carpeta ✓', saving: 'Guardando…', error: 'Error al guardar', denied: 'Sin permiso', offline: 'Sin servidor' };
+const WS_LABEL = { off: 'ws.off', ok: 'ws.ok', saving: 'ws.saving', error: 'msg.save-error', denied: 'ws.denied', offline: 'ws.offline' };
 function wsStatus(s, msg){
   const W = Workspace; W.status = s; W.msg = msg || '';
-  const text = s === 'ok' && W.name ? '📁 ' + W.name + ' ✓' : (s === 'off' ? '' : '📁 ') + WS_LABEL[s];
-  const title = msg || (s === 'ok' ? 'Tus documentos se guardan solos en la carpeta «' + W.name + '». Clic para ver opciones.' : s === 'off' ? 'Tus documentos solo están en este navegador. Clic para guardarlos en una carpeta.' : 'Clic para ver opciones');
+  const text = s === 'ok' && W.name ? '📁 ' + W.name + ' ✓' : (s === 'off' ? '' : '📁 ') + T(WS_LABEL[s]);
+  const title = msg || (s === 'ok' ? T('ws.tip-ok', { name: W.name }) : s === 'off' ? T('ws.tip-off') : T('ws.tip'));
   document.querySelectorAll('.ws-chip').forEach(el => { el.textContent = text; el.dataset.ws = s; el.title = title; });
 }
+document.addEventListener('langchange', () => wsStatus(Workspace.status, Workspace.msgKey ? T(Workspace.msgKey) : Workspace.msg));
 function wsToastOnce(key, text){ const W = Workspace, now = Date.now(); if (W.lastToast[key] && now - W.lastToast[key] < 60000) return; W.lastToast[key] = now; toast(text); }
 function wsFail(e){
   const W = Workspace, code = (e && e.code) || 'io';
   console.error('carpeta:', e);
-  if (code === 'denied'){ wsStatus('denied', 'El navegador ya no tiene permiso para escribir en la carpeta. Clic para volver a darlo.'); wsToastOnce('denied', 'AtelierRoot perdió el permiso sobre la carpeta. Pulsa «📁» abajo para volver a darlo.'); return; }
-  if (code === 'offline'){ wsStatus('offline', 'No hay conexión con el servidor de AtelierRoot. Se reintenta solo.'); wsToastOnce('offline', 'No hay conexión con el servidor de AtelierRoot. Tus cambios se guardarán al volver.'); }
-  else { wsStatus('error', (e && e.message) || 'No se pudo guardar'); wsToastOnce('error', 'No se pudo guardar en la carpeta: ' + ((e && e.message) || code)); }
+  W.msgKey = '';
+  if (code === 'denied'){ wsStatus('denied', T('ws.denied-tip')); W.msgKey = 'ws.denied-tip'; wsToastOnce('denied', T('ws.denied-toast')); return; }
+  if (code === 'offline'){ wsStatus('offline', T('ws.offline-tip')); W.msgKey = 'ws.offline-tip'; wsToastOnce('offline', T('ws.offline-toast')); }
+  else { wsStatus('error', (e && e.message) || T('ws.save-failed')); wsToastOnce('error', T('ws.save-failed-in', { why: (e && e.message) || code })); }
   clearTimeout(W.errT); W.errT = setTimeout(() => wsSchedule(true), 5000);                  // se reintenta
 }
 
@@ -99,7 +101,7 @@ const wsRevive = o => { const n = { id: o.id, type: o.type, name: o.name }; if (
 
 async function wsLoad(be){
   const W = Workspace;
-  Object.assign(W, { be, kind: be.kind, name: be.name || 'Carpeta', known: {}, text: {}, saved: {}, extras: {}, nodes: new Map(), trashIds: new Set(), trashInfo: new Map(), idUsed: new Set(), metaJson: '', startId: null });
+  Object.assign(W, { be, kind: be.kind, name: be.name || T('name.folder'), known: {}, text: {}, saved: {}, extras: {}, nodes: new Map(), trashIds: new Set(), trashInfo: new Map(), idUsed: new Set(), metaJson: '', startId: null });
   const entries = (await be.list(false)).filter(e => e.t === 'd' || wsIsMd(e.p));
   entries.sort((a, b) => a.p.localeCompare(b.p, 'es', { numeric: true, sensitivity: 'base' }));
   const meta = await wsReadMeta(be);
@@ -145,7 +147,7 @@ async function wsLoad(be){
   const cur = meta.current && ok.some(e => e.p === meta.current) ? idOf[meta.current] : null;
   W.startId = cur || lastModifiedDoc() || firstDoc();
   if (!W.startId){                                                        // carpeta vacía: un primer documento para empezar a escribir
-    const d = { id: uid(), type: 'doc', name: 'Primer documento', mod: Date.now() };
+    const d = { id: uid(), type: 'doc', name: T('name.first-doc'), mod: Date.now() };
     state.tree.push(d); state.docs[d.id] = SEED_HTML; W.startId = d.id;
   }
   wsSnapshot();
@@ -292,8 +294,8 @@ async function wsFlushDocs(){
       if (e.code !== 'conflict') throw e;
       let disk; try { disk = await be.read(n.path); } catch(e2){ if (e2.code === 'missing'){ n.path = undefined; again = true; continue; } throw e2; }
       if (disk.text === md){ W.known[n.path] = { t: 'f', m: disk.m, s: disk.s }; W.text[n.path] = md; W.saved[n.id] = html; continue; }
-      wsCopyNode(n, html, 'mi versión'); wsAdoptDisk(n, disk); again = true;
-      toast('«' + n.name + '» cambió en el disco a la vez. Tu versión quedó en una copia.');
+      wsCopyNode(n, html, T('conflict.mine')); wsAdoptDisk(n, disk); again = true;
+      toast(T('msg.disk-conflict-mine', { name: n.name }));
     }
   }
   return again;
@@ -321,7 +323,7 @@ async function wsPersist(){
   try {
     stash(); wsStatus('saving');
     for (let pass = 0; pass < 4; pass++){ if (!(await wsPersistOnce())) break; }
-    wsStatus('ok'); W.lastOk = Date.now(); flag('Guardado'); wsJournalClear();
+    wsStatus('ok'); W.lastOk = Date.now(); flag(T('msg.saved')); wsJournalClear();
   } catch(e){ wsFail(e); }
 }
 function wsSchedule(now){ const W = Workspace; if (!W.active) return Promise.resolve(); W.q = W.q.then(wsPersist); return W.q; }
@@ -347,7 +349,7 @@ function wsRecover(){                                       // si la pestaña se
       n++;
     });
   } catch(_){}
-  if (n){ setTimeout(() => toast('Se recuperó lo último que escribiste antes de cerrar la pestaña'), 700); wsSchedule(true); }
+  if (n){ setTimeout(() => toast(T('msg.recovered-close')), 700); wsSchedule(true); }
 }
 async function wsSaveNow(){ clearTimeout(persistT); await wsSchedule(true); }                // «Guardar ahora»
 function wsFlush(){ if (!Workspace.active) return; stash(); saveUi(); wsJournalWrite(); wsSchedule(true); }
@@ -368,9 +370,9 @@ async function wsRefreshOnce(){
     let disk; try { disk = await be.read(e.p); } catch(_){ continue; }
     if (disk.text === W.text[e.p]){ W.known[e.p] = { t: 'f', m: disk.m, s: disk.s }; continue; }
     if (state.docs[n.id] !== W.saved[n.id] && wsMdText(state.docs[n.id]) !== wsMdText(W.saved[n.id])){
-      wsCopyNode(n, wsHtml(disk.text), 'versión del disco');                                  // yo también lo había cambiado: la versión del disco pasa a una copia
+      wsCopyNode(n, wsHtml(disk.text), T('conflict.disk'));                                  // yo también lo había cambiado: la versión del disco pasa a una copia
       W.known[e.p] = { t: 'f', m: disk.m, s: disk.s }; W.text[e.p] = disk.text; treeChanged = true;
-      toast('«' + n.name + '» cambió en el disco mientras lo editabas. Su versión quedó en una copia.');
+      toast(T('msg.disk-conflict-disk', { name: n.name }));
     } else { wsAdoptDisk(n, disk); }
   }
   // 2) archivos y carpetas nuevos

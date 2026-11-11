@@ -1,22 +1,22 @@
 "use strict";
 /* ====== 25. Menú de barra ====== */
 const SLASH_ITEMS = [
-  { k:'p',     t:'Texto',             a:'parrafo texto normal p' },
-  { k:'h1',    t:'Encabezado 1',      a:'titulo h1 heading' },
-  { k:'h2',    t:'Encabezado 2',      a:'titulo h2 heading subtitulo' },
-  { k:'h3',    t:'Encabezado 3',      a:'titulo h3 heading' },
-  { k:'h4',    t:'Encabezado 4',      a:'titulo h4 heading' },
-  { k:'h5',    t:'Encabezado 5',      a:'titulo h5 heading' },
-  { k:'h6',    t:'Encabezado 6',      a:'titulo h6 heading' },
-  { k:'ul',    t:'Lista con viñetas', a:'vinetas lista bullet ul' },
-  { k:'ol',    t:'Lista numerada',    a:'numerada ordenada numeros ol' },
-  { k:'task',  t:'Lista de tareas',   a:'tareas todo checkbox casilla' },
-  { k:'quote', t:'Cita',              a:'cita quote blockquote' },
-  { k:'pre',   t:'Bloque de código',  a:'codigo code pre bloque' },
-  { k:'table', t:'Tabla',             a:'tabla table' },
-  { k:'hr',    t:'Línea divisoria',   a:'linea divisoria separador hr' },
-  { k:'link',  t:'Enlace',            a:'enlace link url' },
-  { k:'img',   t:'Imagen',            a:'imagen image foto' }
+  { k:'p',     t:'conv.p',            a:'parrafo texto normal p paragraph text plain' },
+  { k:'h1',    t:'conv.h1',           a:'titulo h1 heading title' },
+  { k:'h2',    t:'conv.h2',           a:'titulo h2 heading subtitulo subtitle' },
+  { k:'h3',    t:'conv.h3',           a:'titulo h3 heading' },
+  { k:'h4',    t:'slash.h4',          a:'titulo h4 heading' },
+  { k:'h5',    t:'slash.h5',          a:'titulo h5 heading' },
+  { k:'h6',    t:'slash.h6',          a:'titulo h6 heading' },
+  { k:'ul',    t:'conv.ul',           a:'vinetas lista bullet ul list' },
+  { k:'ol',    t:'conv.ol',           a:'numerada ordenada numeros ol numbered ordered list' },
+  { k:'task',  t:'conv.task',         a:'tareas todo checkbox casilla task list' },
+  { k:'quote', t:'conv.quote',        a:'cita quote blockquote' },
+  { k:'pre',   t:'pal.code-block',    a:'codigo code pre bloque block' },
+  { k:'table', t:'pal.table',         a:'tabla table' },
+  { k:'hr',    t:'pal.divider',       a:'linea divisoria separador hr divider rule' },
+  { k:'link',  t:'pal.link',          a:'enlace link url' },
+  { k:'img',   t:'pal.image',         a:'imagen image foto picture photo' }
 ];
 const slashMenu = $('#slashMenu');
 const slash = { open: false, node: null, off: 0, items: [], i: 0 };
@@ -50,13 +50,13 @@ function slashQuery(){
 }
 function paintSlash(q){
   const nq = norm(q);
-  slash.items = SLASH_ITEMS.filter(x => !nq || norm(x.t + ' ' + x.a).includes(nq));
+  slash.items = SLASH_ITEMS.filter(x => !nq || norm(T(x.t) + ' ' + x.a).includes(nq));
   if (!slash.items.length){ slashMenu.classList.remove('show'); return; }
   slash.i = Math.min(slash.i, slash.items.length - 1);
   slashMenu.innerHTML = '';
   slash.items.forEach((x, i) => {
     const b = document.createElement('button');
-    b.textContent = x.t;
+    b.textContent = T(x.t);
     if (i === slash.i) b.className = 'on';
     b.onmousedown = ev => { ev.preventDefault(); slash.i = i; applySlash(); };
     slashMenu.appendChild(b);

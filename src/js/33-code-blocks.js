@@ -2,7 +2,7 @@
 /* ====== 12. Bloques de código ====== */
 const langMenu = $('#langMenu');
 langMenu.innerHTML = LANGS.map(l => '<button data-l="'+l+'">'+l+'</button>').join('') +
-  '<div class="hr"></div><label for="otroLang">Otro lenguaje</label><input id="otroLang" placeholder="rust" autocomplete="off">';
+  '<div class="hr"></div><label for="otroLang">'+esc(T('cb.other-lang'))+'</label><input id="otroLang" placeholder="rust" autocomplete="off">';
 let langTarget = null;
 langMenu.addEventListener('click', e => {
   e.stopPropagation();
@@ -41,11 +41,11 @@ ed.addEventListener('click', e => {
     const next = cb.nextElementSibling || cb.previousElementSibling;
     cb.remove();
     if (next) caretInto(next, true);
-    after(); History.snap(true); toast('Bloque eliminado · Ctrl+Z para deshacer');
+    after(); History.snap(true); toast(T('msg.block-deleted'));
     return;
   }
   const cp = e.target.closest('.cb-copy');
-  if (cp){ e.stopPropagation(); copyText((cp.closest('.cb').querySelector(SRC) || cp.closest('.cb').querySelector('pre')).innerText.replace(/\n+$/, '')); toast('Bloque copiado'); }
+  if (cp){ e.stopPropagation(); copyText((cp.closest('.cb').querySelector(SRC) || cp.closest('.cb').querySelector('pre')).innerText.replace(/\n+$/, '')); toast(T('msg.block-copied')); }
 });
 // los <pre> viven dentro de un contenedor no editable: hay que guardar sus cambios a mano
 ed.addEventListener('input', e => { const cb = e.target.closest && e.target.closest('.cb'); if (cb){ Dirty.add(state.current); hlBlock(cb); stash(); paintPreview(); save(); } }, true);

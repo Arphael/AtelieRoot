@@ -6,7 +6,7 @@
 import glob
 import os
 
-URL = os.environ.get('ATELIERROOT_URL', 'http://localhost:8765/index.html?test=1')      # ?test=1: sin pantalla de bienvenida
+URL = os.environ.get('ATELIERROOT_URL', 'http://localhost:8765/index.html?test=1&lang=es')      # ?test=1: sin pantalla de bienvenida; lang=es: los textos comparados están en español
 
 
 def _chrome():

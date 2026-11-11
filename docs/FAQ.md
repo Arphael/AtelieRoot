@@ -13,6 +13,10 @@ on disk without keeping your version as a copy.
 The first edit saves normalized Markdown (`*` -> `-`, aligned tables...). Opening without editing
 never rewrites a file. If you do not want that for a file, do not edit it in AtelierRoot.
 
+**How do I change the interface language?**
+Press **EN/ES** in the toolbar, or search "Language" in the command palette (`Ctrl+Shift+P`). The choice
+is remembered. A link can force a language for one visit: add `?lang=en` or `?lang=es` to the address.
+
 **Are images stored as files?**
 Not yet: pasted images are embedded in the `.md` as `data:` URLs. Images as separate files are on the roadmap.
 

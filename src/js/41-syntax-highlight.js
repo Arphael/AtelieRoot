@@ -41,7 +41,7 @@ function upgradeCodeBlocks(){
     const cp = cb.querySelector('.cb-copy');
     if (cp && !cb.querySelector('.cb-del')){
       const d = document.createElement('button');
-      d.className = 'mini cb-del'; d.title = 'Eliminar este bloque'; d.setAttribute('aria-label', 'Eliminar este bloque');
+      d.className = 'mini cb-del'; d.title = T('cb.del'); d.setAttribute('aria-label', T('cb.del')); d.setAttribute('data-i18n-title', 'cb.del'); d.setAttribute('data-i18n-aria', 'cb.del');
       d.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 21 6"></polyline><path d="M8 6V4h8v2"></path><path d="M6 6l1 14h10l1-14"></path></svg>';
       cp.parentNode.insertBefore(d, cp);
     }

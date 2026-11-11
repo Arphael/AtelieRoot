@@ -1,6 +1,6 @@
 {
   "name": "atelierroot",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Local-first Markdown editor: every document is a .md file in a folder on your computer.",
   "author": "Alejandro Reyes",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "check": "node scripts/check.mjs",
     "build": "node scripts/build.mjs",
     "vendor:prism": "node scripts/vendor-prism.mjs",
-    "test:server": "node --test server/test/server.test.mjs",
+    "test:server": "node --test server/test/server.test.mjs server/test/contract.test.mjs",
     "test:e2e": "python tests/run.py --skip-server",
     "test": "npm run check && python tests/run.py",
     "test:dist": "npm run build && python tests/run.py --dist",

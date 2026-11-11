@@ -23,6 +23,8 @@ Un editor Markdown **local-first**: **cada documento es un archivo `.md` en una 
 | **Pensado para código**         | Resaltado de ~45 lenguajes; rutas y URLs se detectan solas                                                                                    |
 | **Privado**                     | Sin cuenta, sin telemetría, sin peticiones a internet                                                                                         |
 
+La interfaz está en español e inglés: sigue el idioma del sistema y cambia al momento con el botón **ES/EN** de la barra.
+
 ## Descarga
 
 | Opción                                                                                          | Para                                                   | Necesita                                  |

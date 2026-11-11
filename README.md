@@ -23,7 +23,7 @@ A **local-first** Markdown editor: **every document is a `.md` file in a folder 
 | **Code friendly**           | Syntax highlighting for ~45 languages, paths and URLs detected automatically                           |
 | **Private**                 | No account, no telemetry, no network requests                                                          |
 
-The interface is in Spanish today; English is coming (see the [roadmap](docs/ROADMAP.md)).
+The interface is in English and Spanish: it follows your system language and switches live with the **EN/ES** button in the toolbar.
 
 ## Download
 

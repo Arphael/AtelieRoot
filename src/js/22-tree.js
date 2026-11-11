@@ -34,7 +34,7 @@ function renderTree(){
     row.style.paddingLeft = (7 + depth * 16) + 'px';
     row.draggable = true; row.dataset.id = n.id;
     row.innerHTML = '<span class="grip" aria-hidden="true">⋮⋮</span>' + (n.type === 'folder' ? '<span class="tw' + (n.open ? ' open':'') + '">' + ICON.tw + '</span>' : '<span style="width:12px;flex-shrink:0"></span>') +
-      '<span class="nm"></span><span class="act"><button class="mini" data-act="ren" aria-label="Renombrar">'+ICON.ren+'</button><button class="mini" data-act="menu" aria-label="Más acciones" style="color:var(--ink-faint);font-size:13px">⋯</button></span>';
+      '<span class="nm"></span><span class="act"><button class="mini" data-act="ren" aria-label="'+T('tree.rename')+'" data-i18n-aria="tree.rename">'+ICON.ren+'</button><button class="mini" data-act="menu" aria-label="'+T('tree.more')+'" data-i18n-aria="tree.more" style="color:var(--ink-faint);font-size:13px">⋯</button></span>';
     row.querySelector('.nm').textContent = n.name;
     treeEl.appendChild(row);
     if (n.type === 'folder' && (n.open || q)) build(n.children || [], depth + 1);

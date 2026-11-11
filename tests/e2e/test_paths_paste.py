@@ -7,8 +7,8 @@ errs=[]; fails=[]
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '→ ' + str(extra)))
   if not cond: fails.append(name)
-YES = ['/clear', '/compact', '/plugin:deploy', '/mcp__github__issue', '/usr/bin/env', '/init', 'src/app', 'docs/guia', 'src/index.js', 'node_modules/.bin', './run.sh', '../lib/x', '~/notas', 'src/', 'frontend/backend', 'a1/b2', 'v1/v2', 'my_dir/sub-dir/file.txt', 'public/img/logo.png', r'src-tauri\app-icon.svg', r'src\js\00-base.js', r'icons\32x32.png', 'docs\\adr\\']
-NO  = ['y/o', 'and/or', 'yes/no', 'on/off', 'he/she', 'input/output', 'si/no', '1/2', '24/7', '12/10/2026', '1.5/2.5', 'TCP/IP', 'I/O', 'Windows/Linux', 'ON/OFF', 'a/b', 's/n', 'w/o', 'km/h', 'c:/usr', 'https://x.com/a', 'http://a/b', 'www.x.com/p', 'x.com/a', 'foo.org/bar', '//comentario', '/', '/1', '/a', '//', 'solo', 'a', '*/x*', '**/x**', 'user@host.com/x', 'ab/', 'pros/cons', 'read/write', r'a\b', r'y\o', r'Si\No']
+YES = ['/clear', '/compact', '/plugin:deploy', '/mcp__github__issue', '/usr/bin/env', '/init', 'src/app', 'docs/guia', 'src/index.js', 'node_modules/.bin', './run.sh', '../lib/x', '~/notas', 'src/', 'frontend/backend', 'a1/b2', 'v1/v2', 'my_dir/sub-dir/file.txt', 'public/img/logo.png', r'src-tauri\app-icon.svg', r'src\js\00-base.js', r'icons\32x32.png', 'docs\\adr\\', 'Fix.prompt.md', 'README.md', 'app.py', 'package.json', 'index.html', 'styles.min.css', '.gitignore', 'data_2024.csv', 'AtelierRoot.exe', 'Cargo.lock']
+NO  = ['y/o', 'and/or', 'yes/no', 'on/off', 'he/she', 'input/output', 'si/no', '1/2', '24/7', '12/10/2026', '1.5/2.5', 'TCP/IP', 'I/O', 'Windows/Linux', 'ON/OFF', 'a/b', 's/n', 'w/o', 'km/h', 'c:/usr', 'https://x.com/a', 'http://a/b', 'www.x.com/p', 'x.com/a', 'foo.org/bar', '//comentario', '/', '/1', '/a', '//', 'solo', 'a', '*/x*', '**/x**', 'user@host.com/x', 'ab/', 'pros/cons', 'read/write', r'a\b', r'y\o', r'Si\No', 'p.ej', 'e.g', 'a.m', 'etc', '3.14', 'v1.2', 'U.S.A', 'Dr.House', 'fin.Luego', 'google.com', 'hola.mundo', 'v2.0.1']
 async def main():
   async with async_playwright() as p:
     b = await p.chromium.launch(**LAUNCH)

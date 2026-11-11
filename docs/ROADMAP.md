@@ -6,9 +6,9 @@ Sprints from cleanup to a public, multi-platform release. Each sprint ends with
 | Sprint | Goal                                            | Weight | Status      |
 | ------ | ----------------------------------------------- | ------ | ----------- |
 | S0     | Cleanup and documentation                       | Medium | Done        |
-| S1     | Public repository, CI, security, community docs | Medium | In progress |
-| S2     | Interface in English and Spanish                | Heavy  | Pending     |
-| S3     | Desktop app with Tauri (moved ahead of S2)      | Heavy  | In progress |
+| S1     | Public repository, CI, security, community docs | Medium | Done        |
+| S2     | Interface in English and Spanish                | Heavy  | Done        |
+| S3     | Desktop app with Tauri (moved ahead of S2)      | Heavy  | Done        |
 | S4     | Multi-platform releases                         | Medium | Pending     |
 | S5     | Quality and browser coverage                    | Medium | Pending     |
 | S6     | New features                                    | Medium | Backlog     |
@@ -40,23 +40,25 @@ Sprints from cleanup to a public, multi-platform release. Each sprint ends with
 
 Done when: CI green on 3 OSes, Pages URL works, repo public, security settings on.
 
-## S2 - Interface in English and Spanish
+## S2 - Interface in English and Spanish (done, v1.1.0)
 
-- [ ] Test first: e2e switches language and asserts toolbar, sidebar, dialogs and palette change without reload; documents unchanged.
-- [ ] `src/js/05-i18n.js`: dictionaries, `t()`, `applyI18n()`, language detection, persistence in `atelierroot.ui`.
-- [ ] Replace hard-coded strings in `src/index.html` (`data-i18n*`) and in every `src/js/*.js` (`t()`), including toasts, `title`/`aria-label`, placeholders, command palette, `83-ws-ui.js` screens, server messages shown in UI.
-- [ ] Language selector in the UI and in the command palette.
-- [ ] `<html lang>` and export template follow the language.
-- [ ] Conflict copy names localized (`name (disk version hh:mm)` / `name (versión del disco hh:mm)`).
-- [ ] `npm run check` rule: no UI literal outside dictionaries (best effort).
+- [x] Test first: e2e switches language and asserts toolbar, sidebar, dialogs and palette change without reload; documents unchanged.
+- [x] `src/js/05-i18n.js`: dictionaries, `T()`, `applyI18n()`, language detection, persistence in `atelierroot.ui`.
+- [x] Replace hard-coded strings in `src/index.html` (`data-i18n*`) and in every `src/js/*.js` (`T()`), including toasts, `title`/`aria-label`, placeholders, command palette, `83-ws-ui.js` screens, server messages shown in UI.
+- [x] Language selector in the UI and in the command palette.
+- [x] `<html lang>` and export template follow the language.
+- [x] Conflict copy names localized (`name (disk version hh:mm)` / `name (versión del disco hh:mm)`).
+- [x] `npm run check` rule: no UI literal outside dictionaries (best effort).
+- [x] Tools panel for small screens: right-hand tools, view tools and status bar move to a panel that slides in from the right when they do not fit.
+- [x] File names with a known extension (`Fix.prompt.md`, `.gitignore`) become inline code after a space.
 
 Done when: whole interface switches live; e2e green in both languages.
 
-## S3 - Desktop app with Tauri
+## S3 - Desktop app with Tauri (done, v1.1.0)
 
 Moved ahead of S2 so a portable executable (`AtelierRoot.exe`, one file) can be tested before the first public release.
 
-- [ ]   : extract backend scenarios into a runner usable by Node and Tauri.
+- [x] Contract tests: `tests/contract/scenarios.json` (24 cases) run by the Node server (`server/test/contract.test.mjs`) and the desktop backend (`src-tauri/src/contract_tests.rs`); it found that Node accepted `:` inside names (an NTFS stream on Windows), now refused like in Rust.
 - [x] `src-tauri/` (Tauri v2), frontend = `dist/`, strict CSP, no remote URLs; portable `AtelierRoot.exe` (~3.4 MB).
 - [x] Rust commands implementing [CONTRACT.md](CONTRACT.md) (path validation, writable rules, atomic write, `expect` conflict).
 - [x] Outside changes detected by a 1.2 s poll that emits `ws-changed` (a `notify` watcher can replace it later).
@@ -72,6 +74,7 @@ Done when: the desktop app opens a folder, edits, autosaves and reloads external
 
 - [ ] `release.yml` with `tauri-apps/tauri-action`: `.msi`/`.exe` (Windows), `.dmg` (macOS universal), `.AppImage`/`.deb` (Linux) on tag `vX.Y.Z`.
 - [x] First release [`v1.0.0`](https://github.com/Arphael/AtelierRoot/releases/tag/v1.0.0) with `AtelierRoot.exe` + `AtelierRoot.html` attached.
+- [x] Release text from the CHANGELOG section of each version (`scripts/release-notes.mjs`).
 - [x] Release assets: `AtelierRoot.exe` + `AtelierRoot.html` (the Node ZIP was dropped; the server is for development only).
 - [ ] Optional code signing (Windows / Apple notarization) documented; unsigned builds warn the user in README.
 - [ ] Manual smoke test checklist per OS in `CONTRIBUTING.md`.
@@ -88,6 +91,8 @@ Done when: a tag produces installers for 3 OSes and each passes the smoke test.
 - [ ] Unit tests (`node --test`) for pure functions: `urlAllowed`, `wsSafeName`, `isCodeLike`, `domFromMd`, `tidyMd`, `wsHash`.
 - [ ] ESLint minimal (`no-undef`, `no-unused-vars`).
 - [ ] Lazy document loading for large folders (5 000 files open in < 2 s).
+- [ ] Fix: the word counter counts the zero-width space (`​`) as a word.
+- [ ] Screenshot of the editor in the README.
 - [ ] Verify: remembered folder handle by hand, OneDrive/Dropbox folders, network drives.
 
 ## S6 - New features (backlog, by priority)

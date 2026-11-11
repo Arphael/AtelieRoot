@@ -4,21 +4,21 @@
 /* ---- 1. elegir filas × columnas al insertar una tabla ---- */
 function askTableSize(ok){
   const R = 8, C = 10;
-  card.innerHTML = '<h2>Insertar tabla</h2>' +
+  card.innerHTML = '<h2>' + esc(T('ts.title')) + '</h2>' +
     '<div id="tsPick" style="display:grid;grid-template-columns:repeat(' + C + ',22px);gap:3px;justify-content:center"></div>' +
     '<div id="tsLab" style="text-align:center;font-size:12px;color:var(--ink-dim);min-height:16px"></div>' +
     '<div style="display:flex;gap:14px;justify-content:center">' +
-      '<div style="display:flex;flex-direction:column;gap:5px"><label for="ts_r" style="font-size:11px;color:var(--ink-faint)">Filas (con el encabezado)</label><input id="ts_r" type="number" min="1" max="60" value="3" style="width:150px"></div>' +
-      '<div style="display:flex;flex-direction:column;gap:5px"><label for="ts_c" style="font-size:11px;color:var(--ink-faint)">Columnas</label><input id="ts_c" type="number" min="1" max="12" value="3" style="width:110px"></div>' +
+      '<div style="display:flex;flex-direction:column;gap:5px"><label for="ts_r" style="font-size:11px;color:var(--ink-faint)">' + esc(T('ts.rows')) + '</label><input id="ts_r" type="number" min="1" max="60" value="3" style="width:150px"></div>' +
+      '<div style="display:flex;flex-direction:column;gap:5px"><label for="ts_c" style="font-size:11px;color:var(--ink-faint)">' + esc(T('ts.cols')) + '</label><input id="ts_c" type="number" min="1" max="12" value="3" style="width:110px"></div>' +
     '</div>' +
-    '<div class="btns"><button class="btn" data-no>Cancelar</button><button class="btn primary" data-yes>Insertar</button></div>';
+    '<div class="btns"><button class="btn" data-no>' + esc(T('btn.cancel')) + '</button><button class="btn primary" data-yes>' + esc(T('ts.insert')) + '</button></div>';
   const pick = card.querySelector('#tsPick'), lab = card.querySelector('#tsLab'), ir = card.querySelector('#ts_r'), ic = card.querySelector('#ts_c');
   const sq = [];
   for (let r = 1; r <= R; r++) for (let c = 1; c <= C; c++){
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'ts-sq'; b.dataset.r = r; b.dataset.c = c; b.setAttribute('aria-label', r + ' filas × ' + c + ' columnas');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'ts-sq'; b.dataset.r = r; b.dataset.c = c; b.setAttribute('aria-label', T('ts.size', { r: T(r === 1 ? 'tm.row1' : 'tm.rows', { n: r }), c: T(c === 1 ? 'tm.col1' : 'tm.cols', { n: c }) }));
     pick.appendChild(b); sq.push(b);
   }
-  const paint = (r, c) => { sq.forEach(b => b.classList.toggle('on', +b.dataset.r <= r && +b.dataset.c <= c)); lab.textContent = r + (r === 1 ? ' fila' : ' filas') + ' × ' + c + (c === 1 ? ' columna' : ' columnas'); };
+  const paint = (r, c) => { sq.forEach(b => b.classList.toggle('on', +b.dataset.r <= r && +b.dataset.c <= c)); lab.textContent = T('ts.size', { r: T(r === 1 ? 'tm.row1' : 'tm.rows', { n: r }), c: T(c === 1 ? 'tm.col1' : 'tm.cols', { n: c }) }); };
   const clampV = () => [Math.min(60, Math.max(1, parseInt(ir.value) || 1)), Math.min(12, Math.max(1, parseInt(ic.value) || 1))];
   const close = () => veil.classList.remove('show');
   pick.onmouseover = e => { const b = e.target.closest('.ts-sq'); if (b){ ir.value = b.dataset.r; ic.value = b.dataset.c; paint(+b.dataset.r, +b.dataset.c); } };
@@ -107,7 +107,7 @@ addEventListener('mouseup', colDragEnd);
 addEventListener('blur', colDragEnd);
 ed.addEventListener('dblclick', e => {                                    // doble clic en el borde: ancho automático otra vez
   const h = colEdgeAt(e); if (!h || !h.tbl.hasAttribute('data-cw')) return;
-  e.preventDefault(); History.mark(); clearColWidths(h.tbl); after(); History.snap(true); refreshTableBar(); toast('Ancho de columnas restablecido');
+  e.preventDefault(); History.mark(); clearColWidths(h.tbl); after(); History.snap(true); refreshTableBar(); toast(T('msg.cw-reset'));
 });
 
 /* ---- 4. convertir una tabla en lista o en texto ---- */
@@ -121,7 +121,7 @@ function convertTable(tbl, kind){
     html = (body.length ? body : [rows[0]]).map(r => '<p>' + (r.map((v, j) => v ? (body.length ? head[j] + ': ' : '') + v : '').filter(Boolean).join('; ') || '<br>') + '</p>').join('');
   } else {
     html = '<ul>' + (body.length ? body : [rows[0]]).map(r => {
-      const first = r[0] || '(sin título)';
+      const first = r[0] || T('name.untitled-paren');
       const sub = body.length ? r.map((v, j) => j > 0 && v ? '<li><strong>' + head[j] + '</strong>: ' + v + '</li>' : '').join('') : '';
       return '<li>' + first + (sub ? '<ul>' + sub + '</ul>' : '') + '</li>';
     }).join('') + '</ul>';
@@ -138,7 +138,7 @@ function paintScopeBtn(){
   const b = tableBar.querySelector('[data-tt="scope"]'); if (!b) return;
   const all = alignScope() === 'table';
   b.classList.toggle('on', all); b.innerHTML = all ? ICON_ALL : ICON_COL;
-  b.title = all ? 'Alinear: TODA LA TABLA (clic para cambiar a solo la columna)' : 'Alinear: solo la COLUMNA (clic para cambiar a toda la tabla)';
+  b.title = T(all ? 'tbl.scope-all' : 'tbl.scope-col');
   b.setAttribute('aria-label', b.title);
 }
 

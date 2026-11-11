@@ -33,6 +33,7 @@ Type Markdown and it turns into formatting as you write:
 | `/command`                                               | Inline code automatically                                          |
 | A URL + space                                            | A real link                                                        |
 | A Windows/Unix path (`C:\Users\...`, `/usr/bin`, `src\app.js`) + space | Inline code automatically                          |
+| A file name (`Fix.prompt.md`, `app.py`, `.gitignore`) + space            | Inline code automatically (known extensions only)                  |
 | Text with `                                              | ` separators                                                       | Offered as a table |
 
 Other blocks from the toolbar: tables, images, links.
@@ -60,6 +61,15 @@ On macOS use `Cmd` instead of `Ctrl`.
 | `Ctrl+F` / `Ctrl+H`                   | Find / find and replace (`Enter` next, `Shift+Enter` previous) |
 
 ### Navigation and view
+
+On narrow windows and phones, the tools on the right of the toolbar (live Markdown, placeholders,
+tidy, copy, export, language, theme) move to the **Tools** panel: the sliders button at the end of the
+toolbar (or in the phone header) opens it from the right; Esc or a tap outside closes it.
+
+The **EN/ES** button in the toolbar (or "Language" in the command palette) switches the interface
+between English and Spanish; your documents do not change. The first time, AtelierRoot follows your
+system language.
+
 
 | Shortcut       | Action                                     |
 | -------------- | ------------------------------------------ |

@@ -121,17 +121,17 @@ function applyFormat(r, tag, sel){
 }
 function toggleWrap(tag){
   const s = getSelection();
-  if (!s.rangeCount || !ed.contains(s.anchorNode)) return toast('Selecciona primero el texto');
+  if (!s.rangeCount || !ed.contains(s.anchorNode)) return toast(T('msg.select-first'));
   const sel = FMT_SEL[tag] || tag, r = s.getRangeAt(0);
   if (s.isCollapsed){
     const el = closestFrom(r.startContainer, sel);
-    if (!el || closestFrom(r.startContainer, '.cb')) return toast('Selecciona primero el texto');
+    if (!el || closestFrom(r.startContainer, '.cb')) return toast(T('msg.select-first'));
     History.mark();
     if (caretAtEnd(el, r)) exitFormat(el); else unwrapKeepingCaret(el, r);   // al final: se sale; en medio: se quita
     after(); History.snap(true); refreshBar(); return;
   }
   const parts = selectedTextBlocks(r).filter(x => rangeHasText(x.range));
-  if (!parts.length) return toast('Selecciona primero el texto');
+  if (!parts.length) return toast(T('msg.select-first'));
   History.mark();
   // si todo lo seleccionado ya lo tiene, se quita en todas partes; si no, se aplica a todo
   const allIn = parts.every(x => rangeAllInside(x.range, sel));
@@ -140,7 +140,7 @@ function toggleWrap(tag){
     try {
       const res = allIn ? removeFormat(x.range, sel) : applyFormat(x.range, tag, sel);
       if (res){ if (!first) first = res[0]; last = res[1] || last; }
-    } catch(_){ toast('No se pudo aplicar a esa selección'); }
+    } catch(_){ toast(T('msg.cannot-apply')); }
   });
   selectBetween(first, last);
   after(); History.snap(true); refreshBar();
@@ -148,9 +148,9 @@ function toggleWrap(tag){
 // quita todo el formato: los formatos en línea de lo seleccionado y, en cada bloque tocado, el tipo (encabezado o cita → párrafo)
 function clearFormat(){
   const s = getSelection();
-  if (!s.rangeCount || !ed.contains(s.anchorNode)) return toast('Selecciona primero el texto');
+  if (!s.rangeCount || !ed.contains(s.anchorNode)) return toast(T('msg.select-first'));
   const tops = touchedTops();
-  if (!tops.length) return toast('Selecciona primero el texto');
+  if (!tops.length) return toast(T('msg.select-first'));
   History.mark();
   const r = s.getRangeAt(0), collapsed = s.isCollapsed;
   const caretOff = collapsed ? textOffsetIn(tops[0], r.startContainer, r.startOffset) : 0;
@@ -168,13 +168,13 @@ function clearFormat(){
   });
   if (collapsed) setCaretByOffset(map.get(tops[0]) || tops[0], caretOff);
   else if (first && last) selectBetween(first, last);
-  after(); History.snap(true); refreshBar(); toast('Formato quitado');
+  after(); History.snap(true); refreshBar(); toast(T('msg.format-cleared'));
 }
 
 /* ---- tipo de bloque (párrafo, encabezados, cita, código) sobre toda la selección ---- */
 function applyBlockType(lvl){
   const tops = touchedTops().filter(b => /^(P|H[1-6])$/.test(b.tagName));
-  if (!tops.length) return toast('Ese bloque no admite encabezados');
+  if (!tops.length) return toast(T('msg.no-headings-here'));
   const tag = lvl === 0 ? 'p' : 'h' + lvl;
   const todo = tops.filter(b => !(b.tagName.toLowerCase() === tag && !b.hasAttribute('data-quote')));
   if (!todo.length) return;
@@ -186,7 +186,7 @@ function applyBlockType(lvl){
 }
 function toggleQuoteSelection(){
   const tops = touchedTops().filter(b => /^(P|H[1-6])$/.test(b.tagName));
-  if (!tops.length) return toast('Ese bloque no admite cita');
+  if (!tops.length) return toast(T('msg.no-quote-here'));
   const allQuote = tops.every(b => b.tagName === 'P' && b.hasAttribute('data-quote'));   // todo ya es cita → se quita en todo
   const pt = capSel(), map = new Map();
   tops.forEach(b => {

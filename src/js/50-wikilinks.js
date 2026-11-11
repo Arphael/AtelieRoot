@@ -35,7 +35,7 @@ function linkAt(x, y){
 function followLink(name){
   const d = docByName(name);
   if (d){ openDoc(d.id); return; }
-  confirmBox('Crear «' + name + '»', 'Todavía no existe un documento con ese nombre. Se creará en la carpeta actual.', () => {
+  confirmBox(T('wl.create', { name }), T('wl.create-body'), () => {
     const nd = { id: uid(), type: 'doc', name };
     let host = state.tree;
     walk(state.tree, (n, p) => { if (n.id === state.current && p) host = p.children; });
@@ -76,7 +76,7 @@ function paintWl(){
   if (c.q.trim() && !docByName(c.q)) wl.items.push({ name: c.q.trim(), create: true });
   if (!wl.items.length) return closeWl();
   wl.i = Math.min(wl.i, wl.items.length - 1);
-  wlMenu.innerHTML = '<div class="hint">Enlazar a documento</div>';
+  wlMenu.innerHTML = '<div class="hint">' + esc(T('wl.hint')) + '</div>';
   wl.items.forEach((it, i) => {
     const b = document.createElement('button');
     b.textContent = it.create ? 'Crear «' + it.name + '»' : it.name;
@@ -126,7 +126,7 @@ function paintBacklinks(){
     if (n.type !== 'doc' || n.id === me.id) return;
     if (norm(state.docs[n.id] || '').includes(key)) hits.push(n);
   });
-  if (!hits.length){ list.innerHTML = '<div class="ol-empty">Ningún documento enlaza aquí. Escribe [[' + esc(me.name) + ']] en otro para enlazarlo.</div>'; return; }
+  if (!hits.length){ list.innerHTML = '<div class="ol-empty">' + esc(T('wl.no-backlinks', { name: me.name })) + '</div>'; return; }
   hits.forEach(n => {
     const b = document.createElement('button');
     b.className = 'ol-item';

@@ -20,7 +20,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '1.0.1';
+const VERSION = '1.1.0';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
 const MAX_ENTRIES = 50000;
 const RESTORE_EXT = /\.(?:png|jpe?g|gif|webp|bmp|ico|svg|pdf|txt|csv|tsv|json|ya?ml|toml|ini|log|docx?|xlsx?|pptx?|odt|ods|odp|zip|mp3|mp4|wav|webm)$/i;   // lo único que no es .md y puede volver de la papelera
@@ -74,7 +74,7 @@ function createServer(opts) {
     if (typeof rel !== 'string' || !rel || rel.includes('\0') || rel.includes('\\') || rel.startsWith('/') || /^[A-Za-z]:/.test(rel)) return null;
     const parts = rel.split('/').filter(Boolean);
     if (!parts.length || parts.some(p => p === '..' || p === '.')) return null;
-    if (parts.some(p => p.length > 255)) return null;
+    if (parts.some(p => p.length > 255 || p.includes(':'))) return null;   // «a:b» would be a hidden NTFS stream on Windows (same rule as fsops.rs)
     return parts;
   };
   const absOf = parts => path.join(root, ...parts);

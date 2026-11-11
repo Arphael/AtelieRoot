@@ -3,17 +3,17 @@
 const ctxMenu = $('#ctxMenu');
 let ctxTarget = null, ctxRowEl = null;
 function ctxItems(n){
-  if (!n) return [['newdoc', 'Nuevo documento'], ['newfolder', 'Nueva carpeta']];
+  if (!n) return [['newdoc', T('newDoc')], ['newfolder', T('newFolder.title')]];
   const head = n.type === 'folder'
-    ? [['newdoc', 'Nuevo documento aquí'], ['newfolder', 'Nueva carpeta aquí']]
-    : [['open', 'Abrir'], ['side', 'Abrir al lado'], ['newdoc', 'Nuevo documento al lado'], ['newfolder', 'Nueva carpeta al lado']];
-  return [...head, '-', ['ren', 'Renombrar'], ['dup', 'Duplicar'], ['move', 'Mover a…'], ['up', 'Subir'], ['down', 'Bajar'], '-', ['del', 'Mover a la papelera', true]];
+    ? [['newdoc', T('ctx.newdoc-here')], ['newfolder', T('ctx.newfolder-here')]]
+    : [['open', T('ctx.open')], ['side', T('msg.open-beside')], ['newdoc', T('ctx.newdoc-beside')], ['newfolder', T('ctx.newfolder-beside')]];
+  return [...head, '-', ['ren', T('tree.rename')], ['dup', T('bb.dup')], ['move', T('ctx.move')], ['up', T('ctx.up')], ['down', T('ctx.down')], '-', ['del', T('ctx.trash'), true]];
 }
 function closeCtx(){ ctxMenu.classList.remove('show'); }
 function openCtxMenu(x, y, n, row){
   document.querySelectorAll('.menu.show').forEach(m => m.classList.remove('show'));
   ctxTarget = n || null;
-  ctxMenu.innerHTML = ctxItems(n).map(it => it === '-' ? '<div class="hr"></div>' : '<button data-r="' + it[0] + '"' + (it[2] ? ' style="color:var(--danger)"' : '') + '>' + it[1] + '</button>').join('');
+  ctxMenu.innerHTML = ctxItems(n).map(it => it === '-' ? '<div class="hr"></div>' : '<button data-r="' + it[0] + '"' + (it[2] ? ' style="color:var(--danger)"' : '') + '>' + esc(it[1]) + '</button>').join('');
   ctxMenu.classList.add('show');
   if (row){ ctxRowEl = row; row.classList.add('ctx'); }
   const w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
@@ -25,7 +25,7 @@ new MutationObserver(() => { if (!ctxMenu.classList.contains('show') && ctxRowEl
 // nuevo documento o carpeta en el sitio donde se pulsó: dentro de una carpeta, junto a un documento o en la raíz
 function newIn(n, asFolder){
   const isFolder = !!n && n.type === 'folder';
-  askName(asFolder ? 'Nueva carpeta' : 'Nuevo documento', asFolder ? 'Carpeta' : 'Sin título', v => {
+  askName(T(asFolder ? 'newFolder.title' : 'newDoc'), T(asFolder ? 'name.folder' : 'name.untitled'), v => {
     const node = asFolder ? { id: uid(), type: 'folder', name: v, open: true, children: [] } : { id: uid(), type: 'doc', name: v, mod: Date.now() };
     if (!n){ state.tree.unshift(node); treeEl.scrollTop = 0; }          // en la raíz y arriba del todo
     else if (isFolder){ (n.children = n.children || []).push(node); n.open = true; }
@@ -48,12 +48,12 @@ function rowAction(act, n){
   if (act === 'ren') return renameNode(n);
   if (act === 'dup'){
     const c = cloneTree(n); c.name = n.name + ' (copia)';
-    placeNode(c, n, 'after'); renderTree(); save(true); toast('Duplicado'); return;
+    placeNode(c, n, 'after'); renderTree(); save(true); toast(T('msg.duplicated')); return;
   }
   if (act === 'up' || act === 'down'){
     const s = siblingsOf(n.id); if (!s) return;
     const j = s.i + (act === 'up' ? -1 : 1);
-    if (j < 0 || j >= s.arr.length) return toast(act === 'up' ? 'Ya está arriba del todo' : 'Ya está abajo del todo');
+    if (j < 0 || j >= s.arr.length) return toast(T(act === 'up' ? 'msg.at-top' : 'msg.at-bottom'));
     [s.arr[s.i], s.arr[j]] = [s.arr[j], s.arr[s.i]];
     renderTree(); save(true); return;
   }

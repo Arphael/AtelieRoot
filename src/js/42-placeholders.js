@@ -38,12 +38,12 @@ function updatePh(){
 }
 $('#phBtn').onclick = () => {
   const list = placeholders();
-  if (!list.length) return toast('No hay marcadores [EN_MAYÚSCULAS] en este documento');
+  if (!list.length) return toast(T('msg.no-placeholders'));
   const f = getFills();
-  card.innerHTML = '<h2>Rellenar marcadores</h2>' +
-    '<p>Los valores se aplican al copiar y exportar; el documento no cambia. Lo que dejes vacío se copia tal cual.</p>' +
+  card.innerHTML = '<h2>' + esc(T('ph.title')) + '</h2>' +
+    '<p>' + esc(T('ph.body')) + '</p>' +
     '<div class="ph-list"></div>' +
-    '<div class="btns"><button class="btn" data-clear>Vaciar</button><button class="btn" data-apply>Escribir en el documento</button><button class="btn primary" data-yes>Listo</button></div>';
+    '<div class="btns"><button class="btn" data-clear>' + esc(T('ph.clear')) + '</button><button class="btn" data-apply>' + esc(T('ph.apply')) + '</button><button class="btn primary" data-yes>' + esc(T('btn.done')) + '</button></div>';
   const host = card.querySelector('.ph-list');
   list.forEach((k, i) => {
     const row = document.createElement('div');
@@ -69,7 +69,7 @@ $('#phBtn').onclick = () => {
 function applyFillsToDoc(){
   const f = getFills();
   const keys = Object.keys(f).filter(k => f[k] && f[k].trim());
-  if (!keys.length) return toast('No hay valores que escribir');
+  if (!keys.length) return toast(T('msg.no-values'));
   History.mark();
   let count = 0;
   textNodes().forEach(n => {
@@ -91,6 +91,6 @@ function applyFillsToDoc(){
   });
   keys.forEach(k => delete f[k]);
   after(); History.snap(true);
-  toast(count + (count === 1 ? ' marcador sustituido' : ' marcadores sustituidos'));
+  toast(T(count === 1 ? 'msg.ph-replaced-1' : 'msg.ph-replaced', { n: count }));
 }
 

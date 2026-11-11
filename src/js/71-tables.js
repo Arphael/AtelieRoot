@@ -181,7 +181,7 @@ function pasteGrid(txt){
 /* ---- acciones (barra, menú y teclado) ---- */
 function tableAction(act){
   const tr = tableRect();
-  if (!tr){ toast('Pon el cursor en una tabla'); return; }
+  if (!tr){ toast(T('msg.cursor-in-table')); return; }
   const { tbl, r0, r1, c0, c1, lastR, lastC } = tr;
   const nR = r1 - r0 + 1, nC = c1 - c0 + 1, multi = tr.multi;
   const done = () => { after(); History.snap(true); refreshTableBar(); };
@@ -190,7 +190,7 @@ function tableAction(act){
   if (act === 'seltbl') return selectCells(tbl, 0, 0, lastR, lastC), refreshTableBar();
   if (act === 'copyCsv' || act === 'copyTsv'){
     const txt = gridText(tr, act === 'copyCsv' ? 'csv' : 'tsv');
-    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Tabla copiada como ' + (act === 'copyCsv' ? 'CSV' : 'TSV')), () => toast('No se pudo copiar'));
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(T('msg.table-copied', { f: act === 'copyCsv' ? 'CSV' : 'TSV' })), () => toast(T('msg.copy-failed')));
     return;
   }
   History.mark();
@@ -202,7 +202,7 @@ function tableAction(act){
   if (act === 'alNum'){
     let n = 0;
     for (let j = 0; j <= lastC; j++) if (numericColDom(tbl, j)){ n++; [...tbl.rows].forEach(row => row.children[j] && setCellAlign(row.children[j], 'right')); }
-    if (!n) return toast('No hay columnas de números');
+    if (!n) return toast(T('msg.no-number-cols'));
     return done();
   }
   if (act === 'cwReset'){ clearColWidths(tbl); return done(); }
@@ -220,7 +220,7 @@ function tableAction(act){
   }
   if (act === 'dupRow'){
     const rows = [...tbl.rows].slice(Math.max(1, r0), r1 + 1);
-    if (!rows.length) return toast('El encabezado no se duplica');
+    if (!rows.length) return toast(T('msg.header-no-dup'));
     let ref = tbl.rows[r1];
     const copies = rows.map(tr0 => tr0.cloneNode(true));
     copies.forEach(cp => { ref.after(cp); ref = cp; });
@@ -234,20 +234,20 @@ function tableAction(act){
     normWidths(tbl); caretInto(cellAt(tbl, r0, c1 + 1), false); return done();
   }
   if (act === 'mvUp' || act === 'mvDn'){
-    if (!moveRowsBy(tbl, r0, r1, act === 'mvUp' ? -1 : 1)) return toast(r1 === 0 ? 'El encabezado no se mueve' : act === 'mvUp' ? 'Ya está arriba del todo' : 'Ya está abajo del todo');
+    if (!moveRowsBy(tbl, r0, r1, act === 'mvUp' ? -1 : 1)) return toast(T(r1 === 0 ? 'msg.header-no-move' : act === 'mvUp' ? 'msg.at-top' : 'msg.at-bottom'));
     const d = act === 'mvUp' ? -1 : 1, nr0 = Math.max(1, r0) + d, nr1 = r1 + d;
     multi ? selectCells(tbl, nr0, c0, nr1, c1) : caretInto(cellAt(tbl, nr0, c0), true);
     return done();
   }
   if (act === 'mvL' || act === 'mvR'){
-    if (!moveColsBy(tbl, c0, c1, act === 'mvL' ? -1 : 1)) return toast(act === 'mvL' ? 'Ya está a la izquierda del todo' : 'Ya está a la derecha del todo');
+    if (!moveColsBy(tbl, c0, c1, act === 'mvL' ? -1 : 1)) return toast(T(act === 'mvL' ? 'msg.at-left' : 'msg.at-right'));
     const d = act === 'mvL' ? -1 : 1;
     multi ? selectCells(tbl, r0, c0 + d, r1, c1 + d) : caretInto(cellAt(tbl, r0, c0 + d), true);
     return done();
   }
   if (act === 'sortA' || act === 'sortZ'){
     const keep = tr.cells[0];
-    if (!sortByCol(tbl, c0, act === 'sortA' ? 'asc' : 'desc')) return toast('No hay filas que ordenar');
+    if (!sortByCol(tbl, c0, act === 'sortA' ? 'asc' : 'desc')) return toast(T('msg.no-rows-sort'));
     multi ? selectCells(tbl, 1, c0, lastR, c1) : caretInto(keep, true);          // mover las filas suelta el cursor: se devuelve a su celda
     return done();
   }
@@ -259,14 +259,14 @@ function tableAction(act){
   if (act === 'clear'){ clearCells(tr.cells); return done(); }
   if (act === 'delRow'){
     const rows = [...tbl.rows].slice(Math.max(1, r0), r1 + 1);
-    if (!rows.length) return toast('No se puede quitar el encabezado');
+    if (!rows.length) return toast(T('msg.header-no-remove'));
     const near = tbl.rows[r1 + 1] || tbl.rows[Math.max(1, r0) - 1];
     rows.forEach(row => row.remove());
     if (near && near.isConnected) caretInto(near.children[Math.min(c0, near.children.length - 1)], false);
     return done();
   }
   if (act === 'delCol'){
-    if (nC >= tbl.rows[0].children.length) return toast('La tabla necesita al menos una columna');
+    if (nC >= tbl.rows[0].children.length) return toast(T('msg.need-one-col'));
     [...tbl.rows].forEach(row => [...row.children].slice(c0, c1 + 1).forEach(c => c.remove()));
     normWidths(tbl); caretInto(cellAt(tbl, r0, Math.min(c0, lastC - nC)), false);
     return done();
@@ -302,7 +302,7 @@ tableBar.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.ta){ const al = b.dataset.ta === 'left' ? 'L' : b.dataset.ta === 'center' ? 'C' : 'R'; tableAction((alignScope() === 'table' ? 'tAl' : 'al') + al); return; }
   const t = b.dataset.tt;
-  if (t === 'scope'){ Ui.data.alignScope = alignScope() === 'table' ? 'col' : 'table'; Ui.write(); paintScopeBtn(); toast(alignScope() === 'table' ? 'La alineación se aplicará a toda la tabla' : 'La alineación se aplicará solo a la columna'); return; }
+  if (t === 'scope'){ Ui.data.alignScope = alignScope() === 'table' ? 'col' : 'table'; Ui.write(); paintScopeBtn(); toast(T(alignScope() === 'table' ? 'msg.align-table' : 'msg.align-col')); return; }
   if (t === 'more'){ e.stopPropagation(); const r = b.getBoundingClientRect(); openTblMenu(r.left, r.bottom + 4); return; }
   const map = { tblSel: 'seltbl', colAdd: 'colR', rowAdd: 'rowdn', colDel: 'delCol', rowDel: 'delRow', tblDel: 'delTbl' };
   if (map[t]) tableAction(map[t]);
@@ -310,22 +310,22 @@ tableBar.addEventListener('click', e => {
 function openTblMenu(x, y){
   const tr = tableRect(); if (!tr) return;
   const nR = tr.r1 - tr.r0 + 1, nC = tr.c1 - tr.c0 + 1;
-  const rowsT = n => n === 1 ? 'fila' : n + ' filas', colsT = n => n === 1 ? 'columna' : n + ' columnas';
+  const rowsT = n => T(n === 1 ? 'tm.row' : 'tm.rows', { n }), colsT = n => T(n === 1 ? 'tm.col' : 'tm.cols', { n });
   const items = [
-    ['selrow', 'Seleccionar ' + (nR > 1 ? 'filas' : 'fila')], ['selcol', 'Seleccionar ' + (nC > 1 ? 'columnas' : 'columna')], ['seltbl', 'Seleccionar toda la tabla', 'Ctrl+A'], '-',
-    ['rowup', 'Insertar ' + rowsT(nR) + ' arriba'], ['rowdn', 'Insertar ' + rowsT(nR) + ' abajo'],
-    ['colL', 'Insertar ' + colsT(nC) + ' a la izquierda'], ['colR', 'Insertar ' + colsT(nC) + ' a la derecha'], '-',
-    ['dupRow', 'Duplicar ' + rowsT(nR)], ['dupCol', 'Duplicar ' + colsT(nC)], '-',
-    ['mvUp', 'Mover ' + rowsT(nR) + ' arriba', 'Alt+↑'], ['mvDn', 'Mover ' + rowsT(nR) + ' abajo', 'Alt+↓'],
-    ['mvL', 'Mover ' + colsT(nC) + ' a la izquierda', 'Alt+←'], ['mvR', 'Mover ' + colsT(nC) + ' a la derecha', 'Alt+→'], '-',
-    ['sortA', 'Ordenar por la columna  A → Z'], ['sortZ', 'Ordenar por la columna  Z → A'], '-',
-    ['alL', 'Columna: alinear a la izquierda'], ['alC', 'Columna: centrar'], ['alR', 'Columna: alinear a la derecha'],
-    ['tAlL', 'Toda la tabla: a la izquierda'], ['tAlC', 'Toda la tabla: centrada'], ['tAlR', 'Toda la tabla: a la derecha'],
-    ['alNum', 'Números a la derecha (columnas de números)'], '-',
-    ['clear', 'Vaciar celdas'], ['copyCsv', 'Copiar como CSV'], ['copyTsv', 'Copiar como TSV (hoja de cálculo)'], '-',
-    ['cwReset', 'Restablecer el ancho de columnas'],
-    ['toList', 'Convertir en lista'], ['toText', 'Convertir en texto (una línea por fila)'], ['toBars', 'Convertir en texto con barras «| a | b |»'], '-',
-    ['delRow', 'Eliminar ' + rowsT(nR)], ['delCol', 'Eliminar ' + colsT(nC)], ['delTbl', 'Eliminar tabla', '', true]];
+    ['selrow', T(nR > 1 ? 'tm.sel-rows' : 'tm.sel-row')], ['selcol', T(nC > 1 ? 'tm.sel-cols' : 'tm.sel-col')], ['seltbl', T('tbl.tblSel.aria'), 'Ctrl+A'], '-',
+    ['rowup', T('tm.ins-above', { x: rowsT(nR) })], ['rowdn', T('tm.ins-below', { x: rowsT(nR) })],
+    ['colL', T('tm.ins-left', { x: colsT(nC) })], ['colR', T('tm.ins-right', { x: colsT(nC) })], '-',
+    ['dupRow', T('tm.dup', { x: rowsT(nR) })], ['dupCol', T('tm.dup', { x: colsT(nC) })], '-',
+    ['mvUp', T('tm.mv-up', { x: rowsT(nR) }), 'Alt+↑'], ['mvDn', T('tm.mv-down', { x: rowsT(nR) }), 'Alt+↓'],
+    ['mvL', T('tm.mv-left', { x: colsT(nC) }), 'Alt+←'], ['mvR', T('tm.mv-right', { x: colsT(nC) }), 'Alt+→'], '-',
+    ['sortA', T('tm.sort-az')], ['sortZ', T('tm.sort-za')], '-',
+    ['alL', T('tm.col-left')], ['alC', T('tm.col-center')], ['alR', T('tm.col-right')],
+    ['tAlL', T('tm.tbl-left')], ['tAlC', T('tm.tbl-center')], ['tAlR', T('tm.tbl-right')],
+    ['alNum', T('tm.num-right')], '-',
+    ['clear', T('tm.clear')], ['copyCsv', T('tm.csv')], ['copyTsv', T('tm.tsv')], '-',
+    ['cwReset', T('tm.cw-reset')],
+    ['toList', T('tm.to-list')], ['toText', T('tm.to-text')], ['toBars', T('tm.to-bars')], '-',
+    ['delRow', T('tm.del', { x: rowsT(nR) })], ['delCol', T('tm.del', { x: colsT(nC) })], ['delTbl', T('tbl.tblDel.title'), '', true]];
   document.querySelectorAll('.menu.show').forEach(m => m.classList.remove('show'));
   tblMenu.innerHTML = items.map(it => it === '-' ? '<div class="hr"></div>'
     : '<button data-t="' + it[0] + '"' + (it[3] ? ' style="color:var(--danger)"' : '') + '><span>' + it[1] + '</span>' + (it[2] ? '<span class="k">' + it[2] + '</span>' : '') + '</button>').join('');

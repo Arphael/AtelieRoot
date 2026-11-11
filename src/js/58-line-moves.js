@@ -57,7 +57,7 @@ function moveListItems(li, dir){
   const nested = list.parentElement && list.parentElement.tagName === 'LI';
   if (!nested && items.length === kids.length) return moveWholeBlock(list, dir);   // lista de un solo punto: se mueve el bloque
   const near = dir < 0 ? items[0].previousElementSibling : items[items.length - 1].nextElementSibling;
-  if (!near){ toast(dir < 0 ? 'Es el primer punto de la lista' : 'Es el último punto de la lista'); return; }
+  if (!near){ toast(T(dir < 0 ? 'msg.first-item' : 'msg.last-item')); return; }
   History.mark();
   if (dir < 0) near.before(...items); else near.after(...items);
   restorePts(pts, items[0]);
@@ -91,7 +91,7 @@ function moveParaLines(b, dir){
   const info = paraInfo(b);
   const ls = lineAt(b, r.startContainer, r.startOffset, info), le = lineAt(b, r.endContainer, r.endOffset, info);
   const i0 = Math.min(ls, le), i1 = Math.max(ls, le), n = info.lines.length;
-  if (dir < 0 ? i0 === 0 : i1 === n - 1){ toast(dir < 0 ? 'Es la primera línea del párrafo' : 'Es la última línea del párrafo'); return; }
+  if (dir < 0 ? i0 === 0 : i1 === n - 1){ toast(T(dir < 0 ? 'msg.first-line-p' : 'msg.last-line-p')); return; }
   History.mark();
   const seg = info.lines.splice(i0, i1 - i0 + 1);
   if (dir < 0) info.lines.splice(i0 - 1, 0, ...seg); else info.lines.splice(i0 + 1, 0, ...seg);
@@ -117,7 +117,7 @@ function moveCodeLines(src, dir){
   const i0 = idxOf(a);
   let i1 = idxOf(z);
   if (z > a && z === starts[i1] && i1 > i0) i1--;          // si la selección termina al inicio de una línea, esa no cuenta
-  if (dir < 0 ? i0 === 0 : i1 === lines.length - 1){ toast(dir < 0 ? 'Es la primera línea del código' : 'Es la última línea del código'); return; }
+  if (dir < 0 ? i0 === 0 : i1 === lines.length - 1){ toast(T(dir < 0 ? 'msg.first-line-code' : 'msg.last-line-code')); return; }
   History.mark();
   const seg = lines.splice(i0, i1 - i0 + 1);
   let delta;
