@@ -9,7 +9,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
 
 fails = []
 def check(name, cond, extra=''):
@@ -33,6 +33,7 @@ MOCK = r"""
       ...Object.keys(files).filter(p => hidden || !p.startsWith('.')).map(p => ({ p, t: 'f', s: files[p].text.length, m: files[p].m })),
     ],
     ws_read: ({ p, optional }) => files[p] ? { text: files[p].text, m: files[p].m, s: files[p].text.length } : (optional ? null : err('missing', 'no existe')),
+    ws_read_many: ({ paths }) => paths.map(p => files[p] ? { text: files[p].text, m: files[p].m, s: files[p].text.length } : { error: 'missing' }),
     ws_write: ({ p, text, expect }) => {
       if (!okPath(p)) return err('denied', 'ruta no valida');
       if (expect != null && files[p] && files[p].m !== expect) return err('conflict', 'el archivo cambio en el disco');
@@ -58,7 +59,7 @@ async def until(pg, expr, ms=8000):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(**LAUNCH)
+        b = await engine(p).launch(**LAUNCH)
         pg = await b.new_page()
         await pg.add_init_script(MOCK)
         await pg.goto(URL)

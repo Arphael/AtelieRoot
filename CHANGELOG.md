@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-11
+
+### Changed
+- Large folders open much faster: 5 000 documents in about 2 seconds instead of 10. Documents are read in batches and converted when first used (the rest in the background), so search and links still see every document.
+
+### Fixed
+- The word counter no longer counts invisible zero-width characters as words (an empty document showed 1 word).
+
+### Added
+- Screenshot of the editor in the README.
+- Docs: Firefox and Safari notes in the FAQ.
+
+### Tests
+- Browser tests also run in Firefox and WebKit (Safari's engine), in their own CI job.
+- Unit tests for pure functions (`npm run test:unit`) and a minimal ESLint (`npm run lint`), both part of `npm test`.
+- Large folder test: time to open 5 000 documents, and an edit made right after opening is saved.
+- Shared contract: batch reads (`read_many`) give the same results in the dev server and the desktop app.
+- CI actions moved to their Node 24 releases (`checkout` v7.0.1, `setup-node` v7.1.0, `upload-pages-artifact` v5.0.0).
+
 ## [1.1.0] - 2026-11-10
 
 ### Added

@@ -2,7 +2,8 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, json
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
+ENGINES = ('chromium', 'webkit')   # Firefox: synthetic paste events arrive empty and contenteditable differs (Enter in quotes, replace inside bold); see FAQ
 errs = []; fails = []
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '→ ' + str(extra)))
@@ -49,7 +50,7 @@ SCEN = [
 ]
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     pg = await (await b.new_context(viewport={'width': 1300, 'height': 700})).new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
     await pg.goto(URL); await pg.wait_for_timeout(900); kb = pg.keyboard
     out = {}

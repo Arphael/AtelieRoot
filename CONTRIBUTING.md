@@ -18,7 +18,10 @@ Questions go to [SUPPORT.md](SUPPORT.md); vulnerabilities to [SECURITY.md](SECUR
 | Command                             | What it does                                                                           |
 | ----------------------------------- | -------------------------------------------------------------------------------------- |
 | `npm run check`                     | Structure, syntax, strict mode, no network URLs (< 1 s)                                |
-| `npm test`                          | check + server (`node --test`) + browser (Playwright) against `src/` (~2.5 min)        |
+| `npm test`                          | check + lint + server, contract and unit (`node --test`) + browser (Playwright) against `src/` (~3 min) |
+| `npm run lint`                      | ESLint: names that do not exist and names never used (`eslint.config.mjs`)             |
+| `npm run test:unit`                 | Unit tests of pure functions (`tests/unit/`, no browser, < 1 s)                        |
+| `python tests/run.py --browser firefox` | Browser tests in Firefox (or `webkit`); tests that need Chromium declare `ENGINES`   |
 | `python tests/run.py --only <text>` | Only the tests whose name contains `<text>`                                            |
 | `npm run test:dist`                 | Build and repeat browser tests against `dist/`. Required before calling something done |
 | `npm start`                         | Local server with `./notas`                                                            |

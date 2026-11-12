@@ -19,7 +19,10 @@ Requirements: Node.js 18+ (Python 3.9+ and Playwright only for browser tests).
 ```bash
 npm start            # serves src/ with ./notas at http://localhost:4321
 npm run build        # dist/
-npm test             # full test suite
+npm ci               # dev tools (ESLint)
+npm test             # full test suite: check, lint, server, contract, unit and browser tests
+npm run lint         # ESLint only
+npm run test:unit    # unit tests only (no browser)
 ```
 
 ## 2. Desktop executable

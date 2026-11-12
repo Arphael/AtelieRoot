@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, shutil, socket, subprocess, tempfile, time
 from pathlib import Path
 from playwright.async_api import async_playwright
-from browser import LAUNCH
+from browser import LAUNCH, engine
 from ws_common import T, Disk, run_core, seed, until, tree, names, nid, open_doc, type_end, save_now, _has
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,7 +31,7 @@ async def main():
     port = free_port(); srv = start_server(work, port); url = f'http://localhost:{port}/?lang=es'
     try:
         async with async_playwright() as p:
-            b = await p.chromium.launch(**LAUNCH)
+            b = await engine(p).launch(**LAUNCH)
             ctx = await b.new_context(viewport={'width': 1300, 'height': 700}); pg = await ctx.new_page()
             await pg.goto(url); await pg.wait_for_timeout(900)
             state = {'pg': pg}

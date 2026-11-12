@@ -2,7 +2,8 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
+ENGINES = ('chromium', 'webkit')   # Firefox: synthetic paste events arrive empty and contenteditable differs (Enter in quotes, replace inside bold); see FAQ
 # Writing assistant extensions (spell/grammar checkers) replace words in the editor; the change must reach
 # the Markdown, be undoable and keep the inline format, and spell check must stay on.
 errs = []; fails = []
@@ -16,7 +17,7 @@ REPLACE = """([sel, word, rep]) => { const t = ed.querySelector(sel).firstChild,
 MD = "mdFromDom(ed).trim()"
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     pg = await (await b.new_context(viewport={'width': 1300, 'height': 700})).new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
     await pg.goto(URL); await pg.wait_for_timeout(900)
     await pg.evaluate(SETUP, '<p>Esto es teh texto</p>'); await pg.evaluate(REPLACE, ['p', 'teh', 'the'])

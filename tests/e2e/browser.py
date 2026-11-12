@@ -19,3 +19,11 @@ def _chrome():
 
 CHROME = _chrome()
 LAUNCH = {'executable_path': CHROME} if CHROME else {}
+
+BROWSER = os.environ.get('BROWSER', 'chromium')      # chromium | firefox | webkit (tests/run.py --browser)
+if BROWSER != 'chromium':
+    LAUNCH = {}
+
+
+def engine(p):
+    return getattr(p, BROWSER)

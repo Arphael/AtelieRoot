@@ -9,8 +9,8 @@ Sprints from cleanup to a public, multi-platform release. Each sprint ends with
 | S1     | Public repository, CI, security, community docs | Medium | Done        |
 | S2     | Interface in English and Spanish                | Heavy  | Done        |
 | S3     | Desktop app with Tauri (moved ahead of S2)      | Heavy  | Done        |
-| S4     | Multi-platform releases                         | Medium | Pending     |
-| S5     | Quality and browser coverage                    | Medium | Pending     |
+| S4     | Multi-platform releases                         | Medium | Skipped     |
+| S5     | Quality and browser coverage                    | Heavy  | Done        |
 | S6     | New features                                    | Medium | Backlog     |
 
 ## S0 - Cleanup and documentation (done)
@@ -70,30 +70,29 @@ Moved ahead of S2 so a portable executable (`AtelierRoot.exe`, one file) can be 
 
 Done when: the desktop app opens a folder, edits, autosaves and reloads external changes on Windows (verified live), and the shared contract runner exists.
 
-## S4 - Multi-platform releases
+## S4 - Multi-platform releases (skipped for now)
 
-- [ ] `release.yml` with `tauri-apps/tauri-action`: `.msi`/`.exe` (Windows), `.dmg` (macOS universal), `.AppImage`/`.deb` (Linux) on tag `vX.Y.Z`.
+Skipped: the downloads stay `AtelierRoot.exe` (Windows) and `AtelierRoot.html`, and the web version
+(<https://arphael.github.io/AtelierRoot/>) covers macOS and Linux in Chrome, Edge or Brave. Native macOS/Linux
+builds need code signing to open without warnings, and an update checker would be the app's first internet access.
+
 - [x] First release [`v1.0.0`](https://github.com/Arphael/AtelierRoot/releases/tag/v1.0.0) with `AtelierRoot.exe` + `AtelierRoot.html` attached.
 - [x] Release text from the CHANGELOG section of each version (`scripts/release-notes.mjs`).
 - [x] Release assets: `AtelierRoot.exe` + `AtelierRoot.html` (the Node ZIP was dropped; the server is for development only).
-- [ ] Optional code signing (Windows / Apple notarization) documented; unsigned builds warn the user in README.
-- [ ] Manual smoke test checklist per OS in `CONTRIBUTING.md`.
-- [ ] Auto-update (Tauri updater) - optional.
+- [x] Unsigned builds: the release text and the FAQ explain the SmartScreen warning.
+- Not planned now: installers (`.msi`, `.dmg`, `.AppImage`/`.deb`), code signing, automatic updates.
 
-Done when: a tag produces installers for 3 OSes and each passes the smoke test.
+## S5 - Quality and browser coverage (done, v1.2.0)
 
-## S5 - Quality and browser coverage
-
-- [ ] Firefox and WebKit in e2e (server mode).
+- [x] Firefox and WebKit (Safari's engine) in the browser tests: `python tests/run.py --browser firefox|webkit`, own CI job on Linux. Tests that need Chromium-only APIs (folder access, DevTools protocol) declare `ENGINES`; Firefox differences (synthetic paste events, Enter at the end of a quote, a correction inside bold) are listed in the FAQ.
 - [x] Fix: typing `[ ] ` key by key left a stray `]` in the new task (fixed in v1.0.1).
 - [x] Writing assistant extensions: the editor accepts their corrections (Markdown, autosave, undo; e2e test). They load only on `http`/`https`, so the docs point to the web version for them.
-- [ ] Move pinned actions (`checkout`, `setup-node`; `setup-python` done) to their Node 24 releases (CI warns that Node 20 is deprecated).
-- [ ] Unit tests (`node --test`) for pure functions: `urlAllowed`, `wsSafeName`, `isCodeLike`, `domFromMd`, `tidyMd`, `wsHash`.
-- [ ] ESLint minimal (`no-undef`, `no-unused-vars`).
-- [ ] Lazy document loading for large folders (5 000 files open in < 2 s).
-- [ ] Fix: the word counter counts the zero-width space (`​`) as a word.
-- [ ] Screenshot of the editor in the README.
-- [ ] Verify: remembered folder handle by hand, OneDrive/Dropbox folders, network drives.
+- [x] Pinned actions moved to their Node 24 releases: `checkout` v7.0.1, `setup-node` v7.1.0, `upload-pages-artifact` v5.0.0.
+- [x] Unit tests (`npm run test:unit`, `tests/unit/`) for pure functions: `urlAllowed`, `isCodeLike` / `isFileName`, `tidyMd`, `wsSafeName`, `wsHash` (`domFromMd` stays covered by the browser tests).
+- [x] ESLint minimal (`npm run lint`: `no-undef`, `no-unused-vars`), part of `npm test`; it found one unused variable.
+- [x] Large folders: 5 000 documents open in about 1.5-2 s (they took 10 s). Documents are read in batches (`POST /api/files`, `ws_read_many`, 500 per call) and converted to HTML the first time they are used, the rest in the background; `tests/e2e/test_large_folder.py` keeps the time and checks that an early edit is saved.
+- [x] Fix: the word counter counted the zero-width space (`\u200b`) as a word.
+- [x] Screenshot of the editor in the README.
 
 ## S6 - New features (backlog, by priority)
 
@@ -110,7 +109,7 @@ Done when: a tag produces installers for 3 OSes and each passes the smoke test.
 
 ## Known unverified areas
 
-1. macOS, Linux desktop, Firefox and Safari (only Windows/Linux + Chromium so far).
+1. macOS and Linux desktop builds (not produced); Firefox and Safari are covered by automated tests only.
 2. Real remembered `showDirectoryPicker` handle across browser restarts.
 3. Folders with tens of thousands of files and network drives.
 4. Sync tools (OneDrive, Dropbox, iCloud) rewriting files.

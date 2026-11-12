@@ -1,7 +1,7 @@
 //! Shared backend contract against the desktop backend (`fsops`). The Node server runs the same
 //! scenarios in server/test/contract.test.mjs; both read tests/contract/scenarios.json.
 
-use crate::fsops::{Code, OpError, Root};
+use crate::fsops::{Code, OpError, ReadItem, Root};
 use serde_json::{json, Value};
 use std::fs;
 use std::path::Path;
@@ -29,6 +29,16 @@ fn run_step(root: &Root, s: &Value) -> Value {
             Ok(None) => json!({ "absent": true }),
             Err(e) => code(&e),
         },
+        "read_many" => {
+            let paths: Vec<String> = s["paths"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+            match root.read_many(&paths) {
+                Ok(items) => json!({ "files": items.iter().map(|it| match it {
+                    ReadItem::File(f) => json!({ "text": f.text }),
+                    ReadItem::Failed { error } => json!({ "error": error }),
+                }).collect::<Vec<_>>() }),
+                Err(e) => code(&e),
+            }
+        }
         "write" => {
             let expect = match st("expect_mtime").as_str() {
                 "current" => root.read(&st("path"), false).ok().flatten().map(|f| f.m),

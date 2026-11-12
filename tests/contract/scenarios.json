@@ -98,6 +98,12 @@
       { "op": "delete", "path": "../a.md", "expect": "denied" } ] },
     { "name": "delete inside .atelierroot/ (emptying the trash)", "steps": [
       { "op": "delete", "path": ".atelierroot/trash/t1", "recursive": true, "expect": "ok" },
-      { "op": "list", "hidden": true, "expect": { "entries": ["d:.atelierroot", "d:.atelierroot/trash", "d:Carpeta", "f:.atelierroot/state.json", "f:Carpeta/b.md", "f:a.md"] } } ] }
+      { "op": "list", "hidden": true, "expect": { "entries": ["d:.atelierroot", "d:.atelierroot/trash", "d:Carpeta", "f:.atelierroot/state.json", "f:Carpeta/b.md", "f:a.md"] } } ] },
+    { "name": "read many: every path gets its own result, with the rules of read", "steps": [
+      { "op": "read_many", "paths": ["a.md", "Carpeta/b.md", ".atelierroot/state.json", "notas.txt", "nada.txt", "no-existe.md", "../fuera.md", "nota:alt.md", ".git/x.md"],
+        "expect": { "files": [{ "text": "# A\n" }, { "text": "B" }, { "text": "{}" }, { "error": "denied" }, { "error": "denied" }, { "error": "missing" }, { "error": "denied" }, { "error": "denied" }, { "error": "denied" }] } } ] },
+    { "name": "read many: sees what a write just changed", "steps": [
+      { "op": "write", "path": "a.md", "text": "nuevo", "expect": "ok" },
+      { "op": "read_many", "paths": ["a.md"], "expect": { "files": [{ "text": "nuevo" }] } } ] }
   ]
 }

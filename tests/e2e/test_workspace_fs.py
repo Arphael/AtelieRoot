@@ -6,7 +6,8 @@ import asyncio, http.server, socket, threading
 from functools import partial
 from pathlib import Path
 from playwright.async_api import async_playwright
-from browser import LAUNCH
+from browser import LAUNCH, engine
+ENGINES = ('chromium',)   # File System Access exists only in Chromium browsers
 from ws_common import T, OpfsDisk, run_core, seed, until, tree, names, nid, open_doc, type_end, save_now, ask, _has
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,7 +40,7 @@ def serve():
 async def main():
     t = T(); srv, port = serve(); url = f'http://localhost:{port}/index.html?lang=es'
     async with async_playwright() as p:
-        b = await p.chromium.launch(**LAUNCH)
+        b = await engine(p).launch(**LAUNCH)
         ctx = await b.new_context(viewport={'width': 1300, 'height': 700}); await ctx.add_init_script(INIT)
         pg = await ctx.new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))

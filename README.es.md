@@ -10,6 +10,8 @@ _[Read in English](README.md)_
 Un editor Markdown **local-first**: **cada documento es un archivo `.md` en una carpeta de tu computadora** y todo se guarda solo.
 **Sin nube, sin cuentas, sin internet.** Nada sale de tu máquina.
 
+![Editor AtelierRoot: una lista de publicación con tareas, una tabla y un bloque de código, tema oscuro](docs/img/editor.png)
+
 ## Funciones
 
 |                                 |                                                                                                                                               |

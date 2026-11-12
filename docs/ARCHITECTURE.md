@@ -61,6 +61,7 @@ The full repository lives on GitHub; users download only the executable.
 | ----------------- | ----------------------------------------------------------------------------------------------------- |
 | `state.tree`      | Nodes `{ id, type:'doc'\|'folder', name, children?, open?, mod?, path? }`                             |
 | `state.docs[id]`  | Internal HTML of each document (what `#ed` edits)                                                     |
+|                   | With a folder open it fills lazily: each document is converted from Markdown the first time it is read (`wsLazy` in `82-ws-core.js`), the rest in the background. Ids in `Workspace.lazy` are untouched, so saving skips them. |
 | `state.trash`     | `{ id, node, docIds, parentId, at, docPaths? }`                                                       |
 | `state.fills[id]` | Values of `[UPPERCASE]` placeholders                                                                  |
 | `Dirty`           | Docs touched in this tab                                                                              |

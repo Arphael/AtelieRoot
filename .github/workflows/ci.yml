@@ -13,27 +13,47 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    # shared runners are slower than a desktop: test_large_folder keeps a regression guard (10 s before the fix)
+    env: { ATELIERROOT_LARGE_BUDGET: '5' }
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22 }
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with: { python-version: '3.12' }
       - run: pip install playwright
       - name: Install Chromium
         run: python -m playwright install ${{ runner.os == 'Linux' && '--with-deps' || '' }} chromium
-      - run: npm test            # check + server + browser tests against src/
+      - run: npm ci              # ESLint (dev dependency)
+      - run: npm test            # check + lint + server + unit + browser tests against src/
       - run: npm run test:dist   # build + browser tests against dist/
+
+  browsers:
+    name: firefox and webkit (ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22 }
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with: { python-version: '3.12' }
+      - run: pip install playwright
+      - run: python -m playwright install --with-deps firefox webkit
+      # tests that need Chromium-only APIs (folder access, DevTools protocol) declare ENGINES and are skipped
+      - run: python tests/run.py --skip-server --browser firefox
+      - run: python tests/run.py --skip-server --browser webkit
 
   rust:
     name: desktop backend (windows)
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22 }
       - run: npm run build       # the Tauri build embeds dist/
       - run: npm run test:rust   # contract rules in src-tauri/src/fsops.rs

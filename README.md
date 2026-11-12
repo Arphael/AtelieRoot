@@ -10,6 +10,8 @@ _[Leer en español](README.es.md)_
 A **local-first** Markdown editor: **every document is a `.md` file in a folder on your computer**, and everything saves itself.
 **No cloud, no accounts, no internet.** Nothing leaves your machine.
 
+![AtelierRoot editor: a release checklist with tasks, a table and a code block, dark theme](docs/img/editor.png)
+
 ## Features
 
 |                             |                                                                                                        |

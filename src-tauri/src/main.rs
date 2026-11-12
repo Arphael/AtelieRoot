@@ -107,6 +107,11 @@ fn ws_read(state: State<App>, p: String, optional: bool) -> Result<Option<FileDa
 }
 
 #[tauri::command]
+fn ws_read_many(state: State<App>, paths: Vec<String>) -> Result<Vec<fsops::ReadItem>, String> {
+    current(&state)?.read_many(&paths).map_err(|e| e.wire())
+}
+
+#[tauri::command]
 fn ws_write(state: State<App>, p: String, text: String, expect: Option<u64>) -> Result<Stat, String> {
     current(&state)?.write(&p, &text, expect).map_err(|e| e.wire())
 }
@@ -130,7 +135,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(App::default())
-        .invoke_handler(tauri::generate_handler![ws_root, ws_pick, ws_clear, ws_list, ws_read, ws_write, ws_mkdir, ws_move, ws_remove])
+        .invoke_handler(tauri::generate_handler![ws_root, ws_pick, ws_clear, ws_list, ws_read, ws_read_many, ws_write, ws_mkdir, ws_move, ws_remove])
         .run(tauri::generate_context!())
         .expect("error while running AtelierRoot");
 }

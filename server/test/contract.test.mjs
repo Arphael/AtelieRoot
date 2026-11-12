@@ -44,6 +44,7 @@ for (const c of spec.cases){
           if (s.expect_mtime === 'stale') q = '&expect=1';
           r = await api('PUT', `file?p=${enc(s.path)}${q}`, { text: s.text });
         }
+        else if (s.op === 'read_many'){ r = await api('POST', 'files', { paths: s.paths }); }
         else if (s.op === 'mkdir'){ r = await api('POST', `mkdir?p=${enc(s.path)}`); }
         else if (s.op === 'move'){ r = await api('POST', 'move', { from: s.from, to: s.to }); }
         else if (s.op === 'delete'){ r = await api('DELETE', `file?p=${enc(s.path)}` + (s.recursive ? '&recursive=1' : '')); }
@@ -53,6 +54,7 @@ for (const c of spec.cases){
           const j = await r.json();
           if (s.op === 'list') got = { entries: j.entries.map(e => e.t + ':' + e.p).sort() };
           else if (s.op === 'read') got = j.missing ? { absent: true } : { text: j.text };
+          else if (s.op === 'read_many') got = { files: j.files.map(f => f.error ? { error: f.error } : { text: f.text }) };
           else got = 'ok';
         }
         assert.deepEqual(got, s.expect, where);

@@ -59,6 +59,17 @@ test('un enlace simbólico no puede sacar a escribir fuera de la carpeta', async
   assert.equal((await call('GET', '/api/file?p=enlace/secreto.md')).status, 403);
   assert.ok(!fs.existsSync(path.join(outside, 'nuevo.md')));
 });
+test('leer en lote (POST /api/files): enlaces a fuera, token y límite de rutas', async t => {
+  assert.equal((await call('POST', '/api/files', { paths: ['Carpeta/b.md'] }, {})).status, 401);
+  assert.equal((await call('POST', '/api/files', { paths: Array(501).fill('Carpeta/b.md') })).status, 400);
+  assert.equal((await call('POST', '/api/files', { paths: 'Carpeta/b.md' })).status, 400);
+  let links = true;
+  try { fs.symlinkSync(outside, path.join(work, 'enlace2'), 'dir'); fs.symlinkSync(path.join(outside, 'secreto.md'), path.join(work, 'atajo.md'), 'file'); } catch { links = false; }
+  const { files } = await (await call('POST', '/api/files', { paths: ['Carpeta/b.md', 'enlace2/secreto.md', 'atajo.md', 'enlace2/secreto.md'] })).json();
+  assert.deepEqual(files[0], { text: 'B', m: files[0].m, s: 1 });
+  if (!links) { t.skip('este sistema no permite crear enlaces simbólicos'); return; }
+  assert.deepEqual(files.slice(1).map(f => f.error), ['denied', 'denied', 'denied'], 'una carpeta o un archivo enlazados fuera no se leen');
+});
 test('mkdir, move (archivo y carpeta), destino ocupado y delete', async () => {
   assert.equal((await call('POST', '/api/mkdir?p=Nueva/Sub')).status, 200); assert.ok(fs.statSync(path.join(work, 'Nueva/Sub')).isDirectory());
   assert.equal((await call('POST', '/api/move', { from: 'a.md', to: 'Nueva/a.md' })).status, 200); assert.ok(fs.existsSync(path.join(work, 'Nueva/a.md')));

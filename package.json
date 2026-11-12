@@ -1,6 +1,6 @@
 {
   "name": "atelierroot",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Local-first Markdown editor: every document is a .md file in a folder on your computer.",
   "author": "Alejandro Reyes",
   "license": "MIT",
@@ -20,11 +20,13 @@
     "start": "node server/atelierroot-server.js --dir ./notas --app src --open",
     "start:dist": "node server/atelierroot-server.js --dir ./notas --app dist --open",
     "check": "node scripts/check.mjs",
+    "lint": "eslint .",
     "build": "node scripts/build.mjs",
     "vendor:prism": "node scripts/vendor-prism.mjs",
     "test:server": "node --test server/test/server.test.mjs server/test/contract.test.mjs",
+    "test:unit": "node --test tests/unit/pure.test.mjs",
     "test:e2e": "python tests/run.py --skip-server",
-    "test": "npm run check && python tests/run.py",
+    "test": "npm run check && npm run lint && python tests/run.py",
     "test:dist": "npm run build && python tests/run.py --dist",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "tauri:dev": "tauri dev",
@@ -43,6 +45,11 @@
     "dist"
   ],
   "devDependencies": {
-    "@tauri-apps/cli": "2.12.4"
+    "@tauri-apps/cli": "2.12.4",
+    "eslint": "10.14.0",
+    "globals": "17.14.0"
+  },
+  "overrides": {
+    "minimatch": "11.0.8"
   }
 }

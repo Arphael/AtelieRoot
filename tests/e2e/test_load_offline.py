@@ -2,14 +2,14 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
 errs = []; fails = []
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '→ ' + str(extra)))
   if not cond: fails.append(name)
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     pg = await (await b.new_context(viewport={'width': 1300, 'height': 700})).new_page(); reqs = []; fail_reqs = []
     pg.on('pageerror', lambda e: errs.append((str(e), (e.stack or '')[:300])))
     pg.on('request', lambda r: reqs.append(r.url)); pg.on('requestfailed', lambda r: fail_reqs.append(r.url))

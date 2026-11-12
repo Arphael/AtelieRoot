@@ -157,7 +157,7 @@ function afterTreeChange(){
 }
 function lastModifiedDoc(){
   let best = null;
-  walk(state.tree, n => { if (n.type === 'doc' && n.mod && state.docs[n.id] !== undefined && (!best || n.mod > best.mod)) best = n; });
+  walk(state.tree, n => { if (n.type === 'doc' && n.mod && n.id in state.docs && (!best || n.mod > best.mod)) best = n; });
   return best ? best.id : null;
 }
 function purgeDocs(ids){ (ids || []).forEach(id => { delete state.docs[id]; Dirty.delete(id); Sync.del.add(id); }); }

@@ -2,7 +2,8 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, re
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
+ENGINES = ('chromium',)   # uses the Chrome DevTools Protocol (clipboard permissions)
 # on macOS Ctrl+click is a right click; links open with Cmd+click there
 MOD = 'Meta' if sys.platform == 'darwin' else 'Control'
 errs=[]; fails=[]
@@ -12,7 +13,7 @@ def check(name, cond, extra=''):
 MDT = '| Tarea | AT |\n| --- | --- |\n| T1 | 0 |\n| T2 | 1 |'
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     ctx = await b.new_context(viewport={'width':1300,'height':700}); await ctx.grant_permissions(['clipboard-read','clipboard-write'])
     pg = await ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
     await pg.goto(URL); await pg.wait_for_timeout(900); kb = pg.keyboard

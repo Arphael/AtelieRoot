@@ -2,7 +2,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
 # Small screens: every right-hand tool (live Markdown ... language) stays reachable. When one does not fit,
 # the whole group moves to the right-hand Tools panel; view tools that overflow go there too, not to «More».
 errs = []; fails = []
@@ -15,7 +15,7 @@ STATE = """r => { const vis = el => el && !el.closest('.ovf') && getComputedStyl
            overflow: bar.scrollWidth > bar.clientWidth + 1 } }"""
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     for w in (1400, 1100, 760, 390):
       ctx = await b.new_context(viewport={'width': w, 'height': 760}); pg = await ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
       await pg.goto(URL); await pg.wait_for_timeout(900)

@@ -2,7 +2,8 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, re
 from playwright.async_api import async_playwright
-from browser import URL, LAUNCH
+from browser import URL, LAUNCH, engine
+ENGINES = ('chromium', 'webkit')   # Firefox: synthetic paste events arrive empty and contenteditable differs (Enter in quotes, replace inside bold); see FAQ
 errs = []; fails = []
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '→ ' + str(extra)))
@@ -11,7 +12,7 @@ YES = [r'C:\Users\ana', 'C:\\', r'D:\Proyectos\AtelierRoot\atelierroot.html', r'
 NO = [r'Nota:\x', 'C:', r'\\x', r'\Users\ana', '50%', r'%%\x', 'C:/Users/ana', r'a\b', r'\n', 'x:y']
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     ctx = await b.new_context(viewport={'width': 1300, 'height': 700}); pg = await ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
     await pg.goto(URL); await pg.wait_for_timeout(900); kb = pg.keyboard
     dom = lambda: pg.evaluate("ed.innerHTML.replace(/\\u200b/g,'').replace(/&nbsp;/g,' ').replace(/<br><\\/p>/g,'</p>')"); md = lambda: pg.evaluate("docMd()")

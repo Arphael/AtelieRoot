@@ -44,6 +44,9 @@ opened differs (the browser asks for permission, the desktop app remembers the f
 
 **Firefox / Safari cannot open a folder.**
 They do not support the File System Access API. Use Chrome or Edge, or the desktop app.
+In them the editor works in temporary mode (documents stay in the browser; **Export backup** saves them).
+The automated tests run in Firefox and Safari's engine too. Known differences in Firefox: Enter at the end
+of a quote and an extension's correction inside bold text can behave differently than in Chrome.
 
 **Brave says it cannot open folders.**
 Brave ships folder access turned off. Open `brave://flags/#file-system-access-api`, choose **Enabled** and restart Brave.

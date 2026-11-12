@@ -12,6 +12,8 @@ tests first, then every backend.
 ```
 list()                       -> [{ p, t: 'f'|'d', s, m }]   paths relative, '/' separated
 read(p)                      -> { text, m, s } | { missing: true }
+readMany(paths)              -> [{ text, m, s } | { error: code }]   optional; up to 500 paths, same order,
+                                                             each with the rules of read (opening a folder)
 write(p, text, expect?)      -> { m, s }                    expect = mtime last read
 mkdir(p)                     -> {}
 move(from, to)               -> {}
@@ -42,6 +44,7 @@ random per server start and injected only into the served `index.html` as
 | `GET /api/events`  | -                                          | SSE stream; an event is sent when the listing signature changes (poll 1.2 s) |                             |
 | `GET /api/list`    | `hidden=1` includes `.atelierroot/`        | `{ entries: [{p,t,s,m}] }` (max 50 000)                                      |                             |
 | `GET /api/file`    | `p`, `optional=1`                          | `{ text, m, s }` or `{ missing: true }`                                      | 400, 403, 404               |
+| `POST /api/files`  | body `{ paths: [...] }` (max 500)          | `{ files: [{ text, m, s } \| { error: denied\|missing\|io }] }`               | 400                         |
 | `PUT /api/file`    | `p`, `expect`; body `{ text }` (max 25 MB) | `{ m, s }`                                                                   | 400, 403, 409 conflict, 413 |
 | `DELETE /api/file` | `p`, `recursive=1`                         | `{}`                                                                         | 403                         |
 | `POST /api/mkdir`  | `p`                                        | `{}`                                                                         | 400, 403                    |

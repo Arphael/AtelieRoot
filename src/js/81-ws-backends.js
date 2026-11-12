@@ -29,6 +29,7 @@ class HttpBackend {
   async init(){ const j = await this.api('GET', 'ping'); this.name = j.name; return this; }
   list(hidden){ return this.api('GET', 'list' + (hidden ? '?hidden=1' : '')).then(j => j.entries); }
   read(p, optional){ return this.api('GET', 'file?p=' + encodeURIComponent(p) + (optional ? '&optional=1' : '')).then(r => r.missing ? null : r); }
+  readMany(paths){ return this.api('POST', 'files', { paths }).then(j => j.files); }   // [{ text, m, s } | { error }], same order
   write(p, text, expect){ return this.api('PUT', 'file?p=' + encodeURIComponent(p) + (expect ? '&expect=' + expect : ''), { text }); }
   mkdir(p){ return this.api('POST', 'mkdir?p=' + encodeURIComponent(p)); }
   move(a, b){ return this.api('POST', 'move', { from: a, to: b }); }
@@ -133,6 +134,7 @@ class TauriBackend {
   }
   list(hidden){ return this.call('ws_list', { hidden: !!hidden }); }
   read(p, optional){ return this.call('ws_read', { p, optional: !!optional }); }
+  readMany(paths){ return this.call('ws_read_many', { paths }); }                 // [{ text, m, s } | { error }], same order
   write(p, text, expect){ return this.call('ws_write', { p, text, expect: expect ? Number(expect) : null }); }
   mkdir(p){ return this.call('ws_mkdir', { p }).then(() => ({})); }
   move(a, b){ return this.call('ws_move', { from: a, to: b }).then(() => ({})); }

@@ -99,15 +99,53 @@ async function wsReadMeta(be){
 const wsLite = n => { const o = { id: n.id, type: n.type, name: n.name }; if (n.children) o.children = n.children.map(wsLite); return o; };
 const wsRevive = o => { const n = { id: o.id, type: o.type, name: o.name }; if (o.type === 'folder'){ n.children = (o.children || []).map(wsRevive); n.open = false; } return n; };
 
+// Opening a large folder: converting thousands of documents to HTML up front is the slowest part, so
+// state.docs and Workspace.saved get each document's HTML the first time anything reads it, both from the
+// same Markdown (so "changed?" comparisons stay exact); the rest is converted in small idle chunks.
+// W.lazy: ids nobody has read or written in state.docs yet. Those are unchanged, so saving skips them;
+// any access to state.docs[id] (read, write, delete) removes the id first.
+function wsLazy(src){
+  const W = Workspace, cache = new Map(), lazy = new Set(src.keys());
+  const htmlOf = id => { let h = cache.get(id); if (h === undefined){ const s = src.get(id); h = wsHtml(s.text); if (s.ex) h = wsApply(h, s.ex); cache.set(id, h); } return h; };
+  const wrap = (obj, onUse) => {
+    const todo = new Set(src.keys());
+    const fill = (t, k) => { if (typeof k !== 'string' || !todo.has(k)) return; todo.delete(k); t[k] = htmlOf(k); };
+    return new Proxy(obj, {
+      get(t, k, r){ fill(t, k); onUse(k); return Reflect.get(t, k, r); },
+      getOwnPropertyDescriptor(t, k){ fill(t, k); onUse(k); return Reflect.getOwnPropertyDescriptor(t, k); },
+      has(t, k){ return todo.has(k) || Reflect.has(t, k); },
+      ownKeys(t){ return [...new Set([...Reflect.ownKeys(t), ...todo])]; },
+      set(t, k, v, r){ todo.delete(k); onUse(k); return Reflect.set(t, k, v, r); },
+      deleteProperty(t, k){ todo.delete(k); onUse(k); return Reflect.deleteProperty(t, k); },
+    });
+  };
+  state.docs = wrap(state.docs, k => lazy.delete(k));
+  W.saved = wrap(W.saved, () => {});
+  W.lazy = lazy;
+  const ids = [...lazy]; let i = 0;
+  const step = () => {
+    if (W.lazy !== lazy) return;                                                      // another folder was opened
+    const end = Math.min(ids.length, i + 150);
+    for (; i < end; i++) if (lazy.has(ids[i])){ void W.saved[ids[i]]; void state.docs[ids[i]]; }
+    if (i < ids.length) setTimeout(step, 0);
+  };
+  setTimeout(step, 300);
+}
 async function wsLoad(be){
   const W = Workspace;
-  Object.assign(W, { be, kind: be.kind, name: be.name || T('name.folder'), known: {}, text: {}, saved: {}, extras: {}, nodes: new Map(), trashIds: new Set(), trashInfo: new Map(), idUsed: new Set(), metaJson: '', startId: null });
+  Object.assign(W, { be, kind: be.kind, name: be.name || T('name.folder'), known: {}, text: {}, saved: {}, extras: {}, nodes: new Map(), trashIds: new Set(), trashInfo: new Map(), idUsed: new Set(), metaJson: '', startId: null, lazy: null });
   const entries = (await be.list(false)).filter(e => e.t === 'd' || wsIsMd(e.p));
   entries.sort((a, b) => a.p.localeCompare(b.p, 'es', { numeric: true, sensitivity: 'base' }));
   const meta = await wsReadMeta(be);
-  // contenido de todos los documentos (de 8 en 8)
-  const reads = {};
-  await wsPool(entries.filter(e => e.t === 'f'), 8, async e => { try { reads[e.p] = await be.read(e.p); } catch(err){ console.warn('No se pudo leer', e.p, err.message); } });
+  // contenido de todos los documentos: en lotes de 500 si el backend sabe leer varios a la vez (servidor y app de escritorio), si no de 8 en 8
+  const reads = {}, files = entries.filter(e => e.t === 'f');
+  if (be.readMany){
+    const batches = []; for (let i = 0; i < files.length; i += 500) batches.push(files.slice(i, i + 500));
+    await wsPool(batches, 4, async batch => {
+      let res; try { res = await be.readMany(batch.map(e => e.p)); } catch(err){ console.warn('No se pudieron leer', batch.length, 'archivos', err.message); return; }
+      batch.forEach((e, k) => { const r = res[k]; if (r && !r.error) reads[e.p] = r; else console.warn('No se pudo leer', e.p, r && r.error); });
+    });
+  } else await wsPool(files, 8, async e => { try { reads[e.p] = await be.read(e.p); } catch(err){ console.warn('No se pudo leer', e.p, err.message); } });
   const ok = entries.filter(e => e.t === 'd' || reads[e.p]);
   // árbol
   const idOf = {}, pathOf = {};
@@ -123,13 +161,16 @@ async function wsLoad(be){
   const openSet = new Set(meta.open || []);
   walk(state.tree, n => { n.path = pathOf[n.id]; if (n.type === 'folder'){ n.open = openSet.has(n.path); W.known[n.path] = { t: 'd', m: 0, s: 0 }; } });
   // documentos
+  // the Markdown -> HTML conversion of each document waits until something reads it (see wsLazy)
+  const src = new Map();
   walk(state.tree, n => {
     if (n.type !== 'doc') return;
-    const r = reads[n.path]; let html = wsHtml(r.text); const ex = meta.extras && meta.extras[n.path];
-    if (ex){ html = wsApply(html, ex); W.extras[n.id] = ex; }
-    state.docs[n.id] = html; W.saved[n.id] = html; W.text[n.path] = r.text; W.known[n.path] = { t: 'f', m: r.m, s: r.s }; n.mod = r.m;
+    const r = reads[n.path], ex = meta.extras && meta.extras[n.path];
+    if (ex) W.extras[n.id] = ex;
+    src.set(n.id, { text: r.text, ex }); W.text[n.path] = r.text; W.known[n.path] = { t: 'f', m: r.m, s: r.s }; n.mod = r.m;
     if (meta.fills && meta.fills[n.path]) state.fills[n.id] = meta.fills[n.path];
   });
+  wsLazy(src);
   // papelera (lo eliminado vive en .atelierroot/trash)
   for (const t of (meta.trash || [])){
     if (!t || !t.node) continue;
@@ -221,7 +262,7 @@ async function wsTrashOnDisk(id, rec){
   walk([rec.node], x => { delete x.path; });
 }
 async function wsPlace(nodes, parentDir){
-  const W = Workspace, be = W.be, taken = new Set();
+  const W = Workspace, taken = new Set();
   const nameOf = n => wsSafeName(n.name, n.type === 'doc') + (n.type === 'doc' ? '.md' : '');
   const stays = n => n.path && wsDir(n.path) === parentDir && wsBase(n.path) === nameOf(n);
   const ordered = [...nodes].sort((a, b) => (stays(b) ? 1 : 0) - (stays(a) ? 1 : 0));    // los que ya tienen su nombre en el disco conservan su sitio
@@ -280,6 +321,7 @@ async function wsFlushDocs(){
   const W = Workspace, be = W.be; let again = false; const docs = [];
   walk(state.tree, n => { if (n.type === 'doc' && n.path) docs.push(n); });
   for (const n of docs){
+    if (W.lazy && W.lazy.has(n.id)) continue;                                          // never read since the folder opened: unchanged
     const html = state.docs[n.id];
     if (html === undefined || html === W.saved[n.id]) continue;
     const md = wsMdText(html);
@@ -328,7 +370,7 @@ async function wsPersist(){
 }
 function wsSchedule(now){ const W = Workspace; if (!W.active) return Promise.resolve(); W.q = W.q.then(wsPersist); return W.q; }
 const wsJKey = () => 'atelierroot.wj.' + wsHash(Workspace.kind + '|' + Workspace.name);
-const wsUnsaved = () => { const out = []; walk(state.tree, n => { if (n.type === 'doc' && n.path){ const h = state.docs[n.id]; if (h !== undefined && h !== Workspace.saved[n.id]) out.push(n); } }); return out; };
+const wsUnsaved = () => { const out = []; walk(state.tree, n => { if (n.type === 'doc' && n.path && !(Workspace.lazy && Workspace.lazy.has(n.id))){ const h = state.docs[n.id]; if (h !== undefined && h !== Workspace.saved[n.id]) out.push(n); } }); return out; };
 function wsJournalWrite(){                                  // al cerrar u ocultar la pestaña: lo que aún no llegó al disco se anota de forma síncrona
   try {
     const j = {}; wsUnsaved().forEach(n => { const h = state.docs[n.id]; if (h.length < 1500000) j[n.path] = { md: wsMdText(h), base: wsHash(Workspace.text[n.path] || '') }; });

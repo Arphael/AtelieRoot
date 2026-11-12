@@ -2,7 +2,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 from playwright.async_api import async_playwright
-from browser import URL as _URL, LAUNCH
+from browser import URL as _URL, LAUNCH, engine
 import re
 URL = re.sub(r'[?&]lang=\w+', '', _URL)          # this test checks the automatic language, so no forced ?lang=
 URL_EN = URL + ('&' if '?' in URL else '?') + 'lang=en'
@@ -28,7 +28,7 @@ async def palette(pg):
   return r
 async def main():
   async with async_playwright() as p:
-    b = await p.chromium.launch(**LAUNCH)
+    b = await engine(p).launch(**LAUNCH)
     # default language follows the system
     for loc, want in (('en-US', 'en'), ('es-MX', 'es'), ('fr-FR', 'en')):
       ctx = await b.new_context(locale=loc); pg = await ctx.new_page(); await pg.goto(URL); await pg.wait_for_timeout(700)

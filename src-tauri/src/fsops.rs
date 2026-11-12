@@ -27,10 +27,10 @@ pub struct OpError { pub code: Code, pub msg: String }
 impl OpError {
     fn new(code: Code, msg: impl Into<String>) -> Self { OpError { code, msg: msg.into() } }
     /// "code:message", parsed by TauriBackend in src/js/81-ws-backends.js.
-    pub fn wire(&self) -> String {
-        let c = match self.code { Code::Conflict => "conflict", Code::Exists => "exists", Code::Missing => "missing", Code::Denied => "denied", Code::Io => "io" };
-        format!("{}:{}", c, self.msg)
+    pub fn code_str(&self) -> &'static str {
+        match self.code { Code::Conflict => "conflict", Code::Exists => "exists", Code::Missing => "missing", Code::Denied => "denied", Code::Io => "io" }
     }
+    pub fn wire(&self) -> String { format!("{}:{}", self.code_str(), self.msg) }
 }
 
 impl From<std::io::Error> for OpError {
@@ -54,6 +54,14 @@ pub struct FileData { pub text: String, pub m: u64, pub s: u64 }
 
 #[derive(Serialize, Debug)]
 pub struct Stat { pub m: u64, pub s: u64 }
+
+/// One result of read_many: the file, or { error: code } (same codes as the single read).
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
+pub enum ReadItem { File(FileData), Failed { error: &'static str } }
+
+/// Paths per read_many call (same limit as POST /api/files in the dev server).
+pub const MAX_MANY: usize = 500;
 
 /// Relative "/" path -> parts, or None if it could escape or is malformed.
 pub fn safe_rel(rel: &str) -> Option<Vec<String>> {
@@ -151,6 +159,16 @@ impl Root {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound && optional => Ok(None),
             Err(e) => Err(e.into()),
         }
+    }
+
+    /// Many reads in one call (opening a large folder); each path follows the rules of read.
+    pub fn read_many(&self, paths: &[String]) -> R<Vec<ReadItem>> {
+        if paths.len() > MAX_MANY { return Err(OpError::new(Code::Denied, format!("hasta {} rutas", MAX_MANY))); }
+        Ok(paths.iter().map(|p| match self.read(p, false) {
+            Ok(Some(f)) => ReadItem::File(f),
+            Ok(None) => ReadItem::Failed { error: "missing" },
+            Err(e) => ReadItem::Failed { error: e.code_str() },
+        }).collect())
     }
 
     pub fn write(&self, rel: &str, text: &str, expect: Option<u64>) -> R<Stat> {

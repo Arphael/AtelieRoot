@@ -32,9 +32,10 @@ function stash(){
 }
 function setPath(){ const p = pathOf(state.current); $('#path').textContent = p; const n = findNode(state.current); $('#mTitle').textContent = n ? n.name : ''; $('#mSub').textContent = p; paintPaneNames(); }
 function counts(){
-  const t = ed.innerText.replace(/\s+/g,' ').trim();
+  const raw = ed.innerText.replace(/[​-‍⁠﻿]/g, '');   // zero-width caret anchors are not text
+  const t = raw.replace(/\s+/g,' ').trim();
   $('#wc').textContent = T('status.words', { n: t ? t.split(' ').length : 0 });
-  $('#cc').textContent = T('status.chars', { n: ed.innerText.length });
+  $('#cc').textContent = T('status.chars', { n: raw.length });
 }
 document.addEventListener('langchange', () => counts());
 function ensureBlocks(){

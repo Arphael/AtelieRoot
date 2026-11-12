@@ -20,8 +20,9 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
+const MAX_MANY = 500;                        // rutas por POST /api/files
 const MAX_ENTRIES = 50000;
 const RESTORE_EXT = /\.(?:png|jpe?g|gif|webp|bmp|ico|svg|pdf|txt|csv|tsv|json|ya?ml|toml|ini|log|docx?|xlsx?|pptx?|odt|ods|odp|zip|mp3|mp4|wav|webm)$/i;   // lo único que no es .md y puede volver de la papelera
 // The page may only talk to this server; remote images in a document stay allowed (http/https), scripts never.
@@ -135,6 +136,21 @@ function createServer(opts) {
     req.on('error', reject);
   });
 
+  // one read for POST /api/files, with the rules of GET /api/file: { text, m, s } or { error: denied|missing|io }
+  // dirs: realInside of each folder, shared by one batch (a plain file adds nothing to its folder's real path;
+  // a link, junction included, is resolved in full like in GET /api/file)
+  async function readOne(p, dirs) {
+    const parts = typeof p === 'string' ? safeRel(p) : null; if (!parts) return { error: 'denied' };   // like the 400 of GET /api/file
+    const abs = absOf(parts);
+    if (!insideRoot(abs) || (parts[0] !== '.atelierroot' && !writable(parts))) return { error: 'denied' };
+    let st; try { st = await fsp.lstat(abs); } catch (e) { return { error: e.code === 'ENOENT' ? 'missing' : 'io' }; }
+    const dir = path.dirname(abs);
+    if (!dirs.has(dir)) dirs.set(dir, realInside(dir));
+    if (!(await (st.isSymbolicLink() ? realInside(abs) : dirs.get(dir)))) return { error: 'denied' };
+    try { const st = await fsp.stat(abs); if (!st.isFile()) return { error: 'missing' }; return { text: await fsp.readFile(abs, 'utf8'), m: Math.round(st.mtimeMs), s: st.size }; }
+    catch (e) { return { error: e.code === 'ENOENT' ? 'missing' : 'io' }; }
+  }
+
   async function api(req, res, url) {
     const q = k => url.searchParams.get(k);
     const route = url.pathname.slice(5);                 // sin «/api/»
@@ -144,6 +160,14 @@ function createServer(opts) {
       res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
     }
     if (route === 'list' && req.method === 'GET') return json(res, 200, { entries: await listAll(q('hidden') === '1') });
+    if (route === 'files' && req.method === 'POST') {            // many reads in one request (opening a large folder)
+      let paths; try { paths = JSON.parse((await readBody(req)).toString('utf8')).paths; } catch (_) { return fail(res, 400, 'JSON no válido'); }
+      if (!Array.isArray(paths) || paths.length > MAX_MANY) return fail(res, 400, `paths: lista de hasta ${MAX_MANY} rutas`);
+      const out = new Array(paths.length), dirs = new Map();
+      let i = 0;
+      await Promise.all(Array.from({ length: Math.min(16, paths.length) }, async () => { while (i < paths.length) { const k = i++; out[k] = await readOne(paths[k], dirs); } }));
+      return json(res, 200, { files: out });
+    }
     if (route === 'file') {
       const parts = safeRel(q('p')); if (!parts) return fail(res, 400, 'ruta no válida');
       const abs = absOf(parts);
