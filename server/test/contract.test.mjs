@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
-const { createServer } = createRequire(import.meta.url)('../atelierroot-server.js');
+const { createServer } = createRequire(import.meta.url)('../atelieroot-server.js');
 const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 const spec = JSON.parse(fs.readFileSync(path.join(here, '..', '..', 'tests', 'contract', 'scenarios.json'), 'utf8'));
 
@@ -20,7 +20,7 @@ const codeOf = async r => {
 };
 
 function makeFixture(){
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'atelierroot-contract-')), root = path.join(tmp, 'notas');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'atelieroot-contract-')), root = path.join(tmp, 'notas');
   for (const [rel, text] of Object.entries(spec.fixture)){ const f = path.join(root, ...rel.split('/')); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, text); }
   return { tmp, root };
 }
@@ -29,7 +29,7 @@ for (const c of spec.cases){
   test(c.name, async () => {
     const { tmp, root } = makeFixture();
     const srv = createServer({ dir: root, port: 0 }), port = await srv.listen();
-    const H = { 'X-AtelierRoot-Token': srv.token, 'Content-Type': 'application/json' };
+    const H = { 'X-AtelieRoot-Token': srv.token, 'Content-Type': 'application/json' };
     const api = (method, p, body) => fetch(`http://127.0.0.1:${port}/api/${p}`, { method, headers: H, body: body === undefined ? undefined : JSON.stringify(body) });
     const enc = encodeURIComponent;
     try {

@@ -9,7 +9,7 @@ no accounts, no internet", and users want to keep using other tools on the same 
 
 ## Decision
 The source of truth is a folder of `.md` files on the user's disk. Metadata Markdown cannot hold
-lives in `.atelierroot/state.json`. No sync service, no telemetry, no network requests from the app.
+lives in `.atelieroot/state.json`. No sync service, no telemetry, no network requests from the app.
 Conflicts with outside edits are resolved by keeping both versions, never by overwriting.
 
 ## Consequences

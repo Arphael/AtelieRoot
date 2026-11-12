@@ -10,4 +10,4 @@ labels: enhancement
 
 **Acceptance criterion** (what a person should be able to do)
 
-**Does it change files on disk or `.atelierroot/state.json`?** yes / no
+**Does it change files on disk or `.atelieroot/state.json`?** yes / no

@@ -1,0 +1,58 @@
+/* ---- comentarios, atajos, edición múltiple, versión y «Acerca de» (S7) ---- */
+
+/* commented text: soft underline; resolved and orphan anchors look like plain text */
+#ed span[data-cmt],#ed2 span[data-cmt]{background:rgba(201,169,97,.13);border-bottom:2px solid rgba(201,169,97,.55);border-radius:2px;cursor:pointer}
+#ed span[data-cmt][data-cmt-r],#ed2 span[data-cmt][data-cmt-r]{background:none;border-bottom:none;cursor:auto}
+#ed span[data-cmt-o],#ed2 span[data-cmt-o]{display:none}
+::highlight(cmt-on){background-color:rgba(201,169,97,.42)}
+
+/* comments panel (right), same slide as the tools panel */
+#cmts{position:fixed;right:0;top:0;bottom:0;z-index:38;width:min(340px,92vw);display:flex;flex-direction:column;background:var(--bg-side);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.45);transform:translateX(102%);visibility:hidden;pointer-events:none;transition:transform .18s ease,visibility 0s linear .18s}
+body.cmts-open #cmts{transform:none;visibility:visible;pointer-events:auto;transition:transform .18s ease,visibility 0s}
+#cmtsBody{flex:1;min-height:0;overflow:auto;padding:10px}
+.cmt-foot{padding:10px 16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-faint)}
+.cmt-empty{padding:18px 8px;font-size:13px;color:var(--ink-faint);line-height:1.5}
+.cmt-card{margin-bottom:10px;padding:10px 12px;border:1px solid var(--line-soft);border-radius:8px;background:var(--bg);cursor:pointer}
+.cmt-card.on{border-color:var(--accent)}
+.cmt-card.resolved{opacity:.65}
+.cmt-quote{margin-bottom:6px;padding-left:8px;border-left:3px solid rgba(201,169,97,.6);font-size:12.5px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmt-quote.orphan{font-style:italic;border-left-color:var(--ink-faint)}
+.cmt-item+.cmt-item{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft)}
+.cmt-meta{font-size:11px;color:var(--ink-faint)}
+.cmt-text{margin-top:2px;font-size:13.5px;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.cmt-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cmt-acts .btn{padding:4px 10px;font-size:12px}
+.cmt-editor textarea{width:100%;box-sizing:border-box;margin-top:6px;padding:8px;border:1px solid var(--line-soft);border-radius:6px;background:var(--bg-hi);color:var(--ink);font:inherit;font-size:13.5px;resize:vertical}
+.cmt-res-toggle{width:100%;margin-top:4px}
+#cmtBtn{position:relative}
+.cmt-n{position:absolute;top:1px;right:1px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--accent-btn);color:var(--accent-btn-ink);font-size:9.5px;font-weight:700;line-height:14px;text-align:center}
+.cmt-n:empty{display:none}
+
+/* multi-edit places */
+::highlight(multi){background-color:rgba(120,170,255,.35)}
+::highlight(multi-caret){text-decoration:underline 2px rgba(120,170,255,.95)}
+
+/* word wrap off (Alt+Z): code blocks and the live Markdown scroll sideways */
+body.no-wrap .cb pre{white-space:pre;word-break:normal;overflow-x:auto}
+body:not(.no-wrap) #pvText{white-space:pre-wrap;word-break:break-word}
+
+/* shortcut list and search in all documents */
+#card.wide{width:min(720px,94vw)}
+.kb-list{max-height:min(60vh,520px)}
+.kb-g{margin:12px 4px 4px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint)}
+.kb-row{display:flex;align-items:baseline;gap:14px;padding:5px 6px;font-size:13.5px;color:var(--ink-soft)}
+.kb-row kbd{flex:0 0 190px;font-family:var(--mono);font-size:12px;color:var(--ink)}
+.gs-count{margin:6px 2px;font-size:12px;color:var(--ink-faint)}
+.gs-item .pt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs-item mark{background:rgba(201,169,97,.4);color:inherit;border-radius:2px}
+@media (max-width:600px){ .kb-row{flex-direction:column;gap:2px} .kb-row kbd{flex:none} }
+
+/* version next to «Saved», and the app name as a button */
+#ver{margin-left:10px;padding:0 4px;border:none;background:none;color:var(--ink-faint);font:inherit;font-size:inherit;cursor:pointer}
+#ver:hover,#ver:focus-visible{color:var(--ink);text-decoration:underline}
+button.brand{border:none;background:none;padding:0;text-align:left;cursor:pointer}
+button.brand:hover,button.brand:focus-visible{color:var(--accent)}
+.about-ver{margin:4px 0 10px;color:var(--ink-dim);font-size:13px}
+.about-what{margin:0 0 12px;line-height:1.5}
+.about-links{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.about-links a{color:var(--accent)}

@@ -75,8 +75,8 @@ async def main():
         check('the document content is loaded from the file', await until(pg, "ed.textContent.includes('hola desde el disco')"), await pg.evaluate("ed.innerHTML.slice(0, 200)"))
 
         await pg.evaluate("caretInto(ed.lastElementChild, true)")
-        await pg.keyboard.type(' y desde AtelierRoot')
-        saved = await until(pg, "(__mock.files['Intro.md'].text || '').includes('y desde AtelierRoot')", 10000)
+        await pg.keyboard.type(' y desde AtelieRoot')
+        saved = await until(pg, "(__mock.files['Intro.md'].text || '').includes('y desde AtelieRoot')", 10000)
         check('autosave writes the .md through ws_write', saved, await pg.evaluate("__mock.files['Intro.md'].text"))
         check('ws_write is called with expect (mtime last read)', await pg.evaluate("__mock.calls.some(c => c[0] === 'ws_write' && c[1].p === 'Intro.md' && typeof c[1].expect === 'number')"))
 

@@ -4,7 +4,7 @@
 - Date: 2026-11-08
 
 ## Context
-Users need one small file that runs AtelierRoot on Windows (first), macOS and Linux, without
+Users need one small file that runs AtelieRoot on Windows (first), macOS and Linux, without
 installing Node. Developers need a fast loop and the existing browser test suite.
 
 ## Options

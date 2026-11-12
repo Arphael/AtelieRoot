@@ -48,7 +48,7 @@ function numericVals(vals){ const v = vals.map(x => x.replace(/\u200b/g, '').tri
 function numericColDom(tbl, c){ return numericVals([...tbl.rows].slice(1).map(tr => tr.children[c] ? tr.children[c].textContent : '')); }
 
 /* ---- 3. ancho de columnas arrastrando el borde ---- */
-// Los anchos se guardan en la tabla (porcentajes en la fila de encabezado). Markdown no tiene anchos, así que solo valen dentro de AtelierRoot.
+// Los anchos se guardan en la tabla (porcentajes en la fila de encabezado). Markdown no tiene anchos, así que solo valen dentro de AtelieRoot.
 const MIN_COL = 6;
 const colWidthsPct = tbl => { const w = tbl.getBoundingClientRect().width || 1; return [...tbl.rows[0].children].map(c => c.getBoundingClientRect().width / w * 100); };
 function setColWidths(tbl, arr){

@@ -8,7 +8,7 @@ errs = []; fails = []
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '→ ' + str(extra)))
   if not cond: fails.append(name)
-YES = [r'C:\Users\ana', 'C:\\', r'D:\Proyectos\AtelierRoot\atelierroot.html', r'c:\temp', r'C:\Program', r'\\servidor\recurso\carpeta', r'%USERPROFILE%\.config-tool\\', r'%APPDATA%', r'%USERPROFILE%', r'.\run.bat', r'..\lib\x', r'~\notas', r'C:\Users\ana\.config\skills\x.md']
+YES = [r'C:\Users\ana', 'C:\\', r'D:\Proyectos\AtelieRoot\atelieroot.html', r'c:\temp', r'C:\Program', r'\\servidor\recurso\carpeta', r'%USERPROFILE%\.config-tool\\', r'%APPDATA%', r'%USERPROFILE%', r'.\run.bat', r'..\lib\x', r'~\notas', r'C:\Users\ana\.config\skills\x.md']
 NO = [r'Nota:\x', 'C:', r'\\x', r'\Users\ana', '50%', r'%%\x', 'C:/Users/ana', r'a\b', r'\n', 'x:y']
 async def main():
   async with async_playwright() as p:
@@ -41,7 +41,7 @@ async def main():
     d = await typed(['Lee README.md.', ' ', 'Luego']); check('nombre de archivo con punto final', d == f'<p>Lee {CODE("README.md")}. Luego</p>', d)
     d = await typed(['p.ej. etc. ', 'fin']); check('abreviaturas no son archivos', d == '<p>p.ej. etc. fin</p>', d)
     d = await typed([r'"C:\Users\ana" ', 'fin']); check('entre comillas', d == f'<p>"{CODE(r"C:\Users\ana")}" fin</p>', d)
-    d = await typed([r'- D:\Proyectos\AtelierRoot', 'Enter', 'otro']); check('en una lista, con Enter', d == f'<ul><li>{CODE(r"D:\Proyectos\AtelierRoot")}</li><li>otro</li></ul>', d)
+    d = await typed([r'- D:\Proyectos\AtelieRoot', 'Enter', 'otro']); check('en una lista, con Enter', d == f'<ul><li>{CODE(r"D:\Proyectos\AtelieRoot")}</li><li>otro</li></ul>', d)
     d = await typed([r'## En %APPDATA%\Editor', 'Enter', 'x']); check('con variable de entorno, en un encabezado', f'<h2>En {CODE(r"%APPDATA%\Editor")}</h2>' in d, d)
     d = await typed([r'Red \\servidor\recurso\x y .\run.bat ', 'fin']); check('ruta de red y ruta relativa', d.count('data-code') == 2, d)
     d = await typed([r'C:\Program Files\Git\bin ', 'fin']); check('con espacios en los nombres (C:\\Program Files\\Git\\bin): UN solo código', d == f'<p>{CODE(r"C:\Program Files\Git\bin")} fin</p>', d)
@@ -63,7 +63,7 @@ async def main():
     print('=== 3. al pegar ===')
     await fresh(); await paste(r'(C:\Users\ana)'); d = await dom(); check('pegar «(C:\\Users\\ana)»', d == f'<p>({CODE(r"C:\Users\ana")})</p>', d)
     await fresh(); await paste(r'Mira C:\Users\ana\.config\x y %APPDATA%\Editor fin'); d = await dom(); check('varias en una frase, con «\\.» dentro (la barra se conserva)', d == f'<p>Mira {CODE(r"C:\Users\ana\.config\x")} y {CODE(r"%APPDATA%\Editor")} fin</p>', d)
-    await fresh(); await paste(r'C:\Program Files\AtelierRoot\app.exe listo'); d = await dom(); check('con espacios: «C:\\Program Files\\AtelierRoot\\app.exe» entera', d == f'<p>{CODE(r"C:\Program Files\AtelierRoot\app.exe")} listo</p>', d)
+    await fresh(); await paste(r'C:\Program Files\AtelieRoot\app.exe listo'); d = await dom(); check('con espacios: «C:\\Program Files\\AtelieRoot\\app.exe» entera', d == f'<p>{CODE(r"C:\Program Files\AtelieRoot\app.exe")} listo</p>', d)
     await fresh(); await paste(r'Instalado en C:\Program Files (x86)\Foo\bar.'); d = await dom(); check('con «(x86)» y punto final', d == f'<p>Instalado en {CODE(r"C:\Program Files (x86)\Foo\bar")}.</p>', d)
     await fresh(); await paste(r'Copia C:\a\b C:\c\d ya'); d = await dom(); check('dos rutas seguidas son dos códigos, no una sola', d.count('data-code') == 2 and CODE(r'C:\a\b') in d and CODE(r'C:\c\d') in d, d)
     await fresh(); await paste(r'"C:\Program Files\x"'); d = await dom(); check('entre comillas y con espacios: las comillas quedan fuera', d == f'<p>"{CODE(r"C:\Program Files\x")}"</p>', d)

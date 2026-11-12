@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "AtelierRoot",
-  "mainBinaryName": "AtelierRoot",
-  "version": "1.2.0",
+  "productName": "AtelieRoot",
+  "mainBinaryName": "AtelieRoot",
+  "version": "2.0.0",
   "identifier": "io.github.arphael.atelierroot",
   "build": {
     "frontendDist": "../dist",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "AtelierRoot",
+        "title": "AtelieRoot",
         "width": 1280,
         "height": 820,
         "minWidth": 480,

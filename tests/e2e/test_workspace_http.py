@@ -1,4 +1,4 @@
-"""Carpeta de trabajo con el servidor local de AtelierRoot (server/atelierroot-server.js): el servidor de verdad, un navegador de verdad y archivos de verdad."""
+"""Carpeta de trabajo con el servidor local de AtelieRoot (server/atelieroot-server.js): el servidor de verdad, un navegador de verdad y archivos de verdad."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, shutil, socket, subprocess, tempfile, time
@@ -8,7 +8,7 @@ from browser import LAUNCH, engine
 from ws_common import T, Disk, run_core, seed, until, tree, names, nid, open_doc, type_end, save_now, _has
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = Path(os.environ.get('ATELIERROOT_APP_DIR', ROOT / 'src'))
+SRC = Path(os.environ.get('ATELIEROOT_APP_DIR', ROOT / 'src'))
 
 
 def free_port():
@@ -16,7 +16,7 @@ def free_port():
 
 
 def start_server(work, port):
-    proc = subprocess.Popen(['node', str(ROOT / 'server' / 'atelierroot-server.js'), '--dir', str(work), '--port', str(port), '--app', str(SRC)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    proc = subprocess.Popen(['node', str(ROOT / 'server' / 'atelieroot-server.js'), '--dir', str(work), '--port', str(port), '--app', str(SRC)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     end = time.time() + 10
     while time.time() < end:
         try: socket.create_connection(('127.0.0.1', port), timeout=0.3).close(); return proc
@@ -25,7 +25,7 @@ def start_server(work, port):
 
 
 async def main():
-    t = T(); tmp = Path(tempfile.mkdtemp(prefix='atelierroot-ws-')); work = tmp / 'Mis notas'; work.mkdir()
+    t = T(); tmp = Path(tempfile.mkdtemp(prefix='atelieroot-ws-')); work = tmp / 'Mis notas'; work.mkdir()
     disk = Disk(work); await seed(disk)
     await disk.write('notas.txt', 'no soy .md'); await disk.write('.git/x.md', 'oculto')
     port = free_port(); srv = start_server(work, port); url = f'http://localhost:{port}/?lang=es'
@@ -40,7 +40,7 @@ async def main():
             pg = await run_core(t, pg, disk, 'http', reopen); state['pg'] = pg
 
             print('=== 10. Servidor local: dos pestañas, servidor que se cae y diario de seguridad ===')
-            t.check('la página recibe el token del servidor y no lo muestra en ningún sitio visible', await pg.evaluate("!!document.querySelector('meta[name=atelierroot-token]') && !document.body.innerText.includes(document.querySelector('meta[name=atelierroot-token]').content)"), '')
+            t.check('la página recibe el token del servidor y no lo muestra en ningún sitio visible', await pg.evaluate("!!document.querySelector('meta[name=atelieroot-token]') && !document.body.innerText.includes(document.querySelector('meta[name=atelieroot-token]').content)"), '')
             pg2 = await ctx.new_page(); await pg2.goto(url); await pg2.wait_for_timeout(1200)
             await until(lambda: pg2.evaluate("Workspace.active && state.tree.length > 0"), 20)
             t.check('una segunda pestaña abre la misma carpeta', await pg2.evaluate("Workspace.active"), '')

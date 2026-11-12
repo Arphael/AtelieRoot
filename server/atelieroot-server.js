@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Servidor local de AtelierRoot (sin dependencias).
+ * Servidor local de AtelieRoot (sin dependencias).
  *
- *   node server/atelierroot-server.js --dir ./notas [--port 4321] [--app ./dist] [--open]
+ *   node server/atelieroot-server.js --dir ./notas [--port 4321] [--app ./dist] [--open]
  *
  * Sirve la aplicación y expone una API mínima para leer y escribir los .md de UNA carpeta.
  * Seguridad (solo escucha en la propia máquina):
  *   - escucha únicamente en 127.0.0.1;
- *   - cada arranque genera un token que solo recibe la página que sirve este servidor (cabecera X-AtelierRoot-Token);
+ *   - cada arranque genera un token que solo recibe la página que sirve este servidor (cabecera X-AtelieRoot-Token);
  *   - se rechazan peticiones cuyo Host no sea el propio servidor (defensa contra «DNS rebinding»);
  *   - toda ruta se confina a la carpeta de trabajo (nada de «..», rutas absolutas ni enlaces simbólicos hacia fuera);
- *   - solo se escriben archivos .md/.markdown y lo que haya dentro de .atelierroot/.
+ *   - solo se escriben archivos .md/.markdown y lo que haya dentro de .atelieroot/.
  */
 const http = require('node:http');
 const fs = require('node:fs');
@@ -20,7 +20,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '1.2.0';
+const VERSION = '2.0.0';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
 const MAX_MANY = 500;                        // rutas por POST /api/files
 const MAX_ENTRIES = 50000;
@@ -54,9 +54,16 @@ function findAppDir(explicit) {
 }
 
 /** Crea el servidor. Devuelve { server, token, root, listen(), close() }. */
+// v2.0 renamed the hidden folder: a folder used by v1 has .atelierroot/ (state, trash); it becomes .atelieroot/
+function migrateHidden(root) {
+  const from = path.join(root, '.atelierroot'), to = path.join(root, '.atelieroot');
+  try { if (fs.statSync(from).isDirectory() && !fs.existsSync(to)) fs.renameSync(from, to); } catch (_) {}
+}
+
 function createServer(opts) {
   // native, like fsp.realpath below: the JS version keeps 8.3 short names (C:\Users\RUNNER~1) and every path would look "outside"
   const root = fs.realpathSync.native(path.resolve(opts.dir));
+  migrateHidden(root);
   const appDir = findAppDir(opts.app);
   const token = crypto.randomBytes(24).toString('hex');
   const sseClients = new Set();
@@ -90,12 +97,12 @@ function createServer(opts) {
   };
   const metaDotOk = p => !p.startsWith('.') || p === '.keep' || p === '.gitignore';
   const writable = parts => {
-    if (parts[0] === '.atelierroot') return parts.length > 1 && parts.slice(1).every(metaDotOk);
+    if (parts[0] === '.atelieroot') return parts.length > 1 && parts.slice(1).every(metaDotOk);
     if (parts.some(p => p.startsWith('.'))) return false;
     const last = parts[parts.length - 1].toLowerCase();
     return last.endsWith('.md') || last.endsWith('.markdown');
   };
-  const writableDir = parts => parts[0] === '.atelierroot' ? parts.length > 1 : !parts.some(p => p.startsWith('.'));
+  const writableDir = parts => parts[0] === '.atelieroot' ? parts.length > 1 : !parts.some(p => p.startsWith('.'));
 
   async function listAll(includeHidden) {
     const out = [];
@@ -103,14 +110,14 @@ function createServer(opts) {
       let ents; try { ents = await fsp.readdir(dirAbs, { withFileTypes: true }); } catch { return; }
       for (const e of ents) {
         if (out.length >= MAX_ENTRIES) return;
-        const hidden = e.name.startsWith('.'), isMeta = rel === '' && e.name === '.atelierroot';
+        const hidden = e.name.startsWith('.'), isMeta = rel === '' && e.name === '.atelieroot';
         if (e.name === 'node_modules' || e.isSymbolicLink()) continue;
-        if (hidden && !(includeHidden && isMeta) && !(includeHidden && rel.startsWith('.atelierroot'))) continue;
+        if (hidden && !(includeHidden && isMeta) && !(includeHidden && rel.startsWith('.atelieroot'))) continue;
         const p = rel ? `${rel}/${e.name}` : e.name, abs = path.join(dirAbs, e.name);
         if (e.isDirectory()) { out.push({ p, t: 'd', s: 0, m: 0 }); await walk(abs, p); }
         else if (e.isFile()) {
           const lower = e.name.toLowerCase(), isMd = lower.endsWith('.md') || lower.endsWith('.markdown');
-          if (!isMd && !(p.startsWith('.atelierroot/') && includeHidden)) continue;
+          if (!isMd && !(p.startsWith('.atelieroot/') && includeHidden)) continue;
           try { const st = await fsp.stat(abs); out.push({ p, t: 'f', s: st.size, m: Math.round(st.mtimeMs) }); } catch { /* desapareció */ }
         }
       }
@@ -125,7 +132,7 @@ function createServer(opts) {
     return h === `localhost:${port}` || h === `127.0.0.1:${port}` || h === `[::1]:${port}`;
   };
   const tokenOk = (req, url) => {
-    const t = req.headers['x-atelierroot-token'] || url.searchParams.get('token') || '';
+    const t = req.headers['x-atelieroot-token'] || url.searchParams.get('token') || '';
     const a = Buffer.from(String(t)), b = Buffer.from(token);
     return a.length === b.length && crypto.timingSafeEqual(a, b);
   };
@@ -142,7 +149,7 @@ function createServer(opts) {
   async function readOne(p, dirs) {
     const parts = typeof p === 'string' ? safeRel(p) : null; if (!parts) return { error: 'denied' };   // like the 400 of GET /api/file
     const abs = absOf(parts);
-    if (!insideRoot(abs) || (parts[0] !== '.atelierroot' && !writable(parts))) return { error: 'denied' };
+    if (!insideRoot(abs) || (parts[0] !== '.atelieroot' && !writable(parts))) return { error: 'denied' };
     let st; try { st = await fsp.lstat(abs); } catch (e) { return { error: e.code === 'ENOENT' ? 'missing' : 'io' }; }
     const dir = path.dirname(abs);
     if (!dirs.has(dir)) dirs.set(dir, realInside(dir));
@@ -173,7 +180,7 @@ function createServer(opts) {
       const abs = absOf(parts);
       if (!insideRoot(abs) || !(await realInside(abs))) return fail(res, 403, 'fuera de la carpeta');
       if (req.method === 'GET') {
-        const isMeta = parts[0] === '.atelierroot';
+        const isMeta = parts[0] === '.atelieroot';
         if (!isMeta && !writable(parts)) return fail(res, 403, 'solo se leen .md');
         try { const st = await fsp.stat(abs); if (!st.isFile()) return fail(res, 404, 'no es un archivo'); return json(res, 200, { text: await fsp.readFile(abs, 'utf8'), m: Math.round(st.mtimeMs), s: st.size }); }
         catch (e) {
@@ -182,7 +189,7 @@ function createServer(opts) {
         }
       }
       if (req.method === 'PUT') {
-        if (!writable(parts)) return fail(res, 403, 'solo se escriben .md y .atelierroot/');
+        if (!writable(parts)) return fail(res, 403, 'solo se escriben .md y .atelieroot/');
         const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
         if (typeof body.text !== 'string') return fail(res, 400, 'falta text');
         const expect = q('expect');
@@ -191,12 +198,12 @@ function createServer(opts) {
           if (cur !== 0 && cur !== Number(expect)) return fail(res, 409, 'el archivo cambió en el disco');
         }
         await fsp.mkdir(path.dirname(abs), { recursive: true });
-        const tmp = path.join(path.dirname(abs), `.atelierroot-tmp-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
+        const tmp = path.join(path.dirname(abs), `.atelieroot-tmp-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
         await fsp.writeFile(tmp, body.text, 'utf8'); await fsp.rename(tmp, abs);   // escritura atómica
         const st = await fsp.stat(abs); return json(res, 200, { m: Math.round(st.mtimeMs), s: st.size });
       }
       if (req.method === 'DELETE') {
-        if (!writable(parts)) return fail(res, 403, 'solo se borran .md y .atelierroot/');
+        if (!writable(parts)) return fail(res, 403, 'solo se borran .md y .atelieroot/');
         try { await fsp.rm(abs, { force: true, recursive: q('recursive') === '1' }); return json(res, 200, {}); } catch (e) { return fail(res, 500, e.message); }
       }
     }
@@ -211,7 +218,7 @@ function createServer(opts) {
       const aa = absOf(a), bb = absOf(b);
       if (!insideRoot(aa) || !insideRoot(bb) || !(await realInside(aa)) || !(await realInside(bb))) return fail(res, 403, 'fuera de la carpeta');
       let isDir = false; try { isDir = (await fsp.stat(aa)).isDirectory(); } catch { return fail(res, 404, 'no existe'); }
-      const fromTrash = a[0] === '.atelierroot' && a[1] === 'trash', safeDest = !b.some(x => x.startsWith('.')) && b[0] !== '.atelierroot';
+      const fromTrash = a[0] === '.atelieroot' && a[1] === 'trash', safeDest = !b.some(x => x.startsWith('.')) && b[0] !== '.atelieroot';
       const restorable = fromTrash && safeDest && !isDir && RESTORE_EXT.test(b[b.length - 1]);          // devolver de la papelera una imagen, un PDF… (nunca scripts ni ejecutables)
       if (isDir ? !(writableDir(a) && writableDir(b)) : !((writable(a) && writable(b)) || restorable)) return fail(res, 403, 'movimiento no permitido');
       try { await fsp.access(bb); return fail(res, 409, 'el destino ya existe'); } catch { /* libre */ }
@@ -228,7 +235,7 @@ function createServer(opts) {
       const st = await fsp.stat(abs); if (!st.isFile()) throw new Error('no es archivo');
       let data = await fsp.readFile(abs);
       if (path.basename(abs) === 'index.html') {
-        data = Buffer.from(data.toString('utf8').replace('</head>', `<meta name="atelierroot-token" content="${token}">\n<meta name="atelierroot-server" content="1">\n</head>`));
+        data = Buffer.from(data.toString('utf8').replace('</head>', `<meta name="atelieroot-token" content="${token}">\n<meta name="atelieroot-server" content="1">\n</head>`));
       }
       return send(res, 200, data, { 'Content-Type': MIME[path.extname(abs).toLowerCase()] || 'application/octet-stream' });
     } catch { return send(res, 404, 'No encontrado', { 'Content-Type': 'text/plain; charset=utf-8' }); }
@@ -273,14 +280,14 @@ async function main() {
   let o;
   try { o = parseArgs(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exit(2); }
   if (o.help) {
-    console.log('Uso: node server/atelierroot-server.js --dir <carpeta> [--port 4321] [--app <carpeta de la app>] [--open]\n  --dir   carpeta donde viven tus .md (se crea si no existe)\n  --port  puerto (por defecto 4321)\n  --app   carpeta con index.html de AtelierRoot (por defecto ../app, ../dist o ../src)\n  --open  abre el navegador');
+    console.log('Uso: node server/atelieroot-server.js --dir <carpeta> [--port 4321] [--app <carpeta de la app>] [--open]\n  --dir   carpeta donde viven tus .md (se crea si no existe)\n  --port  puerto (por defecto 4321)\n  --app   carpeta con index.html de AtelieRoot (por defecto ../app, ../dist o ../src)\n  --open  abre el navegador');
     return;
   }
   fs.mkdirSync(path.resolve(o.dir), { recursive: true });
   const s = createServer(o);
   const port = await s.listen();
   const url = `http://localhost:${port}/`;
-  console.log(`AtelierRoot listo en ${url}\nCarpeta de trabajo: ${s.root}\nPulsa Ctrl+C para salir.`);
+  console.log(`AtelieRoot listo en ${url}\nCarpeta de trabajo: ${s.root}\nPulsa Ctrl+C para salir.`);
   if (o.open) openBrowser(url);
   process.on('SIGINT', () => s.close().then(() => process.exit(0)));
 }

@@ -5,6 +5,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-11
+
+### Changed
+- **Renamed to AtelieRoot.** Downloads are `AtelieRoot.exe` and `AtelieRoot.html`; the repository is `Arphael/AtelieRoot` and the web version moved to https://arphael.github.io/AtelieRoot/ (the old address no longer works).
+- The hidden folder is now `.atelieroot/`. A folder used by v1 is migrated the first time it is opened (`.atelierroot/` is renamed, nothing is lost; `.md` files are not touched). Browser settings move from `atelierroot.*` to `atelieroot.*` by themselves. Major version because a v1 app does not see the state of a migrated folder.
+- Focus mode moved from `Ctrl+Shift+F` to `Ctrl+K Z`; `Ctrl+Shift+F` now searches all documents.
+- `Ctrl+K` waits a moment for a second key (`C`, `U`, `Z`, `S`) before inserting a link.
+
+### Added
+- VS Code shortcuts: `Ctrl+D` (word, then next match), `Ctrl+Shift+L` (all matches) and `Shift+Alt+I` (end of each line) start **multi-edit**: typing, deleting or pasting happens in every place, one `Ctrl+Z` undoes it. Also `Ctrl+L` (select line), `Shift+Alt+Up/Down` (duplicate line), `Ctrl+Shift+K` (delete line), `Alt+Z` (word wrap in code and the live Markdown), `F2` (rename a document and update its `[[links]]`).
+- Search in all documents (`Ctrl+Shift+F`): matches with context; `Enter` opens the document at that match.
+- **Comments**, like in Word or Notion: select text, `Ctrl+/` (or `Ctrl+K Ctrl+C`); a panel to reply, edit, resolve and delete; `Ctrl+K Ctrl+U` removes one. They stay in the app: not in the `.md`, copies or exports; with a folder open they are kept in `.atelieroot/state.json`. If the commented text is deleted the comment stays.
+- Keyboard shortcuts list: toolbar button, `Ctrl+K Ctrl+S` or the command palette; all shortcuts, with a filter.
+- The installed version is shown next to «Saved»; it and the app name open «About» with links to the repository, changes, web version and issues (in the desktop app they open in the system browser, only the project's pages).
+
+### Tests
+- New browser tests for the shortcuts, multi-edit, search, comments (including a real folder through the local server) and the v1 -> v2 migration; Node and Rust tests for the hidden folder migration and the allowed links.
+
 ## [1.2.0] - 2026-11-11
 
 ### Changed

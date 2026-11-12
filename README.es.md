@@ -1,16 +1,20 @@
-# AtelierRoot
+# AtelieRoot
 
-[![CI](https://github.com/Arphael/AtelierRoot/actions/workflows/ci.yml/badge.svg)](https://github.com/Arphael/AtelierRoot/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/Arphael/AtelierRoot/actions/workflows/codeql.yml/badge.svg)](https://github.com/Arphael/AtelierRoot/actions/workflows/codeql.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Arphael/AtelierRoot/badge)](https://scorecard.dev/viewer/?uri=github.com/Arphael/AtelierRoot)
+[![CI](https://github.com/Arphael/AtelieRoot/actions/workflows/ci.yml/badge.svg)](https://github.com/Arphael/AtelieRoot/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Arphael/AtelieRoot/actions/workflows/codeql.yml/badge.svg)](https://github.com/Arphael/AtelieRoot/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Arphael/AtelieRoot/badge)](https://scorecard.dev/viewer/?uri=github.com/Arphael/AtelieRoot)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
 
 _[Read in English](README.md)_
 
+> **Nuevo nombre en la v2.0.0:** AtelierRoot ahora es **AtelieRoot**. La versión web pasó a
+> <https://arphael.github.io/AtelieRoot/> (la dirección anterior ya no funciona). Las carpetas y los
+> ajustes de la v1 se migran solos la primera vez que los abres.
+
 Un editor Markdown **local-first**: **cada documento es un archivo `.md` en una carpeta de tu computadora** y todo se guarda solo.
 **Sin nube, sin cuentas, sin internet.** Nada sale de tu máquina.
 
-![Editor AtelierRoot: una lista de publicación con tareas, una tabla y un bloque de código, tema oscuro](docs/img/editor.png)
+![Editor AtelieRoot: una lista de publicación con tareas, una tabla, un bloque de código y un comentario en el panel lateral, tema oscuro](docs/img/editor.png)
 
 ## Funciones
 
@@ -21,7 +25,8 @@ Un editor Markdown **local-first**: **cada documento es un archivo `.md` en una 
 | **Guardado automático**         | Los cambios se escriben solos; lo no guardado sobrevive a un cierre inesperado                                                                |
 | **Seguro con cambios externos** | Lo que cambies desde otros programas se recarga; si hay conflicto se conservan las dos versiones                                              |
 | **Organiza**                    | Carpetas, arrastrar y soltar, enlaces `[[nombre]]` entre documentos, esquema, vista dividida, papelera                                        |
-| **Escribe más rápido**          | Paleta de comandos, buscar y reemplazar, modo enfoque, plegar secciones, marcadores `[EN_MAYÚSCULAS]`                                         |
+| **Escribe más rápido**          | Paleta de comandos, atajos de VS Code (edición múltiple con `Ctrl+D`, mover y duplicar líneas), búsqueda en todos los documentos, modo enfoque, plegar secciones, marcadores `[EN_MAYÚSCULAS]` |
+| **Comentarios**                 | Comenta cualquier texto como en Word o Notion; los comentarios se quedan en la app y nunca tocan tu `.md` |
 | **Pensado para código**         | Resaltado de ~45 lenguajes; rutas y URLs se detectan solas                                                                                    |
 | **Privado**                     | Sin cuenta, sin telemetría, sin peticiones a internet                                                                                         |
 
@@ -31,14 +36,14 @@ La interfaz está en español e inglés: sigue el idioma del sistema y cambia al
 
 | Opción                                                                                          | Para                                                   | Necesita                                  |
 | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------- |
-| **App de escritorio**: `AtelierRoot.exe` en [Releases](https://github.com/Arphael/AtelierRoot/releases) | Todo el mundo (primero Windows; después macOS y Linux) | Nada (WebView2 ya viene en Windows 11)    |
-| **Un archivo HTML**: `AtelierRoot.html` en Releases (o la página de GitHub Pages)                | Cualquier sistema, nada que instalar                   | Chrome o Edge para guardar en una carpeta |
+| **App de escritorio**: `AtelieRoot.exe` en [Releases](https://github.com/Arphael/AtelieRoot/releases) | Todo el mundo (primero Windows; después macOS y Linux) | Nada (WebView2 ya viene en Windows 11)    |
+| **Un archivo HTML**: `AtelieRoot.html` en Releases (o la página de GitHub Pages)                | Cualquier sistema, nada que instalar                   | Chrome o Edge para guardar en una carpeta |
 
-**App de escritorio**: descarga `AtelierRoot.exe`, haz doble clic y elige la carpeta de tus notas. Un solo archivo, nada que instalar; recuerda la carpeta.
+**App de escritorio**: descarga `AtelieRoot.exe`, haz doble clic y elige la carpeta de tus notas. Un solo archivo, nada que instalar; recuerda la carpeta.
 
-**Un archivo HTML**: haz doble clic en `AtelierRoot.html` (se abre en tu navegador) y pulsa **«Abrir una carpeta...»**. El navegador pide permiso una vez por sesión. Sin carpeta, AtelierRoot funciona en **modo temporal** (los documentos quedan en ese navegador).
+**Un archivo HTML**: haz doble clic en `AtelieRoot.html` (se abre en tu navegador) y pulsa **«Abrir una carpeta...»**. El navegador pide permiso una vez por sesión. Sin carpeta, AtelieRoot funciona en **modo temporal** (los documentos quedan en ese navegador).
 
-Las dos son la misma app: el ejecutable lleva dentro exactamente el `AtelierRoot.html` de la misma versión.
+Las dos son la misma app: el ejecutable lleva dentro exactamente el `AtelieRoot.html` de la misma versión.
 
 ¿Primera vez? Lee la [guía de usuario](docs/USER_GUIDE.md). ¿Problemas? Mira el [FAQ](docs/FAQ.md). (Ambos en inglés.)
 
@@ -47,9 +52,9 @@ Las dos son la misma app: el ejecutable lleva dentro exactamente el `AtelierRoot
 ```
 Mis notas/
 |-- Intro.md          <- un documento (el nombre del archivo es el nombre)
-|-- Proyectos/        <- una carpeta de AtelierRoot es una carpeta del disco
+|-- Proyectos/        <- una carpeta de AtelieRoot es una carpeta del disco
 |   `-- Plan.md
-`-- .atelierroot/         <- lo que Markdown no puede guardar (oculto, se puede versionar)
+`-- .atelieroot/         <- lo que Markdown no puede guardar (oculto, se puede versionar)
     |-- state.json    <- orden, carpetas abiertas, anchos de columna, pliegues, valores de marcadores
     `-- trash/        <- lo que eliminas (se puede restaurar durante 30 días)
 ```
@@ -60,7 +65,7 @@ Mis notas/
 
 ## Seguridad
 
-- La app de escritorio solo lee y escriben archivos `.md` y `.atelierroot/` dentro de la carpeta que elegiste.
+- La app de escritorio solo lee y escriben archivos `.md` y `.atelieroot/` dentro de la carpeta que elegiste.
 - La app no hace peticiones a internet y funciona con una Content-Security-Policy estricta.
 - Un `.md` ajeno no puede ejecutar nada: el HTML crudo se muestra como texto; enlaces e imágenes solo admiten `http(s)`, `mailto`, `tel`, `data:image` o rutas relativas.
 - Reporta vulnerabilidades en privado: [SECURITY.md](SECURITY.md).
@@ -70,7 +75,7 @@ Mis notas/
 El repositorio contiene todo el código: la app (`src/`), un servidor Node solo para desarrollo y pruebas (`server/`, los usuarios nunca lo descargan) y el backend en Rust de la app de escritorio (`src-tauri/`).
 
 ```bash
-git clone https://github.com/Arphael/AtelierRoot.git && cd AtelierRoot
+git clone https://github.com/Arphael/AtelieRoot.git && cd AtelieRoot
 npm start            # sirve src/ con ./notas en http://localhost:4321, sin compilar
 npm test             # check + servidor + pruebas de navegador
 npm run build        # dist/ (~520 KB)
@@ -95,4 +100,4 @@ Compilar el ejecutable: [docs/BUILDING.md](docs/BUILDING.md). Empieza por [docs/
 
 [MIT](LICENSE). Incluye [Prism](https://prismjs.com) (MIT) en `src/vendor/prism/`.
 
-AtelierRoot es un proyecto independiente de código abierto, sin relación ni afiliación con otros productos o marcas de nombre parecido.
+AtelieRoot es un proyecto independiente de código abierto, sin relación ni afiliación con otros productos o marcas de nombre parecido.

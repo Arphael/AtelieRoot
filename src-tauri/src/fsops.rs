@@ -1,6 +1,6 @@
-//! Folder operations for the desktop app. Mirrors server/atelierroot-server.js and docs/CONTRACT.md:
+//! Folder operations for the desktop app. Mirrors server/atelieroot-server.js and docs/CONTRACT.md:
 //! relative "/" paths only, everything confined to the chosen root (symlinks resolved), only
-//! `.md`/`.markdown` outside hidden folders and anything inside `.atelierroot/` may be written,
+//! `.md`/`.markdown` outside hidden folders and anything inside `.atelieroot/` may be written,
 //! atomic writes, and `expect` (mtime last read) prevents overwriting outside changes.
 
 use serde::Serialize;
@@ -78,13 +78,13 @@ fn meta_dot_ok(p: &str) -> bool { !p.starts_with('.') || p == ".keep" || p == ".
 fn is_md(name: &str) -> bool { let l = name.to_lowercase(); l.ends_with(".md") || l.ends_with(".markdown") }
 
 pub fn writable(parts: &[String]) -> bool {
-    if parts[0] == ".atelierroot" { return parts.len() > 1 && parts[1..].iter().all(|p| meta_dot_ok(p)); }
+    if parts[0] == ".atelieroot" { return parts.len() > 1 && parts[1..].iter().all(|p| meta_dot_ok(p)); }
     if parts.iter().any(|p| p.starts_with('.')) { return false; }
     is_md(parts.last().unwrap())
 }
 
 pub fn writable_dir(parts: &[String]) -> bool {
-    if parts[0] == ".atelierroot" { parts.len() > 1 } else { !parts.iter().any(|p| p.starts_with('.')) }
+    if parts[0] == ".atelieroot" { parts.len() > 1 } else { !parts.iter().any(|p| p.starts_with('.')) }
 }
 
 fn restorable_ext(name: &str) -> bool {
@@ -101,6 +101,9 @@ impl Root {
     pub fn new(root: &Path) -> R<Self> {
         let root = fs::canonicalize(root)?;
         if !root.is_dir() { return Err(OpError::new(Code::Missing, "la carpeta no existe")); }
+        // v2.0 renamed the hidden folder: .atelierroot/ (v1) becomes .atelieroot/
+        let (old, new) = (root.join(".atelierroot"), root.join(".atelieroot"));
+        if old.is_dir() && !new.exists() { let _ = fs::rename(&old, &new); }
         Ok(Root { root })
     }
     pub fn name(&self) -> String { self.root.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default() }
@@ -136,14 +139,14 @@ impl Root {
             let name = e.file_name().to_string_lossy().into_owned();
             let Ok(ft) = e.file_type() else { continue };
             if name == "node_modules" || ft.is_symlink() { continue; }
-            let is_meta = rel.is_empty() && name == ".atelierroot";
-            let in_meta = rel == ".atelierroot" || rel.starts_with(".atelierroot/");
+            let is_meta = rel.is_empty() && name == ".atelieroot";
+            let in_meta = rel == ".atelieroot" || rel.starts_with(".atelieroot/");
             if name.starts_with('.') && !(hidden && (is_meta || in_meta)) { continue; }
             let p = if rel.is_empty() { name.clone() } else { format!("{}/{}", rel, name) };
             if ft.is_dir() {
                 out.push(Entry { p: p.clone(), t: "d", s: 0, m: 0 });
                 self.walk(&e.path(), &p, hidden, out);
-            } else if ft.is_file() && (is_md(&name) || (hidden && p.starts_with(".atelierroot/"))) {
+            } else if ft.is_file() && (is_md(&name) || (hidden && p.starts_with(".atelieroot/"))) {
                 if let Ok(md) = e.metadata() { out.push(Entry { p, t: "f", s: md.len(), m: ms(&md) }); }
             }
         }
@@ -151,7 +154,7 @@ impl Root {
 
     pub fn read(&self, rel: &str, optional: bool) -> R<Option<FileData>> {
         let parts = Self::parts(rel)?;
-        if parts[0] != ".atelierroot" && !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se leen .md")); }
+        if parts[0] != ".atelieroot" && !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se leen .md")); }
         let abs = self.abs(&parts)?;
         match fs::metadata(&abs) {
             Ok(md) if md.is_file() => Ok(Some(FileData { text: fs::read_to_string(&abs)?, m: ms(&md), s: md.len() })),
@@ -173,7 +176,7 @@ impl Root {
 
     pub fn write(&self, rel: &str, text: &str, expect: Option<u64>) -> R<Stat> {
         let parts = Self::parts(rel)?;
-        if !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se escriben .md y .atelierroot/")); }
+        if !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se escriben .md y .atelieroot/")); }
         if text.len() > MAX_BODY { return Err(OpError::new(Code::Io, "demasiado grande")); }
         let abs = self.abs(&parts)?;
         if let Some(exp) = expect {
@@ -182,7 +185,7 @@ impl Root {
         }
         let dir = abs.parent().ok_or_else(|| OpError::new(Code::Io, "sin carpeta"))?;
         fs::create_dir_all(dir)?;
-        let tmp = dir.join(format!(".atelierroot-tmp-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0)));
+        let tmp = dir.join(format!(".atelieroot-tmp-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0)));
         {
             let mut f = fs::File::create(&tmp)?;
             f.write_all(text.as_bytes())?;
@@ -202,9 +205,9 @@ impl Root {
 
     pub fn remove(&self, rel: &str, recursive: bool) -> R<()> {
         let parts = Self::parts(rel)?;
-        // Same rule as the Node server: only .md files and things inside .atelierroot/ are ever deleted.
+        // Same rule as the Node server: only .md files and things inside .atelieroot/ are ever deleted.
         // Visible folders reach the trash by being moved, never by being deleted.
-        if !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se borran .md y .atelierroot/")); }
+        if !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se borran .md y .atelieroot/")); }
         let abs = self.abs(&parts)?;
         let r = match fs::symlink_metadata(&abs) {
             Ok(m) if m.is_dir() => if recursive { fs::remove_dir_all(&abs) } else { fs::remove_dir(&abs) },
@@ -221,8 +224,8 @@ impl Root {
         let bb = self.abs(&b)?;
         let md = fs::metadata(&aa).map_err(|_| OpError::new(Code::Missing, "no existe"))?;
         let is_dir = md.is_dir();
-        let from_trash = a[0] == ".atelierroot" && a.get(1).map(|s| s == "trash").unwrap_or(false);
-        let safe_dest = !b.iter().any(|x| x.starts_with('.')) && b[0] != ".atelierroot";
+        let from_trash = a[0] == ".atelieroot" && a.get(1).map(|s| s == "trash").unwrap_or(false);
+        let safe_dest = !b.iter().any(|x| x.starts_with('.')) && b[0] != ".atelieroot";
         let restorable = from_trash && safe_dest && !is_dir && restorable_ext(b.last().unwrap());
         let ok = if is_dir { writable_dir(&a) && writable_dir(&b) } else { (writable(&a) && writable(&b)) || restorable };
         if !ok { return Err(OpError::new(Code::Denied, "movimiento no permitido")); }
@@ -236,6 +239,18 @@ impl Root {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn v1_hidden_folder_is_renamed_on_open() {
+        let d = tempfile::tempdir().unwrap();
+        let dir = d.path().join("notas");
+        fs::create_dir_all(dir.join(".atelierroot").join("trash")).unwrap();
+        fs::write(dir.join(".atelierroot").join("state.json"), "{\"v\":1}").unwrap();
+        let _r = Root::new(&dir).unwrap();
+        assert!(!dir.join(".atelierroot").exists());
+        assert_eq!(fs::read_to_string(dir.join(".atelieroot").join("state.json")).unwrap(), "{\"v\":1}");
+        assert!(dir.join(".atelieroot").join("trash").is_dir());
+    }
 
     fn setup() -> (tempfile::TempDir, Root) {
         let d = tempfile::tempdir().unwrap();
@@ -253,12 +268,12 @@ mod tests {
     }
 
     #[test]
-    fn only_md_and_atelierroot_are_writable() {
+    fn only_md_and_atelieroot_are_writable() {
         let (_d, r) = setup();
         assert!(r.write("a.md", "x", None).is_ok());
         assert!(r.write("A.MARKDOWN", "x", None).is_ok());
-        assert!(r.write(".atelierroot/state.json", "{}", None).is_ok());
-        for p in ["a.txt", "a.js", ".git/config", "dir/.hidden.md", ".atelierroot/.secret", ".atelierroot"] {
+        assert!(r.write(".atelieroot/state.json", "{}", None).is_ok());
+        for p in ["a.txt", "a.js", ".git/config", "dir/.hidden.md", ".atelieroot/.secret", ".atelieroot"] {
             assert_eq!(r.write(p, "x", None).unwrap_err().code, Code::Denied, "{p}");
         }
     }
@@ -298,12 +313,12 @@ mod tests {
         fs::write(n.join("P/a.md"), "x").unwrap();
         fs::write(n.join("b.txt"), "x").unwrap();
         fs::write(n.join(".git/c.md"), "x").unwrap();
-        r.write(".atelierroot/state.json", "{}", None).unwrap();
+        r.write(".atelieroot/state.json", "{}", None).unwrap();
         let mut ps: Vec<String> = r.list(false).unwrap().into_iter().map(|e| e.p).collect();
         ps.sort();
         assert_eq!(ps, vec!["P", "P/Sub", "P/a.md"]);
         let hidden: Vec<String> = r.list(true).unwrap().into_iter().map(|e| e.p).collect();
-        assert!(hidden.contains(&".atelierroot/state.json".to_string()));
+        assert!(hidden.contains(&".atelieroot/state.json".to_string()));
         assert!(!hidden.iter().any(|p| p.starts_with(".git")));
     }
 
@@ -325,9 +340,9 @@ mod tests {
         assert!(!n.join("C/B/y.md").exists());
         assert_eq!(r.remove("C", true).unwrap_err().code, Code::Denied, "visible folders are never deleted");
         assert!(n.join("C").exists());
-        r.mv("C", ".atelierroot/trash/e2/C").unwrap();
-        r.remove(".atelierroot/trash/e2", true).unwrap();
-        assert!(!n.join(".atelierroot/trash/e2").exists());
+        r.mv("C", ".atelieroot/trash/e2/C").unwrap();
+        r.remove(".atelieroot/trash/e2", true).unwrap();
+        assert!(!n.join(".atelieroot/trash/e2").exists());
         assert!(r.remove("gone.md", false).is_ok());
     }
 
@@ -335,14 +350,14 @@ mod tests {
     fn trash_restores_media_but_never_scripts() {
         let (d, r) = setup();
         let n = d.path().join("notas");
-        fs::create_dir_all(n.join(".atelierroot/trash/e1")).unwrap();
-        fs::write(n.join(".atelierroot/trash/e1/pic.png"), "x").unwrap();
-        fs::write(n.join(".atelierroot/trash/e1/run.exe"), "x").unwrap();
-        fs::write(n.join(".atelierroot/trash/e1/s.js"), "x").unwrap();
-        r.mv(".atelierroot/trash/e1/pic.png", "pic.png").unwrap();
-        assert_eq!(r.mv(".atelierroot/trash/e1/run.exe", "run.exe").unwrap_err().code, Code::Denied);
-        assert_eq!(r.mv(".atelierroot/trash/e1/s.js", "s.js").unwrap_err().code, Code::Denied);
-        assert_eq!(r.mv(".atelierroot/trash/e1/s.js", "dir/.hidden/s.js").unwrap_err().code, Code::Denied);
+        fs::create_dir_all(n.join(".atelieroot/trash/e1")).unwrap();
+        fs::write(n.join(".atelieroot/trash/e1/pic.png"), "x").unwrap();
+        fs::write(n.join(".atelieroot/trash/e1/run.exe"), "x").unwrap();
+        fs::write(n.join(".atelieroot/trash/e1/s.js"), "x").unwrap();
+        r.mv(".atelieroot/trash/e1/pic.png", "pic.png").unwrap();
+        assert_eq!(r.mv(".atelieroot/trash/e1/run.exe", "run.exe").unwrap_err().code, Code::Denied);
+        assert_eq!(r.mv(".atelieroot/trash/e1/s.js", "s.js").unwrap_err().code, Code::Denied);
+        assert_eq!(r.mv(".atelieroot/trash/e1/s.js", "dir/.hidden/s.js").unwrap_err().code, Code::Denied);
         assert!(!n.join("s.js").exists() && !n.join("run.exe").exists());
     }
 

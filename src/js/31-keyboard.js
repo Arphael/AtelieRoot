@@ -10,7 +10,7 @@ ed.addEventListener('keydown', e => {
     if (k === 'i'){ e.preventDefault(); toggleWrap('em'); return; }
     if (k === 'e'){ e.preventDefault(); toggleWrap('code'); return; }
     if (k === 'x' && e.shiftKey){ e.preventDefault(); toggleWrap('s'); return; }
-    if (k === 'k'){ e.preventDefault(); $('#linkBtn').click(); return; }
+    if (k === 'k' && !e.shiftKey){ e.preventDefault(); $('#linkBtn').click(); return; }   // normally Ctrl+K is a prefix (78-shortcuts.js)
     if (k === 's'){ e.preventDefault(); stash(); save(true); toast(T('msg.saved')); return; }
   }
   if (slash.open && slashMenu.classList.contains('show')){

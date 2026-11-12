@@ -1,4 +1,4 @@
-// Desktop shell for AtelierRoot: serves dist/ in the system WebView and exposes the folder
+// Desktop shell for AtelieRoot: serves dist/ in the system WebView and exposes the folder
 // commands used by TauriBackend (src/js/81-ws-backends.js). No generic filesystem access is
 // granted to the page: every operation goes through fsops::Root and its rules.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
@@ -111,6 +111,19 @@ fn ws_read_many(state: State<App>, paths: Vec<String>) -> Result<Vec<fsops::Read
     current(&state)?.read_many(&paths).map_err(|e| e.wire())
 }
 
+/// Links of the "About" dialog open in the system browser; only the project's own pages are allowed.
+const LINK_PREFIXES: [&str; 2] = ["https://github.com/Arphael/", "https://arphael.github.io/"];
+fn link_allowed(url: &str) -> bool {
+    LINK_PREFIXES.iter().any(|p| url.starts_with(p)) && !url.chars().any(|c| c.is_whitespace() || c.is_control())
+}
+
+#[tauri::command]
+fn open_link(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    if !link_allowed(&url) { return Err("denied:enlace no permitido".into()); }
+    app.opener().open_url(url, None::<&str>).map_err(|e| format!("io:{}", e))
+}
+
 #[tauri::command]
 fn ws_write(state: State<App>, p: String, text: String, expect: Option<u64>) -> Result<Stat, String> {
     current(&state)?.write(&p, &text, expect).map_err(|e| e.wire())
@@ -134,8 +147,22 @@ fn ws_remove(state: State<App>, p: String, recursive: bool) -> Result<(), String
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(App::default())
-        .invoke_handler(tauri::generate_handler![ws_root, ws_pick, ws_clear, ws_list, ws_read, ws_read_many, ws_write, ws_mkdir, ws_move, ws_remove])
+        .invoke_handler(tauri::generate_handler![ws_root, ws_pick, ws_clear, ws_list, ws_read, ws_read_many, ws_write, open_link, ws_mkdir, ws_move, ws_remove])
         .run(tauri::generate_context!())
-        .expect("error while running AtelierRoot");
+        .expect("error while running AtelieRoot");
+}
+
+#[cfg(test)]
+mod link_tests {
+    use super::link_allowed;
+    #[test]
+    fn only_project_links_open() {
+        assert!(link_allowed("https://github.com/Arphael/AtelieRoot"));
+        assert!(link_allowed("https://arphael.github.io/AtelieRoot/"));
+        for bad in ["https://evil.example/", "http://github.com/Arphael/x", "file:///C:/x", "https://github.com/Arphael/x y", "https://github.com.evil/Arphael/", "javascript:alert(1)"] {
+            assert!(!link_allowed(bad), "{bad}");
+        }
+    }
 }

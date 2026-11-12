@@ -32,6 +32,10 @@ const dict = fs.readFileSync(path.join(src, 'js', '05-i18n.js'), 'utf8');
 for (const m of html.matchAll(/data-i18n(?:-title|-aria|-ph)?="([^"]+)"/g)) {
   if (!dict.includes(`'${m[1]}': [`)) errors.push(`index.html usa la clave ${m[1]}, que no está en js/05-i18n.js`);
 }
+// the version shown in the app (85-about.js) is the one in package.json
+const pkgVer = JSON.parse(fs.readFileSync(path.join(src, '..', 'package.json'), 'utf8')).version;
+const appVer = (fs.readFileSync(path.join(src, 'js', '85-about.js'), 'utf8').match(/const APP_SEMVER = '([^']+)'/) || [])[1];
+if (appVer !== pkgVer) errors.push(`js/85-about.js: APP_SEMVER = ${appVer}, package.json = ${pkgVer}`);
 const external = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)].map(m => m[1]);
 external.forEach(u => errors.push(`index.html pide un recurso externo: ${u}`));
 if (errors.length) { console.error(errors.map(e => '✗ ' + e).join('\n')); process.exit(1); }

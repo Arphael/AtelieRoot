@@ -1,5 +1,15 @@
 
 "use strict";
+// v2.0 renamed the app (AtelierRoot -> AtelieRoot): browser settings move once from atelierroot.* to atelieroot.*
+try {
+  for (let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('atelierroot.')) continue;
+    const nk = 'atelieroot.' + k.slice('atelierroot.'.length);
+    if (localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k));
+    localStorage.removeItem(k);
+  }
+} catch(_){}
 const $ = s => document.querySelector(s);
 let ed = $('#ed'), scroll = $('#scroll');
 const treeEl = $('#tree');

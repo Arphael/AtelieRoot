@@ -19,11 +19,11 @@ const notes = `${body}
 
 | File | What it is |
 | --- | --- |
-| \`AtelierRoot.exe\` | Desktop app for Windows: one file, no installation. Opens a folder and saves every document as a \`.md\` file. |
-| \`AtelierRoot.html\` | The same app as a single HTML file: open it in Chrome, Edge or Brave. The web version is also at https://arphael.github.io/AtelierRoot/ |
+| \`AtelieRoot.exe\` | Desktop app for Windows: one file, no installation. Opens a folder and saves every document as a \`.md\` file. |
+| \`AtelieRoot.html\` | The same app as a single HTML file: open it in Chrome, Edge or Brave. The web version is also at https://arphael.github.io/AtelieRoot/ |
 
 Unsigned build: Windows SmartScreen may warn the first time ("More info" -> "Run anyway").
-Full history: [CHANGELOG.md](https://github.com/Arphael/AtelierRoot/blob/main/CHANGELOG.md)
+Full history: [CHANGELOG.md](https://github.com/Arphael/AtelieRoot/blob/main/CHANGELOG.md)
 `;
 if (out) { fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true }); fs.writeFileSync(out, notes); console.log(`release-notes: ${out} (${ver})`); }
 else process.stdout.write(notes);

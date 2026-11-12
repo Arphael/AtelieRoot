@@ -1,15 +1,15 @@
 "use strict";
 /* ====== 76. Carpeta de trabajo: núcleo ====== */
 // Con una carpeta abierta, los archivos del disco son la verdad:
-//   · carpetas del disco = carpetas de AtelierRoot · cada «.md» = un documento · el nombre del archivo = el nombre del documento;
+//   · carpetas del disco = carpetas de AtelieRoot · cada «.md» = un documento · el nombre del archivo = el nombre del documento;
 //   · lo que Markdown no puede guardar (orden, carpetas abiertas, anchos de columna, pliegues, valores de los marcadores, papelera)
-//     va en <carpeta>/.atelierroot/state.json y lo eliminado en <carpeta>/.atelierroot/trash/;
-//   · el árbol de AtelierRoot (state.tree) se SINCRONIZA con el disco de forma declarativa: después de cada cambio se compara
+//     va en <carpeta>/.atelieroot/state.json y lo eliminado en <carpeta>/.atelieroot/trash/;
+//   · el árbol de AtelieRoot (state.tree) se SINCRONIZA con el disco de forma declarativa: después de cada cambio se compara
 //     con lo último que se sabe del disco y se crean, renombran, mueven o mandan a la papelera los archivos que haga falta.
 //     Así no hay que tocar cada sitio de la aplicación donde cambia el árbol.
 //   · los cambios hechos fuera (VS Code, git…) se detectan y se recargan; si el mismo documento cambió en los dos
 //     sitios, no se pierde nada: tu versión pasa a una copia.
-const WS_META = '.atelierroot/state.json', WS_TRASH = '.atelierroot/trash';
+const WS_META = '.atelieroot/state.json', WS_TRASH = '.atelieroot/trash';
 
 /* ---- ayudantes: nombres, rutas, ids ---- */
 const wsHash = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); };
@@ -36,13 +36,52 @@ function wsMdText(html){
   return md ? md + '\n' : '';
 }
 const wsIsHead = el => /^H[1-6]$/.test(el.tagName);
+// comments (86-comments.js): block index, text offsets inside the block, the quoted text and the thread
+function wsCaptureCmts(root){
+  const out = [], blocks = [...root.children];
+  root.querySelectorAll('span[data-cmt]').forEach(sp => {
+    let b = sp; while (b.parentNode && b.parentNode !== root) b = b.parentNode;
+    const r = document.createRange(); r.setStart(b, 0); r.setEndBefore(sp);
+    const q = sp.textContent;
+    out.push({ id: sp.getAttribute('data-cmt'), b: blocks.indexOf(b), s: r.toString().length, q: q, t: sp.getAttribute('data-cmt-t') || '{}' });
+  });
+  return out;
+}
+// text offsets -> a range inside el
+function wsRangeAt(el, start, end){
+  const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n, pos = 0, r = null;
+  while ((n = w.nextNode())){
+    const len = n.nodeValue.length;
+    if (!r && start <= pos + len){ r = document.createRange(); r.setStart(n, start - pos); }
+    if (r && end <= pos + len){ r.setEnd(n, end - pos); return r; }
+    pos += len;
+  }
+  return null;
+}
+function wsApplyCmts(root, list){
+  const blocks = [...root.children];
+  list.forEach(c => {
+    const sp = root.ownerDocument.createElement('span'); sp.setAttribute('data-cmt', c.id); sp.setAttribute('data-cmt-t', c.t);
+    try { if (JSON.parse(c.t).r) sp.setAttribute('data-cmt-r', ''); } catch(_){}
+    let r = null;
+    const b = blocks[c.b];
+    if (c.q && b && b.textContent.substr(c.s, c.q.length) === c.q) r = wsRangeAt(b, c.s, c.s + c.q.length);
+    if (!r && c.q) for (const x of blocks){ const i = x.textContent.indexOf(c.q); if (i >= 0 && !(x.classList && x.classList.contains('cb'))){ r = wsRangeAt(x, i, i + c.q.length); if (r) break; } }
+    if (r){
+      try { sp.appendChild(r.extractContents()); r.insertNode(sp); return; } catch(_){}
+    }
+    sp.setAttribute('data-cmt-o', '');                                   // the text is gone (edited outside): the comment stays, without text
+    const host = blocks.length ? blocks[blocks.length - 1] : root;
+    host.appendChild(sp);
+  });
+}
 function wsCapture(html){
-  if (!/data-cw|data-fold/.test(html || '')) return null;
+  if (!/data-cw|data-fold|data-cmt/.test(html || '')) return null;
   const t = document.createElement('template'); t.innerHTML = html; const root = t.content;
   const tw = [...root.querySelectorAll('table')].map(tb => tb.hasAttribute('data-cw') && tb.rows[0] ? [...tb.rows[0].children].map(c => parseFloat(c.getAttribute('data-w')) || 0) : null);
   const folds = [...root.children].filter(wsIsHead).map((h, i) => h.hasAttribute('data-fold') ? i : -1).filter(i => i >= 0);
-  const hasTw = tw.some(Boolean);
-  return hasTw || folds.length ? Object.assign({}, hasTw ? { tw } : {}, folds.length ? { folds } : {}) : null;
+  const hasTw = tw.some(Boolean), cmts = wsCaptureCmts(root);
+  return hasTw || folds.length || cmts.length ? Object.assign({}, hasTw ? { tw } : {}, folds.length ? { folds } : {}, cmts.length ? { cmts } : {}) : null;
 }
 function wsApply(html, ex){
   if (!ex) return html;
@@ -56,6 +95,7 @@ function wsApply(html, ex){
     });
   }
   if (ex.folds){ const heads = [...root.children].filter(wsIsHead); ex.folds.forEach(i => { if (heads[i]) heads[i].setAttribute('data-fold', ''); }); }
+  if (ex.cmts) wsApplyCmts(root, ex.cmts);
   const d = document.createElement('div'); d.appendChild(root); return d.innerHTML;
 }
 
@@ -90,11 +130,11 @@ function wsFail(e){
   clearTimeout(W.errT); W.errT = setTimeout(() => wsSchedule(true), 5000);                  // se reintenta
 }
 
-/* ---- carga: del disco al estado de AtelierRoot ---- */
+/* ---- carga: del disco al estado de AtelieRoot ---- */
 const wsIdFor = p => { const W = Workspace; let id = 'w' + wsHash(p); while (W.idUsed.has(id)) id += 'x'; W.idUsed.add(id); return id; };
 async function wsReadMeta(be){
   try { const r = await be.read(WS_META, true); if (!r) return {}; const j = JSON.parse(r.text); Workspace.metaJson = r.text; return (j && typeof j === 'object') ? j : {}; }
-  catch(e){ if (e && e.code && e.code !== 'missing') console.warn('No se pudo leer .atelierroot/state.json:', e.message); return {}; }
+  catch(e){ if (e && e.code && e.code !== 'missing') console.warn('No se pudo leer .atelieroot/state.json:', e.message); return {}; }
 }
 const wsLite = n => { const o = { id: n.id, type: n.type, name: n.name }; if (n.children) o.children = n.children.map(wsLite); return o; };
 const wsRevive = o => { const n = { id: o.id, type: o.type, name: o.name }; if (o.type === 'folder'){ n.children = (o.children || []).map(wsRevive); n.open = false; } return n; };
@@ -134,6 +174,7 @@ function wsLazy(src){
 async function wsLoad(be){
   const W = Workspace;
   Object.assign(W, { be, kind: be.kind, name: be.name || T('name.folder'), known: {}, text: {}, saved: {}, extras: {}, nodes: new Map(), trashIds: new Set(), trashInfo: new Map(), idUsed: new Set(), metaJson: '', startId: null, lazy: null });
+  if (be.migrateHidden){ try { await be.migrateHidden(); } catch(e){ console.warn('No se pudo migrar .atelierroot/', e); } }   // the servers do it themselves
   const entries = (await be.list(false)).filter(e => e.t === 'd' || wsIsMd(e.p));
   entries.sort((a, b) => a.p.localeCompare(b.p, 'es', { numeric: true, sensitivity: 'base' }));
   const meta = await wsReadMeta(be);
@@ -171,7 +212,7 @@ async function wsLoad(be){
     if (meta.fills && meta.fills[n.path]) state.fills[n.id] = meta.fills[n.path];
   });
   wsLazy(src);
-  // papelera (lo eliminado vive en .atelierroot/trash)
+  // papelera (lo eliminado vive en .atelieroot/trash)
   for (const t of (meta.trash || [])){
     if (!t || !t.node) continue;
     const docPaths = t.docPaths || {};
@@ -223,7 +264,7 @@ function wsRebase(from, to, node){
 /* ---- sincronización del árbol con el disco ---- */
 async function wsSyncTree(){
   const W = Workspace, be = W.be, cur = new Map(); walk(state.tree, n => cur.set(n.id, n)); const cur2 = id => cur.get(id) || null;
-  // 1) lo que desapareció del árbol (eliminado) pasa a .atelierroot/trash: así nada se borra de verdad
+  // 1) lo que desapareció del árbol (eliminado) pasa a .atelieroot/trash: así nada se borra de verdad
   const gone = [...W.nodes].filter(([id]) => !cur.has(id)), goneSet = new Set(gone.map(g => g[0]));
   for (const [id, rec] of gone){ if (rec.parentId && goneSet.has(rec.parentId)) continue; await wsTrashOnDisk(id, rec); }
   // 2) crear, renombrar y mover lo demás
@@ -236,7 +277,7 @@ async function wsSyncTree(){
     if (live.has(id)) continue;
     const info = W.trashInfo.get(id), back = info && info.type === 'folder' ? cur2(info.nodeId) : null;
     let keep = false;
-    if (back && back.path) keep = !(await wsRestoreExtras(id, info.base, back.path));       // restaurada: lo que AtelierRoot no muestra (imágenes, PDF…) vuelve con ella
+    if (back && back.path) keep = !(await wsRestoreExtras(id, info.base, back.path));       // restaurada: lo que AtelieRoot no muestra (imágenes, PDF…) vuelve con ella
     if (keep) continue;
     try { await be.remove(WS_TRASH + '/' + id, true); } catch(e){ if (e.code !== 'missing') throw e; }
     W.trashIds.delete(id); W.trashInfo.delete(id);
@@ -299,7 +340,7 @@ async function wsMoveNode(n, dest){
   try { await be.move(from, dest); }
   catch(e){
     if (e.code === 'exists' && from.toLowerCase() === dest.toLowerCase()){            // solo cambia mayúsculas/minúsculas en un sistema que no distingue: se pasa por un nombre temporal
-      const tmp = wsJoin(wsDir(dest), '__atelierroot_tmp_' + uid() + (n.type === 'doc' ? '.md' : ''));
+      const tmp = wsJoin(wsDir(dest), '__atelieroot_tmp_' + uid() + (n.type === 'doc' ? '.md' : ''));
       await be.move(from, tmp); await be.move(tmp, dest);
     } else throw e;
   }
@@ -325,7 +366,10 @@ async function wsFlushDocs(){
     const html = state.docs[n.id];
     if (html === undefined || html === W.saved[n.id]) continue;
     const md = wsMdText(html);
-    if (md === wsMdText(W.saved[n.id])){ W.saved[n.id] = html; continue; }                // cambió el HTML pero no el Markdown: no hay nada que escribir
+    if (md === wsMdText(W.saved[n.id])){                                                   // cambió el HTML pero no el Markdown: no hay nada que escribir,
+      W.saved[n.id] = html; const ex = wsCapture(html); if (ex) W.extras[n.id] = ex; else delete W.extras[n.id];   // pero pliegues y comentarios van a state.json
+      continue;
+    }
     try {
       const k = W.known[n.path], r = await be.write(n.path, md, k && k.m);
       W.known[n.path] = { t: 'f', m: r.m, s: r.s }; W.text[n.path] = md; W.saved[n.id] = html;
@@ -354,7 +398,7 @@ function wsTreeMeta(){
 async function wsWriteMeta(){
   const W = Workspace, json = JSON.stringify(wsTreeMeta(), null, 1) + '\n';
   if (json === W.metaJson) return;
-  if (!W.metaJson){ try { await W.be.write('.atelierroot/.gitignore', 'trash/\n'); } catch(_){} }     // lo eliminado no debe acabar en git
+  if (!W.metaJson){ try { await W.be.write('.atelieroot/.gitignore', 'trash/\n'); } catch(_){} }     // lo eliminado no debe acabar en git
   await W.be.write(WS_META, json); W.metaJson = json;
 }
 
@@ -369,7 +413,7 @@ async function wsPersist(){
   } catch(e){ wsFail(e); }
 }
 function wsSchedule(now){ const W = Workspace; if (!W.active) return Promise.resolve(); W.q = W.q.then(wsPersist); return W.q; }
-const wsJKey = () => 'atelierroot.wj.' + wsHash(Workspace.kind + '|' + Workspace.name);
+const wsJKey = () => 'atelieroot.wj.' + wsHash(Workspace.kind + '|' + Workspace.name);
 const wsUnsaved = () => { const out = []; walk(state.tree, n => { if (n.type === 'doc' && n.path && !(Workspace.lazy && Workspace.lazy.has(n.id))){ const h = state.docs[n.id]; if (h !== undefined && h !== Workspace.saved[n.id]) out.push(n); } }); return out; };
 function wsJournalWrite(){                                  // al cerrar u ocultar la pestaña: lo que aún no llegó al disco se anota de forma síncrona
   try {
@@ -396,7 +440,7 @@ function wsRecover(){                                       // si la pestaña se
 async function wsSaveNow(){ clearTimeout(persistT); await wsSchedule(true); }                // «Guardar ahora»
 function wsFlush(){ if (!Workspace.active) return; stash(); saveUi(); wsJournalWrite(); wsSchedule(true); }
 
-/* ---- cambios hechos fuera de AtelierRoot ---- */
+/* ---- cambios hechos fuera de AtelieRoot ---- */
 async function wsRefreshOnce(){
   const W = Workspace, be = W.be; if (!W.active) return;
   stash();

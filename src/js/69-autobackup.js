@@ -2,7 +2,7 @@
 /* ====== 60. Copia automática antes de actualizar ====== */
 // La primera vez que se abre una versión nueva, se guarda aparte una copia de todo lo que había (en este mismo navegador).
 // Se puede bajar como respaldo con el comando «Descargar la copia automática previa a la actualización».
-const APP_VERSION = '2026-11-11';
+const APP_VERSION = '2026-11-11.2';
 async function snapKeys(){
   const db = await DB.open();
   return new Promise(res => {
@@ -35,7 +35,7 @@ async function downloadPreviousCopy(){
   const tree = nestedFromMeta(snap.meta), docs = {};
   const byId = Object.fromEntries(snap.docs.map(d => [d.id, d.html]));
   walk(tree, n => { if (n.type === 'doc') docs[n.id] = byId[n.id] || '<p><br></p>'; });
-  download('atelierroot-copia-previa-' + new Date(snap.at).toISOString().slice(0, 10) + '.json', JSON.stringify({ v: 1, at: snap.at, tree, docs }, null, 1), 'application/json');
+  download('atelieroot-copia-previa-' + new Date(snap.at).toISOString().slice(0, 10) + '.json', JSON.stringify({ v: 1, at: snap.at, tree, docs }, null, 1), 'application/json');
   toast(T('msg.autocopy-downloaded'));
 }
 

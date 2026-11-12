@@ -10,13 +10,13 @@ ENGINES = ('chromium',)   # time budget measured on Chromium (the browsers with 
 import socket, subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = Path(os.environ.get('ATELIERROOT_APP_DIR', ROOT / 'src'))
+SRC = Path(os.environ.get('ATELIEROOT_APP_DIR', ROOT / 'src'))
 
 def free_port():
   s = socket.socket(); s.bind(('127.0.0.1', 0)); n = s.getsockname()[1]; s.close(); return n
 
 def start_server(work, port):
-  proc = subprocess.Popen(['node', str(ROOT / 'server' / 'atelierroot-server.js'), '--dir', str(work), '--port', str(port), '--app', str(SRC)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+  proc = subprocess.Popen(['node', str(ROOT / 'server' / 'atelieroot-server.js'), '--dir', str(work), '--port', str(port), '--app', str(SRC)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
   end = time.time() + 10
   while time.time() < end:
     try: socket.create_connection(('127.0.0.1', port), timeout=0.3).close(); return proc
@@ -24,7 +24,7 @@ def start_server(work, port):
   proc.kill(); raise RuntimeError('the server did not start')
 
 N_DIRS, PER_DIR = 50, 100
-BUDGET = float(os.environ.get('ATELIERROOT_LARGE_BUDGET', '4.0'))      # regression guard, seconds to a usable tree (about 1.5 s on an idle desktop; 10 s before batch reads)
+BUDGET = float(os.environ.get('ATELIEROOT_LARGE_BUDGET', '4.0'))      # regression guard, seconds to a usable tree (about 1.5 s on an idle desktop; 10 s before batch reads)
 fails = []
 def check(name, cond, extra=''):
   print(('OK   ' if cond else 'FALLO'), name, ('' if cond else '-> ' + str(extra)))
@@ -33,7 +33,7 @@ def check(name, cond, extra=''):
 BODY = '\n\n'.join(['Some text with **bold**, a [link](https://example.com) and `code`.'] * 6 + ['- one\n- two\n- [ ] task', '| a | b |\n| --- | --- |\n| 1 | 2 |'])
 
 async def main():
-  tmp = Path(tempfile.mkdtemp(prefix='atelierroot-big-')); work = tmp / 'Big'
+  tmp = Path(tempfile.mkdtemp(prefix='atelieroot-big-')); work = tmp / 'Big'
   for d in range(N_DIRS):
     (work / f'Folder {d:02}').mkdir(parents=True)
     for i in range(PER_DIR): (work / f'Folder {d:02}' / f'Note {i:03}.md').write_text(f'# Note {d}-{i}\n\n{BODY}\n', encoding='utf-8')

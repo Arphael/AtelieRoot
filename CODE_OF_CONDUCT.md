@@ -45,7 +45,7 @@ and also when an individual is officially representing the community in public s
 ## Enforcement
 
 Report abusive, harassing or otherwise unacceptable behavior privately to the maintainer through
-a [private security advisory](https://github.com/Arphael/AtelierRoot/security/advisories/new)
+a [private security advisory](https://github.com/Arphael/AtelieRoot/security/advisories/new)
 (choose it even if the report is not about security; it is the only private channel) or by
 contacting the maintainer through their GitHub profile. All complaints will be reviewed and
 investigated promptly and fairly. The privacy and security of the reporter will be respected.

@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     # shared runners are slower than a desktop: test_large_folder keeps a regression guard (10 s before the fix)
-    env: { ATELIERROOT_LARGE_BUDGET: '5' }
+    env: { ATELIEROOT_LARGE_BUDGET: '5' }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }

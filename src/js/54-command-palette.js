@@ -26,7 +26,15 @@ const COMMANDS = [
   { g:'pal.g.edit', t:'pal.find', k:'Ctrl+F', run: () => openFind(false) },
   { g:'pal.g.edit', t:'pal.find-and-replace', k:'Ctrl+H', run: () => openFind(true) },
   { g:'pal.g.edit', t:'pal.tidy-document', run: clickSel('#tidyBtn') },
-  { g:'pal.g.edit', t:'pal.delete-the-line', k:'Shift+Supr', run: () => deleteCaretUnit() },
+  { g:'pal.g.edit', t:'pal.delete-the-line', k:'Ctrl+Shift+K', run: () => deleteCaretUnit() },
+  { g:'pal.g.edit', t:'pal.select-line', k:'Ctrl+L', run: () => selectLineUnit() },
+  { g:'pal.g.edit', t:'pal.duplicate-line', k:'Shift+Alt+↓', run: () => duplicateUnit(1) },
+  { g:'pal.g.edit', t:'pal.select-all-matches', k:'Ctrl+Shift+L', run: () => multiAll() },
+  { g:'pal.g.edit', t:'pal.search-all', k:'Ctrl+Shift+F', run: () => openSearchAll() },
+  { g:'pal.g.edit', t:'pal.word-wrap-code', k:'Alt+Z', run: () => { const on = !codeWrapOn(); setCodeWrap(on); toast(T(on ? 'msg.wrap-on' : 'msg.wrap-off')); } },
+  { g:'pal.g.comments', t:'pal.add-comment', k:'Ctrl+/', run: () => addComment() },
+  { g:'pal.g.comments', t:'pal.remove-comment', k:'Ctrl+K Ctrl+U', run: () => removeComment() },
+  { g:'pal.g.comments', t:'pal.comments-panel', run: () => toggleComments() },
   { g:'pal.g.edit', t:'pal.fill-in-placeholders', run: clickSel('#phBtn') },
   // formato
   { g:'pal.g.format', t:'pal.paragraph', run: () => setBlockLevel(0) },
@@ -61,10 +69,13 @@ const COMMANDS = [
   { g:'pal.g.view', t:'pal.show-or-hide-the-sidebar', run: () => toggleSide() },
   { g:'pal.g.view', t:'pal.show-or-hide-the-outline', run: clickSel('#olBtn') },
   { g:'pal.g.view', t:'pal.show-or-hide-the-live-markdown', run: clickSel('#pvBtn') },
-  { g:'pal.g.view', t:'pal.focus-mode', k:'Ctrl+Shift+F', run: () => toggleFocus() },
+  { g:'pal.g.view', t:'pal.focus-mode', k:'Ctrl+K Z', run: () => toggleFocus() },
   { g:'pal.g.view', t:'pal.show-or-hide-line-breaks', k:'Ctrl+Shift+8', run: () => setBreaks(!state.breaks) },
   { g:'pal.g.view', t:'pal.switch-between-light-and-dark-theme', run: clickSel('#themeBtn') },
-  { g:'pal.g.view', t:'pal.lang', run: () => I18n.set(I18n.lang === 'es' ? 'en' : 'es') }
+  { g:'pal.g.view', t:'pal.lang', run: () => I18n.set(I18n.lang === 'es' ? 'en' : 'es') },
+  { g:'pal.g.view', t:'pal.keyboard-shortcuts', k:'Ctrl+K Ctrl+S', run: () => openKeys() },
+  { g:'pal.g.view', t:'pal.about', run: () => openAbout() },
+  { g:'pal.g.view', t:'pal.open-repo', run: () => openExternal(APP_LINKS.repo) }
 ];
 // command texts are i18n keys (or a function for texts with a value)
 const palLabel = c => typeof c.t === 'function' ? c.t() : T(c.t);

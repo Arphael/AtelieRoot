@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Descarga prismjs de npm y copia a src/vendor/prism SOLO el núcleo, el autoloader y los lenguajes de scripts/prism-languages.json
-// (con sus dependencias). Así AtelierRoot resalta código sin conexión y sin CDN. Para añadir un lenguaje: edítalo en el JSON y ejecuta
+// (con sus dependencias). Así AtelieRoot resalta código sin conexión y sin CDN. Para añadir un lenguaje: edítalo en el JSON y ejecuta
 //   npm run vendor:prism
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';

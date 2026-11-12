@@ -1,11 +1,11 @@
 "use strict";
 /* ====== 75. Carpeta de trabajo: backends ====== */
-// Un «backend» sabe leer y escribir los archivos de UNA carpeta. Hay dos y ofrecen exactamente lo mismo, así que el resto de AtelierRoot no sabe cuál usa:
-//   HttpBackend  habla con server/atelierroot-server.js (cualquier navegador; sin permisos que aceptar).
+// Un «backend» sabe leer y escribir los archivos de UNA carpeta. Hay dos y ofrecen exactamente lo mismo, así que el resto de AtelieRoot no sabe cuál usa:
+//   HttpBackend  habla con server/atelieroot-server.js (cualquier navegador; sin permisos que aceptar).
 //   FsBackend    usa la API de carpetas del navegador (File System Access; solo Chrome y Edge).
 //
 //   list(hidden)           → [{ p, t:'d'|'f', s, m }]   rutas con «/», tamaño y fecha de modificación (ms). Solo .md y carpetas visibles;
-//                            con hidden=true también lo que hay dentro de .atelierroot/
+//                            con hidden=true también lo que hay dentro de .atelieroot/
 //   read(p, optional)      → { text, m, s }   (con optional=true, si no existe devuelve null en vez de fallar)
 //   write(p, text, expect) → { m, s }   (si se pasa expect y el archivo cambió fuera desde esa fecha: error 'conflict' y NO se pisa)
 //   mkdir(p) · move(a, b) · remove(p, recursive)
@@ -19,7 +19,7 @@ class HttpBackend {
   constructor(token){ this.kind = 'http'; this.token = token; this.name = ''; }
   async api(method, path, body){
     let r;
-    try { r = await fetch('/api/' + path, { method, headers: { 'X-AtelierRoot-Token': this.token, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }); }
+    try { r = await fetch('/api/' + path, { method, headers: { 'X-AtelieRoot-Token': this.token, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }); }
     catch(_){ throw new WsError('offline', T('ws.err.offline')); }
     let j = {}; try { j = await r.json(); } catch(_){}
     if (r.ok) return j;
@@ -50,6 +50,13 @@ const fsErr = e => {
 
 class FsBackend {
   constructor(root){ this.kind = 'fs'; this.root = root; this.name = root.name; }
+  // v2.0 renamed the hidden folder: .atelierroot/ (v1) is copied to .atelieroot/ and then removed
+  async migrateHidden(){
+    let old; try { old = await this.root.getDirectoryHandle('.atelierroot'); } catch(_){ return; }
+    try { await this.root.getDirectoryHandle('.atelieroot'); return; } catch(_){}
+    await this.copyDir(old, '.atelieroot');
+    try { await this.root.removeEntry('.atelierroot', { recursive: true }); } catch(_){}
+  }
   async dir(parts, create){
     let d = this.root;
     for (const part of parts){ try { d = await d.getDirectoryHandle(part, { create: !!create }); } catch(e){ throw fsErr(e); } }
@@ -70,9 +77,9 @@ class FsBackend {
   async list(hidden){
     const out = [];
     const walkDir = async (dir, rel) => {
-      const inMeta = rel === '.atelierroot' || rel.startsWith('.atelierroot/'), files = [];
+      const inMeta = rel === '.atelieroot' || rel.startsWith('.atelieroot/'), files = [];
       for await (const [name, h] of dir.entries()){
-        if (name.startsWith('.') && !(hidden && ((rel === '' && name === '.atelierroot') || inMeta))) continue;
+        if (name.startsWith('.') && !(hidden && ((rel === '' && name === '.atelieroot') || inMeta))) continue;
         if (name === 'node_modules') continue;
         const p = rel ? rel + '/' + name : name;
         if (h.kind === 'directory'){ out.push({ p, t: 'd', s: 0, m: 0 }); await walkDir(h, p); }

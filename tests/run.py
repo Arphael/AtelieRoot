@@ -52,7 +52,7 @@ def main():
                 for line in out.splitlines():
                     if re.match(r'^\s*(✖|not ok|error:|Error|AssertionError|\s+(expected|actual|step))', line): print(f'  {test_file}: ' + line.strip()[:300])
     srv, port = serve(app)
-    env = dict(os.environ, ATELIERROOT_URL=f'http://localhost:{port}/index.html?test=1&lang=es', ATELIERROOT_APP_DIR=str(app), BROWSER=a.browser)
+    env = dict(os.environ, ATELIEROOT_URL=f'http://localhost:{port}/index.html?test=1&lang=es', ATELIEROOT_APP_DIR=str(app), BROWSER=a.browser)
     for f in sorted((ROOT / 'tests' / 'e2e').glob('test_*.py')):
         if a.only and a.only not in f.name: continue
         engines = re.search(r'^ENGINES = \(([^)]*)\)', f.read_text(encoding='utf-8'), re.M)       # a test lists its engines when it cannot run in all three

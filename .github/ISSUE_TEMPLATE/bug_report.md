@@ -16,6 +16,6 @@ labels: bug
 - OS:
 - Mode: desktop app / HTML file (browser) / temporary / `npm start` (development)
 - Browser and version (if not the desktop app):
-- AtelierRoot version:
+- AtelieRoot version:
 
 **Did you lose or change any file?** yes / no

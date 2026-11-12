@@ -11,7 +11,7 @@ ENGINES = ('chromium',)   # File System Access exists only in Chromium browsers
 from ws_common import T, OpfsDisk, run_core, seed, until, tree, names, nid, open_doc, type_end, save_now, ask, _has
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = Path(os.environ.get('ATELIERROOT_APP_DIR', ROOT / 'src'))
+SRC = Path(os.environ.get('ATELIEROOT_APP_DIR', ROOT / 'src'))
 INIT = """
 window.__WS_POLL_MS = 400;                                              // en las pruebas se mira cada 0,4 s (en uso real, cada 3 s)
 window.__perm = { query: sessionStorage.getItem('__pq') || 'granted', request: 'granted' };       // el estado del permiso sobrevive a las recargas
@@ -47,7 +47,7 @@ async def main():
         await pg.goto(url); await pg.wait_for_timeout(900)
         disk = OpfsDisk(pg)
         print('=== 0. Modo temporal y primera carpeta ===')
-        t.check('sin carpeta ni servidor, AtelierRoot empieza en modo temporal y lo dice', await pg.evaluate("Workspace.active === false && Workspace.status === 'off'") and 'temporal' in (await pg.evaluate("document.getElementById('wsState').textContent")).lower(), await pg.evaluate("document.getElementById('wsState').textContent"))
+        t.check('sin carpeta ni servidor, AtelieRoot empieza en modo temporal y lo dice', await pg.evaluate("Workspace.active === false && Workspace.status === 'off'") and 'temporal' in (await pg.evaluate("document.getElementById('wsState').textContent")).lower(), await pg.evaluate("document.getElementById('wsState').textContent"))
         ok = await until(lambda: pg.evaluate("document.getElementById('veil').classList.contains('show') && document.getElementById('card').innerText.includes('en una carpeta')"), 4)
         t.check('...y ofrece abrir una carpeta (Chrome/Edge pueden)', ok, await pg.evaluate("document.getElementById('card').innerText"))
         t.check('...con la opción de seguir sin carpeta', 'Seguir sin carpeta' in await pg.evaluate("document.getElementById('card').innerText"), '')

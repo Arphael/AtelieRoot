@@ -2,7 +2,7 @@
 
 Cada backend aporta un «disco» (lo que hay de verdad en la carpeta) con la misma interfaz:
     read(p) · write(p, texto) · delete(p) · rmdir(p) · exists(p) · files() · mtime(p) · mkdir(p)
-Los .md y lo demás se ven exactamente como los vería VS Code o git: desde fuera de AtelierRoot.
+Los .md y lo demás se ven exactamente como los vería VS Code o git: desde fuera de AtelieRoot.
 """
 import asyncio
 import json
@@ -27,12 +27,12 @@ class Disk:
     async def exists(self, p): return self._p(p).exists()
     async def mkdir(self, p): self._p(p).mkdir(parents=True, exist_ok=True)
     async def mtime(self, p): return self._p(p).stat().st_mtime_ns
-    async def files(self, atelierroot=False):
+    async def files(self, atelieroot=False):
         out = []
         for f in self.root.rglob('*'):
             rel = f.relative_to(self.root).as_posix()
-            if not f.is_file() or '.atelierroot-tmp' in rel or rel.startswith('.git/'): continue
-            if rel.startswith('.atelierroot/') and not atelierroot: continue
+            if not f.is_file() or '.atelieroot-tmp' in rel or rel.startswith('.git/'): continue
+            if rel.startswith('.atelieroot/') and not atelieroot: continue
             out.append(rel)
         return sorted(out)
 
@@ -47,13 +47,13 @@ window.__opfs = window.__opfs || {
   async rmdir(p){ const parts = p.split('/'), n = parts.pop(); const d = await this.dir(parts.join('/')); await d.removeEntry(n, { recursive: true }); },
   async exists(p){ try { await this.fh(p); return true; } catch(_){ try { await this.dir(p); return true; } catch(__){ return false; } } },
   async mtime(p){ return (await (await this.fh(p)).getFile()).lastModified; },
-  async files(atelierroot){ const out = []; const walk = async (d, rel) => { for await (const [n, h] of d.entries()){ const p = rel ? rel + '/' + n : n; if (h.kind === 'directory') await walk(h, p); else if (!n.startsWith('.crswap') && (atelierroot || !p.startsWith('.atelierroot/'))) out.push(p); } }; await walk(await this.dir(''), ''); return out.sort(); },
+  async files(atelieroot){ const out = []; const walk = async (d, rel) => { for await (const [n, h] of d.entries()){ const p = rel ? rel + '/' + n : n; if (h.kind === 'directory') await walk(h, p); else if (!n.startsWith('.crswap') && (atelieroot || !p.startsWith('.atelieroot/'))) out.push(p); } }; await walk(await this.dir(''), ''); return out.sort(); },
 };
 """
 
 
 class OpfsDisk:
-    """Disco dentro del navegador (OPFS): lo que ve AtelierRoot cuando se abre una «carpeta» con File System Access."""
+    """Disco dentro del navegador (OPFS): lo que ve AtelieRoot cuando se abre una «carpeta» con File System Access."""
     def __init__(self, pg): self.pg = pg
     async def _ev(self, expr, *args):
         await self.pg.evaluate(OPFS_JS)
@@ -65,7 +65,7 @@ class OpfsDisk:
     async def exists(self, p): return await self._ev("p => __opfs.exists(p)", p)
     async def mkdir(self, p): await self._ev("p => __opfs.dir(p, true)", p)
     async def mtime(self, p): return await self._ev("p => __opfs.mtime(p)", p)
-    async def files(self, atelierroot=False): return await self._ev("a => __opfs.files(a)", atelierroot)
+    async def files(self, atelieroot=False): return await self._ev("a => __opfs.files(a)", atelieroot)
 
 
 class T:
@@ -101,7 +101,7 @@ async def type_end(pg, name, text):
     await open_doc(pg, name)
     await pg.evaluate("caretInto(ed.lastElementChild, true)"); await pg.keyboard.type(text)
 async def ask(pg, value, expect_title=None):
-    """Rellena el diálogo de nombre de AtelierRoot y lo acepta con Enter."""
+    """Rellena el diálogo de nombre de AtelieRoot y lo acepta con Enter."""
     await pg.wait_for_selector('#veil.show #f_n', timeout=3000)
     await pg.fill('#f_n', value); await pg.keyboard.press('Enter'); await pg.wait_for_timeout(120)
 def names(nodes):
@@ -123,13 +123,13 @@ async def seed(disk, files=SAMPLE):
 
 
 async def run_core(t, pg, disk, kind, reopen):
-    """Escenas que valen igual para los dos backends. `reopen()` vuelve a cargar AtelierRoot y devuelve la página lista."""
+    """Escenas que valen igual para los dos backends. `reopen()` vuelve a cargar AtelieRoot y devuelve la página lista."""
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     # ---------------------------------------------------------------- 1. abrir una carpeta con contenido
     print('=== 1. Abrir una carpeta que ya tiene .md ===')
     await until(lambda: pg.evaluate("Workspace.active && state.tree.length > 0"))
-    t.check('AtelierRoot abre la carpeta: modo carpeta activo y la base de datos del navegador apagada', await pg.evaluate("Workspace.active === true && Sync.ready === false"), await pg.evaluate("[Workspace.active, Sync.ready]"))
+    t.check('AtelieRoot abre la carpeta: modo carpeta activo y la base de datos del navegador apagada', await pg.evaluate("Workspace.active === true && Sync.ready === false"), await pg.evaluate("[Workspace.active, Sync.ready]"))
     tr = await tree(pg)
     t.check('el árbol refleja las carpetas del disco y los .md (sin la extensión)', names(tr) == ['Intro', 'Proyectos', 'Plan', 'Sub', 'Deep', 'zeta'], names(tr))
     t.check('...con las carpetas como carpetas', [n['t'] for n in tr] == ['doc', 'folder', 'doc'] and tr[1]['c'][1]['t'] == 'folder', tr)
@@ -141,8 +141,8 @@ async def run_core(t, pg, disk, kind, reopen):
     m0 = {p: await disk.mtime(p) for p in SAMPLE}; txt0 = {p: await disk.read(p) for p in SAMPLE}
     await asyncio.sleep(2.0)
     t.check('solo abrirlos NO reescribe ningún archivo (ni «normalizando» el Markdown ni tocando la fecha)', await every(SAMPLE, lambda p: _same(disk, p, txt0, m0)), 'cambió alguno')
-    t.check('se creó .atelierroot/state.json con el orden y lo que Markdown no guarda', '"order"' in (await disk.read('.atelierroot/state.json') or ''), await disk.read('.atelierroot/state.json'))
-    t.check('...y .atelierroot/.gitignore para que la papelera no acabe en git', (await disk.read('.atelierroot/.gitignore') or '').strip() == 'trash/', await disk.read('.atelierroot/.gitignore'))
+    t.check('se creó .atelieroot/state.json con el orden y lo que Markdown no guarda', '"order"' in (await disk.read('.atelieroot/state.json') or ''), await disk.read('.atelieroot/state.json'))
+    t.check('...y .atelieroot/.gitignore para que la papelera no acabe en git', (await disk.read('.atelieroot/.gitignore') or '').strip() == 'trash/', await disk.read('.atelieroot/.gitignore'))
 
     # ---------------------------------------------------------------- 2. escribir
     print('=== 2. Escribir: se guarda solo en el .md ===')
@@ -189,19 +189,19 @@ async def run_core(t, pg, disk, kind, reopen):
     await pg.evaluate("n => moveToTrash(findNode(n))", await nid(pg, 'zeta'))
     ok = await until(lambda: _gone(disk, 'zeta.md'), 6)
     fl = await disk.files(True)
-    tz = [f for f in fl if f.startswith('.atelierroot/trash/') and f.endswith('/zeta.md')]
-    t.check('eliminar un documento lo quita de su lugar y lo guarda en .atelierroot/trash (con su contenido)', ok and len(tz) == 1 and (await disk.read(tz[0]) or '').strip() == 'zeta', fl)
-    t.check('...y la papelera de AtelierRoot lo muestra', await pg.evaluate("state.trash.length") == 1, await pg.evaluate("state.trash.length"))
+    tz = [f for f in fl if f.startswith('.atelieroot/trash/') and f.endswith('/zeta.md')]
+    t.check('eliminar un documento lo quita de su lugar y lo guarda en .atelieroot/trash (con su contenido)', ok and len(tz) == 1 and (await disk.read(tz[0]) or '').strip() == 'zeta', fl)
+    t.check('...y la papelera de AtelieRoot lo muestra', await pg.evaluate("state.trash.length") == 1, await pg.evaluate("state.trash.length"))
     await pg.evaluate("restoreTrash(state.trash[0])")
     ok = await until(lambda: disk.exists('zeta.md'), 6)
     await until(lambda: _no_trash(disk), 6)
     t.check('restaurarlo lo devuelve a su lugar con su contenido', ok and (await disk.read('zeta.md') or '').strip() == 'zeta', await disk.files(True))
     t.check('...y la copia de la papelera desaparece', await _no_trash(disk), await disk.files(True))
-    await disk.write('Proy/imagen.png', 'no soy markdown')                                  # un archivo que AtelierRoot no muestra, dentro de la carpeta
+    await disk.write('Proy/imagen.png', 'no soy markdown')                                  # un archivo que AtelieRoot no muestra, dentro de la carpeta
     await pg.evaluate("n => moveToTrash(findNode(n))", await nid(pg, 'Proy'))
     ok = await until(lambda: _gone_dir(disk, 'Proy'), 6)
     fl = await disk.files(True)
-    t.check('eliminar una carpeta la guarda entera en la papelera, incluso lo que AtelierRoot no muestra', ok and any(f.endswith('/Proy/imagen.png') for f in fl) and any(f.endswith('/Proy/Plan.md') for f in fl), fl)
+    t.check('eliminar una carpeta la guarda entera en la papelera, incluso lo que AtelieRoot no muestra', ok and any(f.endswith('/Proy/imagen.png') for f in fl) and any(f.endswith('/Proy/Plan.md') for f in fl), fl)
     await pg.evaluate("restoreTrash(state.trash[0])")
     await until(lambda: disk.exists('Proy/Plan.md'), 6); await until(lambda: _no_trash(disk), 6)
     fl = await disk.files(True)
@@ -214,7 +214,7 @@ async def run_core(t, pg, disk, kind, reopen):
     t.check('borrar de la papelera «para siempre» elimina también su copia del disco', await _no_trash(disk), await disk.files(True))
 
     # ---------------------------------------------------------------- 5. cambios hechos fuera
-    print('=== 5. Cambios hechos fuera de AtelierRoot (VS Code, git…) ===')
+    print('=== 5. Cambios hechos fuera de AtelieRoot (VS Code, git…) ===')
     await open_doc(pg, 'Intro')
     await disk.write('Intro.md', '# Intro\n\nCAMBIADO FUERA\n')
     ok = await until(lambda: pg.evaluate("ed.innerText.includes('CAMBIADO FUERA')"), 9)
@@ -230,7 +230,7 @@ async def run_core(t, pg, disk, kind, reopen):
     t.check('...y se pueden abrir con su contenido', 'vino de fuera' in await pg.evaluate("ed.innerText"), await pg.evaluate("ed.innerText"))
     await disk.delete('Externo.md')
     ok = await until(lambda: _not_in_tree(pg, 'Externo'), 9)
-    t.check('un .md borrado fuera desaparece del árbol (y AtelierRoot abre otro documento)', ok and await pg.evaluate("state.current !== null && !!findNode(state.current)"), names(await tree(pg)))
+    t.check('un .md borrado fuera desaparece del árbol (y AtelieRoot abre otro documento)', ok and await pg.evaluate("state.current !== null && !!findNode(state.current)"), names(await tree(pg)))
     # conflicto: yo lo edité y alguien lo cambió en el disco a la vez
     await open_doc(pg, 'Intro'); iid = await nid(pg, 'Intro')
     await pg.evaluate("i => { state.docs[i] = '<h1>Intro</h1><p>MI VERSION</p>'; Dirty.add(i); refreshEditorsFor(i); }", iid)
@@ -260,14 +260,14 @@ async def run_core(t, pg, disk, kind, reopen):
     t.check('si borran fuera un archivo que yo tenía editado sin guardar, se vuelve a crear con mi edición', await until(lambda: _has(disk, 'Proy/Sub/Deep.md', 'SIN GUARDAR'), 6), await disk.files())
 
     # ---------------------------------------------------------------- 6. lo que Markdown no guarda
-    print('=== 6. Lo que Markdown no guarda (va en .atelierroot/) y recargar ===')
+    print('=== 6. Lo que Markdown no guarda (va en .atelieroot/) y recargar ===')
     tid = await nid(pg, 'zeta')
     await pg.evaluate("i => { state.docs[i] = '<h1>Zeta</h1><table data-cw=\"\"><thead><tr><th data-w=\"30.00\" style=\"width:30.00%\">a</th><th data-w=\"70.00\" style=\"width:70.00%\">b</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table><h2 data-fold=\"\">Sección</h2><p>oculto</p><h2>Otra</h2><p>visible</p>'; Dirty.add(i); state.fills = state.fills || {}; state.fills[i] = { CLIENTE: 'ACME' }; save(true); }", tid)
     await save_now(pg)
     z = await disk.read('zeta.md') or ''
     t.check('el .md no lleva ni anchos de columna ni pliegues (queda Markdown limpio)', 'data-cw' not in z and 'data-fold' not in z and 'data-w' not in z and '| a' in z, z)
-    st = json.loads(await disk.read('.atelierroot/state.json') or '{}')
-    t.check('...están en .atelierroot/state.json, por ruta', st.get('extras', {}).get('zeta.md', {}).get('tw') == [[30.0, 70.0]] and st['extras']['zeta.md'].get('folds') == [1], st.get('extras'))
+    st = json.loads(await disk.read('.atelieroot/state.json') or '{}')
+    t.check('...están en .atelieroot/state.json, por ruta', st.get('extras', {}).get('zeta.md', {}).get('tw') == [[30.0, 70.0]] and st['extras']['zeta.md'].get('folds') == [1], st.get('extras'))
     t.check('...y los valores de los marcadores también', st.get('fills', {}).get('zeta.md') == {'CLIENTE': 'ACME'}, st.get('fills'))
     await pg.evaluate("i => openDoc(i)", await nid(pg, 'Intro'))
     await pg.evaluate("() => { const ids = []; walk(state.tree, n => { if (n.type === 'folder') n.open = true; }); state.tree.forEach(n => {}); }")
@@ -292,7 +292,7 @@ async def run_core(t, pg, disk, kind, reopen):
         'cita y regla': "> una cita\n> en dos líneas\n\n---\n\nfin\n",
         'código': "```python\nprint('hola')\nif x:\n    pass\n```\n\nluego `inline`.\n",
         'tabla': "| Nombre | Edad |\n| --- | ---: |\n| Ana | 31 |\n| Beto | 7 |\n",
-        'enlaces': "Mira [AtelierRoot](https://example.com/a?b=1&c=2) y https://example.com/suelta y [[otro documento]].\n",
+        'enlaces': "Mira [AtelieRoot](https://example.com/a?b=1&c=2) y https://example.com/suelta y [[otro documento]].\n",
         'acentos y símbolos': "Canción №1: ¿qué tal? ¡Bien! — “comillas” … ñandú 😀 → ✓ © & < > \" '\n",
     }
     import_js = "md => { const h = wsHtml(md); const m1 = wsMdText(h); const m2 = wsMdText(wsHtml(m1)); return [m1, m2]; }"
@@ -330,7 +330,7 @@ async def _has(disk, p, s): return s in (await disk.read(p) or '')
 async def _gone(disk, p): return not await disk.exists(p)
 async def _dir_exists(disk, p): return await disk.exists(p)
 async def _gone_dir(disk, p): return not await disk.exists(p)
-async def _no_trash(disk): return not any(f.startswith('.atelierroot/trash/') for f in await disk.files(True))
+async def _no_trash(disk): return not any(f.startswith('.atelieroot/trash/') for f in await disk.files(True))
 async def _any_file(disk, frag): return any(frag in f for f in await disk.files())
 async def _in_tree(pg, wanted): nm = names(await tree(pg)); return all(w in nm for w in wanted)
 async def _not_in_tree(pg, w): return w not in names(await tree(pg))

@@ -32,10 +32,10 @@ Browser tests load the page with `?test=1` (no welcome screen).
 
 1. **Every JS file starts with `"use strict";`** (strict mode is per script).
 2. **No forward references at load time.** Files share the global scope and load in file-name order, without hoisting between files. If top-level code names a function declared in a _later_ file, it fails. Use a lazy arrow (`run: () => myFunction()`) or move the declaration.
-3. **The disk is the truth** (with a folder open). Never really delete: removed items go to `.atelierroot/trash`. Never rewrite a file whose Markdown did not change. If a file changed outside, never overwrite it: your version goes to a copy.
+3. **The disk is the truth** (with a folder open). Never really delete: removed items go to `.atelieroot/trash`. Never rewrite a file whose Markdown did not change. If a file changed outside, never overwrite it: your version goes to a copy.
 4. **Foreign content is hostile.** Everything coming from a `.md` goes through `esc()`, links and images through `urlAllowed()`. Never assign unescaped text to `innerHTML`.
 5. **No network.** No `<script src="https://...">`, no web fonts, no external `fetch` (`npm run check` enforces it). Prism lives in `src/vendor/`.
-6. **Minimal server.** It only writes `.md` and `.atelierroot/`. Any new permission in `server/atelierroot-server.js` (or the Tauri backend) needs a test and a written justification.
+6. **Minimal server.** It only writes `.md` and `.atelieroot/`. Any new permission in `server/atelieroot-server.js` (or the Tauri backend) needs a test and a written justification.
 7. **Every fixed bug gets a test** in `tests/e2e/` or `server/test/` that fails without the fix.
 
 ## Known pitfalls
@@ -53,7 +53,7 @@ Browser tests load the page with `?test=1` (no welcome screen).
 - **New JS file**: `src/js/NN-name.js` (number = load order), starts with `"use strict";`, add its `<script>` to `src/index.html` in order, run `npm run check`.
 - **New interface text**: add `'area.name': ['Texto', 'Text']` to `STR` in `src/js/05-i18n.js`; use `T('area.name', { n })` in code or `data-i18n*="area.name"` in HTML. If the module paints the text itself, repaint it on `langchange`.
 - **New highlight language**: add it to `scripts/prism-languages.json`, run `npm run vendor:prism`.
-- **New server permission**: add the case to `tests/contract/scenarios.json` first (both backends run it), then change `server/atelierroot-server.js` and `src-tauri/src/fsops.rs`; explain in the PR why it is safe.
+- **New server permission**: add the case to `tests/contract/scenarios.json` first (both backends run it), then change `server/atelieroot-server.js` and `src-tauri/src/fsops.rs`; explain in the PR why it is safe.
 - **Release**: add the `## [X.Y.Z] - date` section to `CHANGELOG.md`, bump the version, push, then tag `vX.Y.Z`; that section becomes the release text.
 - **Working-folder test**: add the scene to `tests/e2e/ws_common.py` (runs against both backends).
 - **Golden values** (`tests/e2e/golden/`): `UPDATE_GOLDEN=1 python tests/e2e/test_enter_pushdown.py`, review the diff.

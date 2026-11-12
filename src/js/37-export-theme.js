@@ -37,7 +37,7 @@ function download(name, content, type){
 }
 function backup(){
   stash();
-  return download('atelierroot-respaldo-' + new Date().toISOString().slice(0,10) + '.json',
+  return download('atelieroot-respaldo-' + new Date().toISOString().slice(0,10) + '.json',
     JSON.stringify({ v:1, at: Date.now(), tree: state.tree, docs: (() => { const o = {}; walk(state.tree, n => { if (n.type === 'doc') o[n.id] = state.docs[n.id]; }); return o; })() }, null, 1), 'application/json').then(ok => {
     if (!ok) return;                                          // solo cuenta como respaldo si de verdad se guardó el archivo
     state.lastBackup = Date.now(); save(true); updateBackupNote(); toast(T('msg.backup-downloaded'));

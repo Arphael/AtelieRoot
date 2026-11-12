@@ -29,7 +29,7 @@ const SEED_HTML = '<h1>' + esc(T('seed.title')) + '</h1><p>' + T('seed.body') + 
   if (inWs){
     wsRecover(); openDoc(Workspace.startId); wsStartWatching(); wsStatus('ok'); wsSchedule(true);
   } else {
-    // al abrir AtelierRoot se muestra el último documento modificado
+    // al abrir AtelieRoot se muestra el último documento modificado
     const lastOpen = Ui.data.current;
     const start = lastModifiedDoc() || (lastOpen && findNode(lastOpen) && state.docs[lastOpen] !== undefined ? lastOpen : firstDoc());
     openDoc(start);

@@ -4,13 +4,13 @@
 // los cambios se fusionan; si las dos tocaron el mismo documento a la vez, se conservan las dos versiones.
 const Ui = {
   data: {},
-  read(){ try { this.data = JSON.parse(localStorage.getItem('atelierroot.ui') || '{}') || {}; } catch(_){ this.data = {}; } },
+  read(){ try { this.data = JSON.parse(localStorage.getItem('atelieroot.ui') || '{}') || {}; } catch(_){ this.data = {}; } },
   write(){
     try {
       let cur = {};
-      try { cur = JSON.parse(localStorage.getItem('atelierroot.ui') || '{}') || {}; } catch(_){}
+      try { cur = JSON.parse(localStorage.getItem('atelieroot.ui') || '{}') || {}; } catch(_){}
       this.data.scroll = Object.assign({}, cur.scroll, this.data.scroll);
-      localStorage.setItem('atelierroot.ui', JSON.stringify(this.data));
+      localStorage.setItem('atelieroot.ui', JSON.stringify(this.data));
     } catch(_){}
   }
 };
@@ -232,8 +232,8 @@ async function doPersist(){
   journalClear();
 }
 // Diario de seguridad: al ocultar o cerrar la pestaña se anota de forma síncrona lo que aún no llegó a disco.
-// Si la pestaña desaparece antes de terminar de escribir, la próxima vez que se abra AtelierRoot se recupera.
-const TAB_ID = Math.random().toString(36).slice(2, 8), JKEY = 'atelierroot.j.' + TAB_ID;
+// Si la pestaña desaparece antes de terminar de escribir, la próxima vez que se abra AtelieRoot se recupera.
+const TAB_ID = Math.random().toString(36).slice(2, 8), JKEY = 'atelieroot.j.' + TAB_ID;
 const anyDirty = () => Object.keys(state.docs).some(id => { const b = Sync.docs[id]; return state.docs[id] !== undefined && !(b && b.html === state.docs[id]); });
 function journalWrite(){
   try {
@@ -250,7 +250,7 @@ function journalClear(){ try { if (!anyDirty()) localStorage.removeItem(JKEY); }
 function recoverJournals(){
   let n = 0;
   try {
-    const keys = []; for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k && k.startsWith('atelierroot.j.') && k !== JKEY) keys.push(k); }
+    const keys = []; for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k && k.startsWith('atelieroot.j.') && k !== JKEY) keys.push(k); }
     keys.forEach(k => {
       let j = {}; try { j = JSON.parse(localStorage.getItem(k) || '{}'); } catch(_){}
       Object.keys(j).forEach(id => {
@@ -328,7 +328,7 @@ async function syncFromDb(){
 let syncT = 0;
 function queueSync(){ clearTimeout(syncT); syncT = setTimeout(() => { Sync.q = Sync.q.then(syncFromDb).catch(e => console.error(e)); }, 150); }
 function startSync(){
-  try { Sync.bc = new BroadcastChannel('atelierroot-sync'); Sync.bc.onmessage = queueSync; } catch(_){}
+  try { Sync.bc = new BroadcastChannel('atelieroot-sync'); Sync.bc.onmessage = queueSync; } catch(_){}
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) flushNow(); else queueSync();
   });

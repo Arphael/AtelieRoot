@@ -6,7 +6,7 @@
 | ----------------------- | ----------------------------------------------------------------------------------- |
 | UI / editor             | Vanilla JavaScript (classic scripts, no framework), CSS, `contenteditable`          |
 | Syntax highlight        | Prism 1.29, vendored in `src/vendor/prism/` (no CDN)                                |
-| Local server            | Node.js >= 18, single file `server/atelierroot-server.js`, zero dependencies            |
+| Local server            | Node.js >= 18, single file `server/atelieroot-server.js`, zero dependencies            |
 | Browser-only storage    | File System Access API (Chrome/Edge) or IndexedDB + `localStorage`                  |
 | Desktop app             | Tauri v2: Rust backend in `src-tauri/`, system WebView, one portable file           |
 | Build                   | `scripts/build.mjs` concatenates `src/` into `dist/` (~520 KB); no bundler          |
@@ -26,16 +26,16 @@ The only npm package is `@tauri-apps/cli`, a development tool. The app never con
  |  Folder core            82-ws-core.js  (queue, sync, journal) |
  |        |                                                      |
  |  Backends               81-ws-backends.js                     |
- |    +- HttpBackend  --HTTP+token-->  server/atelierroot-server.js  |---> your folder/*.md
+ |    +- HttpBackend  --HTTP+token-->  server/atelieroot-server.js  |---> your folder/*.md
  |    +- FsBackend    --File System Access API------------------ |---> your folder/*.md
  |    +- TauriBackend --invoke()-->    src-tauri (Rust)          |---> your folder/*.md
  |  Temporary mode         20-storage-local.js, 56-tab-sync.js   |---> IndexedDB
  +---------------------------------------------------------------+
 ```
 
-At boot (`99-boot.js` -> `wsBoot()` in `83-ws-ui.js`) AtelierRoot picks one storage mode:
+At boot (`99-boot.js` -> `wsBoot()` in `83-ws-ui.js`) AtelieRoot picks one storage mode:
 
-1. **Working folder** (normal): local server (page has `<meta name="atelierroot-token">`), a
+1. **Working folder** (normal): local server (page has `<meta name="atelieroot-token">`), a
    remembered browser folder handle, or the desktop app (`window.__TAURI__`). Every document is a `.md`.
 2. **Temporary mode**: no folder and no server. IndexedDB + `localStorage`, per-document
    versions and cross-tab merge. Disabled (`Sync.ready = false`) when a folder is open.
@@ -49,7 +49,7 @@ All backends obey [CONTRACT.md](CONTRACT.md).
 
 | Audience               | Artifact                                                                                          | Needs     |
 | ---------------------- | ------------------------------------------------------------------------------------------------- | --------- |
-| End users              | Portable `AtelierRoot.exe` (and the same app as `AtelierRoot.html`) from GitHub Releases (installers `.msi`, `.dmg`, `.AppImage`/`.deb` in S4) | nothing   |
+| End users              | Portable `AtelieRoot.exe` (and the same app as `AtelieRoot.html`) from GitHub Releases (installers `.msi`, `.dmg`, `.AppImage`/`.deb` in S4) | nothing   |
 | Try without installing | GitHub Pages build (`dist/`), Chrome/Edge for folders                                             | a browser |
 | Developers / headless  | Clone + `npm start` (Node server)                                                                 | Node 18+  |
 
@@ -141,13 +141,30 @@ by `src/index.html`:
 | `75-slash-code.js`             | `/command` becomes inline code                                         |
 | `76-links-urls.js`             | URLs become real links                                                 |
 | `77-exit-inline.js`            | Inline format ends with a space after paths, commands, URLs            |
+| `78-shortcuts.js`              | VS Code shortcuts (`KEYS`, the one list), `Ctrl+K` prefix, search in all documents, F2, Alt+Z |
+| `79-multi-edit.js`             | Multi-edit: `Ctrl+D`, `Ctrl+Shift+L`, `Shift+Alt+I` (places painted with the Highlight API) |
 | `80-enter-pushdown.js`         | Enter at the start of a format pushes it down                          |
 | `81-ws-backends.js`            | Working folder: backends (HTTP, File System Access, Tauri)             |
 | `82-ws-core.js`                | Working folder: load, sync, save, outside changes, journal             |
 | `83-ws-ui.js`                  | Working folder: screens and boot                                       |
+| `84-tools-panel.js`            | Tools panel for small screens                                          |
+| `85-about.js`                  | Version (`APP_SEMVER` = package.json, checked) and «About» with the project links |
+| `86-comments.js`               | Comments: `<span data-cmt>` anchors in the internal HTML, panel, orphans |
 | `99-boot.js`                   | Boot                                                                   |
 
-CSS lives in `src/css/01-base.css` ... `21-workspace.css`, same ordering rule.
+CSS lives in `src/css/01-base.css` ... `23-comments-keys.css`, same ordering rule.
+
+**Comments** never reach Markdown: `mdFromDom` ignores the anchor spans, `forOutsideHtml` removes them from
+copies and exports, and `wsCapture`/`wsApply` store them per document in `.atelieroot/state.json`
+(`extras[path].cmts`: block index, text offset, quoted text, thread). When the text changed outside, the
+quote is searched in the whole document; if it is gone the comment is kept without text.
+
+**Names kept from v1 on purpose** (the app was renamed from AtelierRoot in v2.0.0): the IndexedDB databases
+`atelierroot` and `atelierroot-ws` and the desktop app identifier `io.github.arphael.atelierroot`. They are
+not visible, and renaming them would lose the documents of the temporary mode and the remembered folder.
+Everything else moved: `.atelierroot/` -> `.atelieroot/` (renamed by the Node server and the Rust backend
+when a folder opens, copied by the File System Access backend) and `atelierroot.*` -> `atelieroot.*`
+browser settings (`00-base.js`, before anything reads them).
 
 ## Interface language (i18n)
 
@@ -155,12 +172,12 @@ CSS lives in `src/css/01-base.css` ... `21-workspace.css`, same ordering rule.
   `'key': [spanish, english]`; code calls `T('key', { var })` (`T`, not `t`: many modules use `t` as a local name).
 - Static HTML carries `data-i18n` (own text, icons kept), `data-i18n-title`, `data-i18n-aria`, `data-i18n-ph`.
   HTML built in code that stays on screen (code-block buttons, tree buttons) carries the same attributes.
-- `I18n.set(lang)` saves the choice in `atelierroot.ui`, repaints those attributes and fires `langchange`;
+- `I18n.set(lang)` saves the choice in `atelieroot.ui`, repaints those attributes and fires `langchange`;
   modules that paint text themselves (status bar, block-type button, backup note, folder chip) listen to it.
   Dialogs, menus and toasts are built on open, so they already use the current language.
 - Language: `?lang=es|en` in the URL (this load only, used by tests) > saved choice > system language
   (`es*` -> Spanish, anything else -> English).
-- Documents and `.atelierroot/` are never translated. New names that the app creates (conflict copies,
+- Documents and `.atelieroot/` are never translated. New names that the app creates (conflict copies,
   "Untitled", the welcome document) use the active language. Backend errors are shown by code (`WsError`).
 - `npm run check` rejects a literal text in `toast`/`dialog`/`confirmBox`/`askName`/`flag` and any
   `data-i18n*` key missing from the dictionary.
@@ -169,7 +186,7 @@ CSS lives in `src/css/01-base.css` ... `21-workspace.css`, same ordering rule.
 
 | File                        | Role                                                                                                                                                                                                                            |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/main.rs`               | Window, commands `ws_root`, `ws_pick`, `ws_clear`, `ws_list`, `ws_read`, `ws_write`, `ws_mkdir`, `ws_move`, `ws_remove`; remembered folder in the app config dir (`settings.json`); change poller (1.2 s) emitting `ws-changed` |
+| `src/main.rs`               | Window, commands `ws_root`, `ws_pick`, `ws_clear`, `ws_list`, `ws_read`, `ws_read_many`, `ws_write`, `ws_mkdir`, `ws_move`, `ws_remove`, `open_link` (only `https://github.com/Arphael/` and `https://arphael.github.io/`, opened in the system browser); remembered folder in the app config dir (`settings.json`); change poller (1.2 s) emitting `ws-changed` |
 | `src/fsops.rs`              | The contract rules in Rust (path validation, writable rules, atomic write, `expect` conflict, trash restore) and their unit tests                                                                                               |
 | `tauri.conf.json`           | Frontend = `dist/` (built by `beforeBuildCommand`), strict CSP, no bundling for the portable build                                                                                                                              |
 | `capabilities/default.json` | Only `core:default`: the page gets no generic filesystem, shell or network permission                                                                                                                                           |

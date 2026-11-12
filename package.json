@@ -1,24 +1,24 @@
 {
-  "name": "atelierroot",
-  "version": "1.2.0",
+  "name": "atelieroot",
+  "version": "2.0.0",
   "description": "Local-first Markdown editor: every document is a .md file in a folder on your computer.",
   "author": "Alejandro Reyes",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Arphael/AtelierRoot.git"
+    "url": "git+https://github.com/Arphael/AtelieRoot.git"
   },
-  "homepage": "https://github.com/Arphael/AtelierRoot#readme",
+  "homepage": "https://github.com/Arphael/AtelieRoot#readme",
   "bugs": {
-    "url": "https://github.com/Arphael/AtelierRoot/issues"
+    "url": "https://github.com/Arphael/AtelieRoot/issues"
   },
   "private": true,
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "start": "node server/atelierroot-server.js --dir ./notas --app src --open",
-    "start:dist": "node server/atelierroot-server.js --dir ./notas --app dist --open",
+    "start": "node server/atelieroot-server.js --dir ./notas --app src --open",
+    "start:dist": "node server/atelieroot-server.js --dir ./notas --app dist --open",
     "check": "node scripts/check.mjs",
     "lint": "eslint .",
     "build": "node scripts/build.mjs",

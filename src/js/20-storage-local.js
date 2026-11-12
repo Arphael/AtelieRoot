@@ -3,7 +3,7 @@
 const DB = (() => {
   let p;
   const open = () => p || (p = new Promise((res, rej) => {
-    const r = indexedDB.open('atelierroot', 1);
+    const r = indexedDB.open('atelierroot', 1);   // database name kept from v1 (renaming it would lose the documents of the temporary mode)
     r.onupgradeneeded = () => r.result.createObjectStore('kv');
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   }));

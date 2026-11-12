@@ -1,10 +1,10 @@
 "use strict";
 /* ====== 77. Carpeta de trabajo: pantallas y arranque ====== */
-// Hay tres formas de empezar, y AtelierRoot elige solo la que pueda:
-//   1. Servidor local de AtelierRoot (la página trae un token): se abre su carpeta, sin preguntar nada.
+// Hay tres formas de empezar, y AtelieRoot elige solo la que pueda:
+//   1. Servidor local de AtelieRoot (la página trae un token): se abre su carpeta, sin preguntar nada.
 //   2. Carpeta recordada del navegador (Chrome/Edge): se vuelve a pedir permiso con un clic.
 //   3. Modo temporal: los documentos viven solo en este navegador (IndexedDB), como antes, hasta que se abra una carpeta.
-const wsServerToken = () => { const m = document.querySelector('meta[name="atelierroot-token"]'); return m ? m.content : ''; };
+const wsServerToken = () => { const m = document.querySelector('meta[name="atelieroot-token"]'); return m ? m.content : ''; };
 // apps built on Electron (VS Code's integrated browser) expose the picker but never grant folder access
 const wsEmbedded = () => !wsTauri() && /\bElectron\//.test(navigator.userAgent);
 const wsCanPick = () => !!wsTauri() || (typeof window.showDirectoryPicker === 'function' && !wsEmbedded());
@@ -87,7 +87,7 @@ async function wsPickFolder(){
     return;
   }
   let h;
-  try { h = await window.showDirectoryPicker({ id: 'atelierroot', mode: 'readwrite' }); }
+  try { h = await window.showDirectoryPicker({ id: 'atelieroot', mode: 'readwrite' }); }
   catch(e){                                                     // cancelling is silent; anything else is the browser refusing
     if (e && e.name === 'AbortError') return;
     toast(T('msg.picker-refused', { why: (e && e.name) || e }));

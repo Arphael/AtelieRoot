@@ -1,6 +1,6 @@
 # Contract
 
-The technical behavior every AtelierRoot Markdown backend must honor. Today there are three
+The technical behavior every AtelieRoot Markdown backend must honor. Today there are three
 implementations (Node server, File System Access in the browser, temporary IndexedDB mode);
 the Tauri desktop backend (roadmap S3) must pass the same contract tests.
 
@@ -32,17 +32,17 @@ Errors are `WsError` with `code`:
 | `offline`  | Backend unreachable (server stopped, permission revoked).                       |
 | `io`       | Any other filesystem failure.                                                   |
 
-## 2. HTTP API (`server/atelierroot-server.js`)
+## 2. HTTP API (`server/atelieroot-server.js`)
 
-Every `/api/*` request needs header `X-AtelierRoot-Token: <token>` (or `?token=`). The token is
+Every `/api/*` request needs header `X-AtelieRoot-Token: <token>` (or `?token=`). The token is
 random per server start and injected only into the served `index.html` as
-`<meta name="atelierroot-token">`.
+`<meta name="atelieroot-token">`.
 
 | Method + route     | Params / body                              | Success                                                                      | Errors                      |
 | ------------------ | ------------------------------------------ | ---------------------------------------------------------------------------- | --------------------------- |
 | `GET /api/ping`    | -                                          | `{ name, version, server: true }`                                            |                             |
 | `GET /api/events`  | -                                          | SSE stream; an event is sent when the listing signature changes (poll 1.2 s) |                             |
-| `GET /api/list`    | `hidden=1` includes `.atelierroot/`        | `{ entries: [{p,t,s,m}] }` (max 50 000)                                      |                             |
+| `GET /api/list`    | `hidden=1` includes `.atelieroot/`        | `{ entries: [{p,t,s,m}] }` (max 50 000)                                      |                             |
 | `GET /api/file`    | `p`, `optional=1`                          | `{ text, m, s }` or `{ missing: true }`                                      | 400, 403, 404               |
 | `POST /api/files`  | body `{ paths: [...] }` (max 500)          | `{ files: [{ text, m, s } \| { error: denied\|missing\|io }] }`               | 400                         |
 | `PUT /api/file`    | `p`, `expect`; body `{ text }` (max 25 MB) | `{ m, s }`                                                                   | 400, 403, 409 conflict, 413 |
@@ -58,9 +58,9 @@ Errors are JSON `{ error: "<message>" }`.
 2. Reject requests whose `Host` is not `localhost|127.0.0.1|[::1]:<port>` (DNS rebinding).
 3. Paths: relative, `/` separated; reject `..`, `.`, `\`, NUL, absolute or drive paths,
    segments > 255 chars, and anything whose real path (symlinks resolved) leaves the root.
-4. Writable: `*.md`, `*.markdown` outside hidden folders, and anything inside `.atelierroot/`.
+4. Writable: `*.md`, `*.markdown` outside hidden folders, and anything inside `.atelieroot/`.
    Nothing else is ever written or deleted.
-5. Restoring from `.atelierroot/trash/` may also move back common document/media files
+5. Restoring from `.atelieroot/trash/` may also move back common document/media files
    (images, PDF, office, text, audio/video); never scripts or executables.
 6. Writes are atomic: temp file in the same folder, then rename.
 7. Static responses carry `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
@@ -74,13 +74,14 @@ Errors are JSON `{ error: "<message>" }`.
 | Path                                                                  | Content                                                                                                                |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `**/*.md`, `**/*.markdown`                                            | One document. File name = document name.                                                                               |
-| visible folders                                                       | AtelierRoot folders (empty ones too).                                                                                  |
-| `.atelierroot/state.json`                                             | What Markdown cannot store (below).                                                                                    |
-| `.atelierroot/.gitignore`                                             | `trash/`                                                                                                               |
-| `.atelierroot/trash/<entry>/...`                                      | Deleted items with their original structure. Auto-emptied after 30 days.                                               |
+| visible folders                                                       | AtelieRoot folders (empty ones too).                                                                                  |
+| `.atelieroot/state.json`                                             | What Markdown cannot store (below).                                                                                    |
+| `.atelieroot/.gitignore`                                             | `trash/`                                                                                                               |
+| `.atelieroot/trash/<entry>/...`                                      | Deleted items with their original structure. Auto-emptied after 30 days.                                               |
+| `.atelierroot/` (v1)                                                  | Renamed to `.atelieroot/` when the folder is opened (only if `.atelieroot/` does not exist yet).                      |
 | anything else (`.txt`, images, `.git/`, dot folders, `node_modules/`) | Ignored and never touched, unless inside a folder you delete (it goes to the trash with it and comes back on restore). |
 
-`.atelierroot/state.json`:
+`.atelieroot/state.json`:
 
 ```json
 {
@@ -143,7 +144,7 @@ right-aligned).
 
 - Supported: `es`, `en`. Default: system language (`navigator.language`: `es*` -> Spanish, anything else -> English);
   `?lang=es|en` in the URL forces one for that load.
-- Switching is live (no reload) and persisted in `localStorage` `atelierroot.ui`.
+- Switching is live (no reload) and persisted in `localStorage` `atelieroot.ui`.
 - Changing the language never changes documents, file names or `state.json`. Names the app creates from then on
   (conflict copies, "Untitled") use the active language. Backend errors are shown by code (section 1).
 

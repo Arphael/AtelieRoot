@@ -2,16 +2,16 @@
 
 ## General
 
-**Does AtelierRoot send my documents anywhere?**
+**Does AtelieRoot send my documents anywhere?**
 No. There is no account, no cloud and no telemetry. The app makes no network requests at all.
 
 **Can I keep using VS Code, Obsidian or git on the same folder?**
-Yes. Files are plain `.md`. AtelierRoot reloads outside changes and never overwrites a file that changed
+Yes. Files are plain `.md`. AtelieRoot reloads outside changes and never overwrites a file that changed
 on disk without keeping your version as a copy.
 
 **Why did my file change when I edited it?**
 The first edit saves normalized Markdown (`*` -> `-`, aligned tables...). Opening without editing
-never rewrites a file. If you do not want that for a file, do not edit it in AtelierRoot.
+never rewrites a file. If you do not want that for a file, do not edit it in AtelieRoot.
 
 **How do I change the interface language?**
 Press **EN/ES** in the toolbar, or search "Language" in the command palette (`Ctrl+Shift+P`). The choice
@@ -22,6 +22,17 @@ Not yet: pasted images are embedded in the `.md` as `data:` URLs. Images as sepa
 
 **Does it work with OneDrive, Dropbox or iCloud folders?**
 It should (changes are detected by date and size), but it has not been measured yet. Keep backups.
+
+**AtelierRoot became AtelieRoot. What changed for me?**
+Only the name (v2.0.0). The web version is now at <https://arphael.github.io/AtelieRoot/>; the old address
+stops working, so update your bookmark. The first time v2 opens a folder used by v1, its hidden folder
+`.atelierroot/` becomes `.atelieroot/` (order, trash, folds and comments are kept); your `.md` files are not
+touched. Browser settings move over too. An old v1 executable opened on a migrated folder will not see that
+hidden state; use the v2 downloads.
+
+**What are comments and where do they go?**
+Notes on selected text (`Ctrl+/`), visible only in AtelieRoot. They are stored in `.atelieroot/state.json`
+(or in the browser in temporary mode), never in the `.md`, copies or exports. Another editor will not show them.
 
 ## Desktop app
 
@@ -38,7 +49,7 @@ In the app's own settings folder. Choosing another folder from the app replaces 
 
 ## HTML file (browser)
 
-**Is `AtelierRoot.html` different from the executable?**
+**Is `AtelieRoot.html` different from the executable?**
 No. The executable embeds the same HTML file of the same release; only the way the folder is
 opened differs (the browser asks for permission, the desktop app remembers the folder).
 
@@ -52,12 +63,12 @@ of a quote and an extension's correction inside bold text can behave differently
 Brave ships folder access turned off. Open `brave://flags/#file-system-access-api`, choose **Enabled** and restart Brave.
 
 **VS Code's integrated browser stays in temporary mode.**
-It is built on Electron, which lets you pick a folder but never grants access to it, so AtelierRoot does not offer the button there. Open the file in Chrome, Edge or Brave, or use the desktop app.
+It is built on Electron, which lets you pick a folder but never grants access to it, so AtelieRoot does not offer the button there. Open the file in Chrome, Edge or Brave, or use the desktop app.
 
-**My spelling or grammar extension does nothing in `AtelierRoot.html`.**
+**My spelling or grammar extension does nothing in `AtelieRoot.html`.**
 Most writing assistant extensions only run on `http`/`https` pages, so they never load in a
 file opened from disk (`file://`), even with "Allow access to file URLs" turned on. Open the
-same app from the web instead: <https://arphael.github.io/AtelierRoot/>. Your documents still
+same app from the web instead: <https://arphael.github.io/AtelieRoot/>. Your documents still
 stay in your local folder. In the extension's details, set **Site access** to "On all sites"
 (or add `arphael.github.io`). The desktop app does not run browser extensions; the editor's
 built-in spell check (`spellcheck`) works everywhere.

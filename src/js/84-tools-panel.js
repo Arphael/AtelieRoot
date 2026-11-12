@@ -2,7 +2,7 @@
 /* ====== 86. Panel de herramientas (derecha) ====== */
 // When the right-hand toolbar group does not fit (48-responsive-ui.js), its tools live here, together with the
 // view tools and, on phones, the status bar. Each row clicks the real toolbar button, so behavior stays in one place.
-const TOOLS_VIEW = [['#pvBtn', 'pvBtn.aria'], ['#olBtn', 'olBtn.title'], ['#splitBtn', 'splitBtn.title'], ['#focusBtn', 'focusBtn.aria', 'Ctrl+Shift+F'],
+const TOOLS_VIEW = [['#pvBtn', 'pvBtn.aria'], ['#olBtn', 'olBtn.title'], ['#splitBtn', 'splitBtn.title'], ['#focusBtn', 'focusBtn.aria', 'Ctrl+K Z'],
   ['#findBtn', 'findBtn.aria', 'Ctrl+F'], ['#swBtn', 'swBtn.aria', 'Ctrl+P']];
 const TOOLS_DOC = [['#phBtn', 'phBtn.aria'], ['#tidyBtn', 'pal.tidy-document'], ['#copyMd', 'copyMd'], ['#copyRich', 'pal.copy-with-formatting'], ['#exportBtn', 'tools.export']];
 const toolsEl = $('#tools'), toolsBody = $('#toolsBody');

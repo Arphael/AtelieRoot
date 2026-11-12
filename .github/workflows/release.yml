@@ -1,6 +1,6 @@
 name: Release
 # On a version tag (git tag v1.0.0 && git push --tags) the two downloads are attached:
-# AtelierRoot.exe (desktop app) and AtelierRoot.html (the same app as one HTML file), with the
+# AtelieRoot.exe (desktop app) and AtelieRoot.html (the same app as one HTML file), with the
 # CHANGELOG.md section of that version as the release text (scripts/release-notes.mjs).
 # Both come from the same dist/index.html, so they always behave the same.
 on:
@@ -24,12 +24,12 @@ jobs:
       - run: npm run tauri:build   # runs npm run build, then embeds dist/ in the executable
       - run: |
           mkdir release
-          copy src-tauri\target\release\AtelierRoot.exe release\
-          copy dist\index.html release\AtelierRoot.html
+          copy src-tauri\target\release\AtelieRoot.exe release\
+          copy dist\index.html release\AtelieRoot.html
         shell: cmd
       - uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           body_path: release-notes.md
           files: |
-            release/AtelierRoot.exe
-            release/AtelierRoot.html
+            release/AtelieRoot.exe
+            release/AtelieRoot.html

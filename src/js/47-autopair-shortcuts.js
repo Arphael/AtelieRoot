@@ -58,8 +58,7 @@ document.addEventListener('keydown', e => {
   if (mod && !e.altKey){
     const k = e.key.toLowerCase();
     if (k === 'p' && !e.shiftKey){ e.preventDefault(); openSwitcher(); return; }
-    if (k === 'f' && e.shiftKey){ e.preventDefault(); toggleFocus(); return; }
-    if (k === 'f'){ e.preventDefault(); openFind(false); return; }
+    if (k === 'f' && !e.shiftKey){ e.preventDefault(); openFind(false); return; }   // Ctrl+Shift+F: search all documents (78-shortcuts.js)
     if (k === 'h'){ e.preventDefault(); openFind(true); return; }
     // deshacer fuera del editor (por ejemplo, con bloques seleccionados)
     const ae = document.activeElement;
