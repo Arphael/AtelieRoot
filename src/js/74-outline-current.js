@@ -2,10 +2,12 @@
 /* ====== 68. Esquema: marca el encabezado donde estás ====== */
 // Si el cursor está en el documento y a la vista, vale el encabezado de su sección; si no, el de la parte que estás viendo.
 let olHeads = [], olBtns = [], olCur = -2, olRaf = 0, olHold = 0;
+// Al desplazar la página manda lo que se ve (el outline sigue al scroll); al mover el cursor, su sección.
+let olByScroll = false;
 function curHeadingIdx(){
   if (!olHeads.length) return -1;
   const sr = scroll.getBoundingClientRect(), s = getSelection();
-  if (document.activeElement === ed && s.rangeCount && ed.contains(s.anchorNode)){
+  if (!olByScroll && document.activeElement === ed && s.rangeCount && ed.contains(s.anchorNode)){
     let blk = s.anchorNode;
     while (blk && blk.parentElement !== ed) blk = blk.parentElement;
     if (blk && blk.nodeType === 1){
@@ -38,6 +40,13 @@ function markOutline(){
   if (i !== olCur) setOutlineCur(i);
 }
 const markOutlineSoon = () => { if (state.outline && !olRaf) olRaf = requestAnimationFrame(markOutline); };
-document.addEventListener('selectionchange', markOutlineSoon);
-[scroll1, scroll2].forEach(sc => sc.addEventListener('scroll', () => { if (sc === scroll) markOutlineSoon(); }, { passive: true }));
+document.addEventListener('selectionchange', () => { olByScroll = false; markOutlineSoon(); });
+// only scrolling done by the person (wheel, touch, the scroll bar) wins over the cursor; the app's own scrolling does not
+[scroll1, scroll2].forEach(sc => {
+  const byHand = () => { if (sc === scroll) olByScroll = true; };
+  sc.addEventListener('wheel', byHand, { passive: true });
+  sc.addEventListener('touchmove', byHand, { passive: true });
+  sc.addEventListener('mousedown', e => { if (e.offsetX > sc.clientWidth) byHand(); });
+  sc.addEventListener('scroll', () => { if (sc === scroll) markOutlineSoon(); }, { passive: true });
+});
 

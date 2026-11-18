@@ -26,7 +26,7 @@ const ICON = {
 function renderTree(){
   const q = $('#search').value.trim().toLowerCase();
   treeEl.innerHTML = '';
-  const build = (nodes, depth) => nodes.forEach(n => {
+  const build = (nodes, depth, where) => nodes.forEach(n => {
     const hit = !q || n.name.toLowerCase().includes(q) || (n.children && JSON.stringify(n.children).toLowerCase().includes(q));
     if (!hit) return;
     const row = document.createElement('div');
@@ -36,10 +36,11 @@ function renderTree(){
     row.innerHTML = '<span class="grip" aria-hidden="true">⋮⋮</span>' + (n.type === 'folder' ? '<span class="tw' + (n.open ? ' open':'') + '">' + ICON.tw + '</span>' : '<span style="width:12px;flex-shrink:0"></span>') +
       '<span class="nm"></span><span class="act"><button class="mini" data-act="ren" aria-label="'+T('tree.rename')+'" data-i18n-aria="tree.rename">'+ICON.ren+'</button><button class="mini" data-act="menu" aria-label="'+T('tree.more')+'" data-i18n-aria="tree.more" style="color:var(--ink-faint);font-size:13px">⋯</button></span>';
     row.querySelector('.nm').textContent = n.name;
+    row.title = where ? where + ' / ' + n.name : n.name;                      // full name and place (pathOf per row would be slow on big folders)
     treeEl.appendChild(row);
-    if (n.type === 'folder' && (n.open || q)) build(n.children || [], depth + 1);
+    if (n.type === 'folder' && (n.open || q)) build(n.children || [], depth + 1, where ? where + ' / ' + n.name : n.name);
   });
-  build(state.tree, 0);
+  build(state.tree, 0, '');
 }
 treeEl.addEventListener('click', e => {
   const row = e.target.closest('.row'); if (!row) return;
@@ -90,6 +91,7 @@ treeEl.addEventListener('drop', e => {
   if (!dragId) return;
   const moving = findNode(dragId), target = row ? findNode(row.dataset.id) : null;
   if (!moving || (target && (target.id === dragId || isInside(moving, target.id)))) return;
+  if (!wsPlaceCheck(moving, target, z)) return;                                   // several folders open (89-multi-ui.js)
   removeNode(dragId);
   placeNode(moving, target, z);
   renderTree(); save(true);

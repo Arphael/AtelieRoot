@@ -135,3 +135,30 @@ test('desde la papelera vuelven imágenes y similares, pero nunca scripts ni eje
   assert.equal((await call('POST', '/api/move', { from: '.atelieroot/trash/r1/dentro.png', to: '.atelieroot/otra.png' })).status, 200, 'dentro de .atelieroot todo se mueve');
   assert.equal((await call('POST', '/api/move', { from: 'foto.png', to: 'foto2.png' })).status, 403, 'fuera de la papelera, solo .md');
 });
+
+// v2.1: images, «Show in Explorer», «Copy path»
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==', 'base64');
+const bin = (method, p, body) => fetch(base + '/api/bin?p=' + encodeURIComponent(p), { method, headers: Object.assign({ 'Content-Type': 'application/octet-stream' }, H), body });
+test('v2.1: imágenes: se escriben y se leen tal cual en assets/', async () => {
+  const w = await bin('PUT', 'Carpeta/assets/foto 1.png', PNG); assert.equal(w.status, 200);
+  assert.deepEqual(fs.readFileSync(path.join(work, 'Carpeta', 'assets', 'foto 1.png')), PNG);
+  const r = await bin('GET', 'Carpeta/assets/foto 1.png'); assert.equal(r.status, 200); assert.equal(r.headers.get('content-type'), 'image/png');
+  assert.deepEqual(Buffer.from(await r.arrayBuffer()), PNG);
+  assert.equal((await bin('GET', 'assets/no.png')).status, 404);
+});
+test('v2.1: imágenes: solo png/jpg/gif/webp, nunca en carpetas ocultas ni fuera', async () => {
+  for (const p of ['x.md', 'x.html', 'x.svg', 'x.exe', '.atelieroot/x.png', '.git/x.png', '../fuera/x.png', 'C:/x.png']) {
+    const r = await bin('PUT', p, PNG); assert.ok(r.status === 403 || r.status === 400, p + ' ' + r.status);
+  }
+  assert.ok(!fs.existsSync(path.join(outside, 'x.png')));
+  assert.equal((await fetch(base + '/api/bin?p=a.png', { method: 'PUT', body: PNG })).status, 401);
+});
+test('v2.1: ping da la ruta de la carpeta y «Mostrar en el Explorador» valida la ruta', async () => {
+  process.env.ATELIEROOT_NO_REVEAL = '1';
+  assert.equal((await (await call('GET', '/api/ping')).json()).path, srv.root);
+  const r = await call('POST', '/api/reveal?p=' + encodeURIComponent('Carpeta/b.md')); assert.equal(r.status, 200);
+  assert.equal((await r.json()).path, path.join(srv.root, 'Carpeta', 'b.md'));
+  assert.equal((await call('POST', '/api/reveal?p=no.md')).status, 404);
+  assert.equal((await call('POST', '/api/reveal?p=' + encodeURIComponent('../fuera/secreto.md'))).status, 400);
+  assert.equal((await call('POST', '/api/reveal?p=.git')).status, 400);
+});

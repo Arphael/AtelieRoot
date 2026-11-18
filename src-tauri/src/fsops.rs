@@ -87,6 +87,12 @@ pub fn writable_dir(parts: &[String]) -> bool {
     if parts[0] == ".atelieroot" { parts.len() > 1 } else { !parts.iter().any(|p| p.starts_with('.')) }
 }
 
+pub fn image_ok(parts: &[String]) -> bool {
+    if parts.iter().any(|p| p.starts_with('.')) { return false; }
+    let l = parts.last().unwrap().to_lowercase();
+    [".png", ".jpg", ".jpeg", ".gif", ".webp"].iter().any(|e| l.ends_with(e))
+}
+
 fn restorable_ext(name: &str) -> bool {
     name.rsplit_once('.').map(|(_, e)| RESTORE_EXT.contains(&e.to_lowercase().as_str())).unwrap_or(false)
 }
@@ -217,6 +223,38 @@ impl Root {
         match r { Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()), r => r.map_err(Into::into) }
     }
 
+    /// Images of the documents (pasted or dropped). Same list as the dev server's /api/bin.
+    pub fn read_bin(&self, rel: &str) -> R<Vec<u8>> {
+        let parts = Self::parts(rel)?;
+        if !image_ok(&parts) { return Err(OpError::new(Code::Denied, "solo imágenes png, jpg, gif o webp")); }
+        let abs = self.abs(&parts)?;
+        if !abs.is_file() { return Err(OpError::new(Code::Missing, "no existe")); }
+        Ok(fs::read(&abs)?)
+    }
+
+    pub fn write_bin(&self, rel: &str, data: &[u8]) -> R<Stat> {
+        let parts = Self::parts(rel)?;
+        if !image_ok(&parts) { return Err(OpError::new(Code::Denied, "solo imágenes png, jpg, gif o webp")); }
+        if data.len() > MAX_BODY { return Err(OpError::new(Code::Io, "demasiado grande")); }
+        let abs = self.abs(&parts)?;
+        let dir = abs.parent().ok_or_else(|| OpError::new(Code::Io, "sin carpeta"))?;
+        fs::create_dir_all(dir)?;
+        let tmp = dir.join(format!(".atelieroot-tmp-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0)));
+        fs::write(&tmp, data)?;
+        if let Err(e) = fs::rename(&tmp, &abs) { let _ = fs::remove_file(&tmp); return Err(e.into()); }
+        let md = fs::metadata(&abs)?;
+        Ok(Stat { m: ms(&md), s: md.len() })
+    }
+
+    /// Absolute path of something that exists in the folder (for «Show in Explorer» and «Copy path»).
+    pub fn existing(&self, rel: &str) -> R<PathBuf> {
+        let parts = Self::parts(rel)?;
+        if parts.iter().any(|p| p.starts_with('.')) { return Err(OpError::new(Code::Denied, "ruta no válida")); }
+        let abs = self.abs(&parts)?;
+        if !abs.exists() { return Err(OpError::new(Code::Missing, "no existe")); }
+        Ok(abs)
+    }
+
     pub fn mv(&self, from: &str, to: &str) -> R<()> {
         let a = Self::parts(from)?;
         let b = Self::parts(to)?;
@@ -252,6 +290,21 @@ mod tests {
         assert!(dir.join(".atelieroot").join("trash").is_dir());
     }
 
+    #[test]
+    fn images_are_written_and_read_as_bytes() {
+        let (d, r) = setup();
+        let png: &[u8] = &[0x89, b'P', b'N', b'G', 0, 1, 2, 255];
+        r.write_bin("docs/assets/foto 1.png", png).unwrap();
+        assert_eq!(std::fs::read(d.path().join("notas/docs/assets/foto 1.png")).unwrap(), png);
+        assert_eq!(r.read_bin("docs/assets/foto 1.png").unwrap(), png);
+        assert_eq!(r.read_bin("assets/no.png").unwrap_err().code_str(), "missing");
+        for bad in ["x.md", "x.svg", "x.exe", ".atelieroot/x.png", ".git/x.png", "../x.png", "C:/x.png"] {
+            assert!(r.write_bin(bad, png).is_err(), "{bad}");
+        }
+        assert!(r.existing("docs/assets/foto 1.png").unwrap().ends_with("foto 1.png"));
+        assert_eq!(r.existing("nada.md").unwrap_err().code_str(), "missing");
+        assert_eq!(r.existing(".atelieroot").unwrap_err().code_str(), "denied");
+    }
     fn setup() -> (tempfile::TempDir, Root) {
         let d = tempfile::tempdir().unwrap();
         fs::create_dir_all(d.path().join("notas")).unwrap();

@@ -26,6 +26,8 @@ Un editor Markdown **local-first**: **cada documento es un archivo `.md` en una 
 | **Seguro con cambios externos** | Lo que cambies desde otros programas se recarga; si hay conflicto se conservan las dos versiones                                              |
 | **Organiza**                    | Carpetas, arrastrar y soltar, enlaces `[[nombre]]` entre documentos, esquema, vista dividida, papelera                                        |
 | **Escribe más rápido**          | Paleta de comandos, atajos de VS Code (edición múltiple con `Ctrl+D`, mover y duplicar líneas), búsqueda en todos los documentos, modo enfoque, plegar secciones, marcadores `[EN_MAYÚSCULAS]` |
+| **Lee y mira**                  | Modo lectura con guía por palabra que marca el ritmo y párrafo a párrafo; las imágenes pegadas o arrastradas se guardan junto al documento |
+| **Varias carpetas**             | Abre varias carpetas a la vez en la misma barra lateral; cada una guarda su propio estado |
 | **Comentarios**                 | Comenta cualquier texto como en Word o Notion; los comentarios se quedan en la app y nunca tocan tu `.md` |
 | **Pensado para código**         | Resaltado de ~45 lenguajes; rutas y URLs se detectan solas                                                                                    |
 | **Privado**                     | Sin cuenta, sin telemetría, sin peticiones a internet                                                                                         |

@@ -43,9 +43,10 @@ function cloneTree(n){
   return c;
 }
 function moveToDialog(n){
-  const folders = [{ id: null, label: T('tree.root') }];
+  const folders = wsMulti() ? [] : [{ id: null, label: T('tree.root') }];      // with several folders open there is no common root
   walk(state.tree, f => {
     if (f.type !== 'folder' || f.id === n.id || isInside(n, f.id)) return;
+    if (n.type === 'folder' && wsMulti() && wsRootOf(f) !== wsRootOf(n)) return;          // folders stay in their own open folder
     folders.push({ id: f.id, label: pathOf(f.id) });
   });
   card.innerHTML = '<h2></h2><div class="pick-list"></div><div class="btns"><button class="btn" data-no>' + esc(T('btn.cancel')) + '</button></div>';

@@ -8,11 +8,11 @@ function openDoc(id){
   if (id && splitGuard(id)) return;
   if (!id){ ed.innerHTML = '<p><br></p>'; History.init(); return; }
   rememberScroll(active);                       // posición de lectura del documento que se deja
-  if (state.current && state.current !== id) stash();
+  if (state.current && state.current !== id){ stash(); History.park(state.current); }
   state.current = id;
   ed.innerHTML = state.docs[id] || '<p><br></p>';
   autolinkTree(ed);                             // direcciones que estaban como texto: se ven como enlaces (sin tocar lo guardado)
-  ensureBlocks(); applyFolds(); renumberLists(true); History.init();
+  ensureBlocks(); applyFolds(); renumberLists(true); History.resume(id);
   const pos = (Ui.data.scroll || {})[id];       // vuelve donde se quedó
   scroll.scrollTop = pos ? pos.y : 0;
   renderTree(); setPath(); counts(); paintPreview(); save();
@@ -27,7 +27,7 @@ function stash(){
   if (!id || !Dirty.has(id)) return;
   renumberLists();
   state.docs[id] = ed.innerHTML
-    .replace(/ data-cur=""| data-bsel=""| data-hid=""/g, '')
+    .replace(/ data-cur=""| data-bsel=""| data-hid=""| data-rd-cur=""/g, '')
     .replace(/(<pre class="cb-hl"[^>]*><code[^>]*>)[\s\S]*?(<\/code><\/pre>)/g, '$1$2');   // el color del código se recalcula al abrir
 }
 function setPath(){ const p = pathOf(state.current); $('#path').textContent = p; const n = findNode(state.current); $('#mTitle').textContent = n ? n.name : ''; $('#mSub').textContent = p; paintPaneNames(); }

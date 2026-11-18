@@ -25,8 +25,11 @@ MOCK = r"""
   const err = (c, m) => Promise.reject(c + ':' + m);
   const okPath = p => typeof p === 'string' && p && !p.includes('..') && !p.startsWith('/') && !p.includes('\\');
   const cmds = {
-    ws_root: () => ({ name: 'Mis notas' }),
-    ws_pick: () => ({ name: 'Mis notas' }),
+    ws_root: () => ({ name: 'Mis notas', path: 'C:\\Users\\x\\Mis notas' }),
+    ws_roots: () => [{ name: 'Mis notas', path: 'C:\\Users\\x\\Mis notas' }],
+    ws_pick: () => ({ name: 'Mis notas', path: 'C:\\Users\\x\\Mis notas' }),
+    ws_abs: ({ p }) => 'C:\\Users\\x\\Mis notas\\' + p.split('/').join('\\'),
+    ws_reveal: () => null,
     ws_clear: () => null,
     ws_list: ({ hidden }) => [
       ...[...dirs].filter(d => hidden || !d.startsWith('.')).map(p => ({ p, t: 'd', s: 0, m: 0 })),
@@ -67,7 +70,12 @@ async def main():
 
         ok = await until(pg, "Workspace.active && Workspace.kind === 'tauri'")
         check('boot opens the remembered desktop folder', ok, await pg.evaluate("[Workspace.active, Workspace.kind]"))
-        check('boot asked the Rust side for the folder (ws_root)', await pg.evaluate("__mock.calls.some(c => c[0] === 'ws_root')"))
+        check('boot asked the Rust side for the open folders (ws_roots)', await pg.evaluate("__mock.calls.some(c => c[0] === 'ws_roots')"))
+        check('v2.1: every command says which open folder (r)', await pg.evaluate("__mock.calls.filter(c => c[0] === 'ws_list').every(c => c[1].r === 0)"))
+        await pg.evaluate("(() => { const n = state.tree.find(x => x.name === 'Intro'); placeAction('reveal', n); })()"); await pg.wait_for_timeout(100)
+        check('v2.1: «Show in Explorer» asks the desktop app (ws_reveal) for that document', await pg.evaluate("__mock.calls.some(c => c[0] === 'ws_reveal' && c[1].p === 'Intro.md' && c[1].r === 0)"))
+        path = await pg.evaluate("Workspace.be.absPath('Intro.md')")
+        check('v2.1: «Copy path» gives the absolute path', path == 'C:\\Users\\x\\Mis notas\\Intro.md', path)
         check('documents from disk appear in the tree', await until(pg, "document.querySelector('#tree').textContent.includes('Intro')"), await pg.evaluate("document.querySelector('#tree').textContent"))
         check('folders from disk appear in the tree', await pg.evaluate("document.querySelector('#tree').textContent.includes('Proyectos')"))
 

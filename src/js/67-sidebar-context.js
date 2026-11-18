@@ -7,7 +7,23 @@ function ctxItems(n){
   const head = n.type === 'folder'
     ? [['newdoc', T('ctx.newdoc-here')], ['newfolder', T('ctx.newfolder-here')]]
     : [['open', T('ctx.open')], ['side', T('msg.open-beside')], ['newdoc', T('ctx.newdoc-beside')], ['newfolder', T('ctx.newfolder-beside')]];
-  return [...head, '-', ['ren', T('tree.rename')], ['dup', T('bb.dup')], ['move', T('ctx.move')], ['up', T('ctx.up')], ['down', T('ctx.down')], '-', ['del', T('ctx.trash'), true]];
+  const W = Workspace, place = [];
+  if (W.active && n.path && W.be.reveal) place.push(['reveal', T('ctx.reveal')]);
+  if (W.active && n.path && W.be.absPath) place.push(['copypath', T('ctx.copy-path')]);
+  place.push(['copyrel', T('ctx.copy-rel')]);
+  return [...head, '-', ['ren', T('tree.rename')], ['dup', T('bb.dup')], ['move', T('ctx.move')], ['up', T('ctx.up')], ['down', T('ctx.down')], '-', ...place, '-', ['del', T('ctx.trash'), true]];
+}
+// path inside its folder ("notes/ideas.md"); in temporary mode, the place in the tree
+function relPathOf(n){
+  if (Workspace.active && n.path) return Workspace.be.relOf ? Workspace.be.relOf(n.path) : n.path;
+  return pathOf(n.id).split(' / ').join('/') + (n.type === 'doc' ? '.md' : '');
+}
+function copyPlain(t, msg){ copyText(t); toast(msg); }
+async function placeAction(act, n){
+  const W = Workspace;
+  if (act === 'copyrel') return copyPlain(relPathOf(n), T('msg.path-copied'));
+  if (act === 'copypath'){ try { copyPlain(await W.be.absPath(n.path), T('msg.path-copied')); } catch(e){ toast(e.message || String(e)); } return; }
+  if (act === 'reveal'){ try { await W.be.reveal(n.path); } catch(e){ toast(T('msg.reveal-failed', { why: e.message || e })); } return; }
 }
 function closeCtx(){ ctxMenu.classList.remove('show'); }
 function openCtxMenu(x, y, n, row){
@@ -58,6 +74,7 @@ function rowAction(act, n){
     renderTree(); save(true); return;
   }
   if (act === 'move') return moveToDialog(n);
+  if (/^(copyrel|copypath|reveal)$/.test(act)) return placeAction(act, n);
   if (act === 'del') return moveToTrash(n);
 }
 $('#side').addEventListener('contextmenu', e => {

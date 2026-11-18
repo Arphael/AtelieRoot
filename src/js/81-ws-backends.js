@@ -26,7 +26,7 @@ class HttpBackend {
     const code = r.status === 409 ? (/destino/.test(j.error || '') ? 'exists' : 'conflict') : r.status === 404 ? 'missing' : (r.status === 401 || r.status === 403) ? 'denied' : 'io';
     throw new WsError(code, j.error || ('HTTP ' + r.status));
   }
-  async init(){ const j = await this.api('GET', 'ping'); this.name = j.name; return this; }
+  async init(){ const j = await this.api('GET', 'ping'); this.name = j.name; this.path = j.path || ''; return this; }
   list(hidden){ return this.api('GET', 'list' + (hidden ? '?hidden=1' : '')).then(j => j.entries); }
   read(p, optional){ return this.api('GET', 'file?p=' + encodeURIComponent(p) + (optional ? '&optional=1' : '')).then(r => r.missing ? null : r); }
   readMany(paths){ return this.api('POST', 'files', { paths }).then(j => j.files); }   // [{ text, m, s } | { error }], same order
@@ -34,6 +34,19 @@ class HttpBackend {
   mkdir(p){ return this.api('POST', 'mkdir?p=' + encodeURIComponent(p)); }
   move(a, b){ return this.api('POST', 'move', { from: a, to: b }); }
   remove(p, recursive){ return this.api('DELETE', 'file?p=' + encodeURIComponent(p) + (recursive ? '&recursive=1' : '')); }
+  async readBin(p){                                            // images: bytes (Uint8Array)
+    const r = await fetch('/api/bin?p=' + encodeURIComponent(p), { headers: { 'X-AtelieRoot-Token': this.token } }).catch(() => { throw new WsError('offline', T('ws.err.offline')); });
+    if (!r.ok) throw new WsError(r.status === 404 ? 'missing' : r.status === 403 ? 'denied' : 'io', 'HTTP ' + r.status);
+    return new Uint8Array(await r.arrayBuffer());
+  }
+  async writeBin(p, bytes){
+    const r = await fetch('/api/bin?p=' + encodeURIComponent(p), { method: 'PUT', headers: { 'X-AtelieRoot-Token': this.token, 'Content-Type': 'application/octet-stream' }, body: bytes }).catch(() => { throw new WsError('offline', T('ws.err.offline')); });
+    let j = {}; try { j = await r.json(); } catch(_){}
+    if (!r.ok) throw new WsError(r.status === 403 ? 'denied' : 'io', j.error || ('HTTP ' + r.status));
+    return j;
+  }
+  absPath(p){ const win = /^[A-Za-z]:\\/.test(this.path); return Promise.resolve(this.path + (win ? '\\' + p.split('/').join('\\') : '/' + p)); }
+  reveal(p){ return this.api('POST', 'reveal?p=' + encodeURIComponent(p)); }
   watch(cb){                                                   // el servidor avisa por eventos; si se corta, el navegador reconecta solo
     let es = null; try { es = new EventSource('/api/events?token=' + encodeURIComponent(this.token)); es.onmessage = () => cb(); } catch(_){}
     return () => { if (es) es.close(); };
@@ -118,6 +131,12 @@ class FsBackend {
       else { const buf = await (await h.getFile()).arrayBuffer(); const w = await (await this.fileH(to, true)).createWritable(); await w.write(buf); await w.close(); }
     }
   }
+  async readBin(p){ const f = await (await this.fileH(p)).getFile(); return new Uint8Array(await f.arrayBuffer()); }
+  async writeBin(p, bytes){
+    const h = await this.fileH(p, true);
+    try { const w = await h.createWritable(); await w.write(bytes); await w.close(); } catch(e){ throw fsErr(e); }
+    const f = await h.getFile(); return { m: f.lastModified, s: f.size };
+  }
   async move(a, b){
     if (await this.handleOf(b)) throw new WsError('exists', T('ws.err.exists'));
     const src = await this.handleOf(a); if (!src) throw new WsError('missing', T('ws.err.missing'));
@@ -134,9 +153,9 @@ class FsBackend {
 // Rust errors arrive as "code:message".
 const wsTauri = () => window.__TAURI__ && window.__TAURI__.core;
 class TauriBackend {
-  constructor(name){ this.kind = 'tauri'; this.name = name || ''; }
-  async call(cmd, args){
-    try { return await wsTauri().invoke(cmd, args); }
+  constructor(name, r, path){ this.kind = 'tauri'; this.name = name || ''; this.r = r || 0; this.path = path || ''; }        // r: which open folder (several can be open)
+  async call(cmd, args, opts){
+    try { return await wsTauri().invoke(cmd, args instanceof Uint8Array ? args : Object.assign({ r: this.r }, args), opts); }
     catch(e){ const s = String(e && e.message || e), i = s.indexOf(':'), code = i > 0 ? s.slice(0, i) : 'io'; throw new WsError(['conflict', 'exists', 'missing', 'denied', 'offline', 'io'].includes(code) ? code : 'io', i > 0 ? s.slice(i + 1) : s); }
   }
   list(hidden){ return this.call('ws_list', { hidden: !!hidden }); }
@@ -146,6 +165,10 @@ class TauriBackend {
   mkdir(p){ return this.call('ws_mkdir', { p }).then(() => ({})); }
   move(a, b){ return this.call('ws_move', { from: a, to: b }).then(() => ({})); }
   remove(p, recursive){ return this.call('ws_remove', { p, recursive: !!recursive }).then(() => ({})); }
+  readBin(p){ return this.call('ws_read_bin', { p }).then(b => new Uint8Array(b)); }
+  writeBin(p, bytes){ return this.call('ws_write_bin', bytes, { headers: { r: String(this.r), p: encodeURIComponent(p) } }); }
+  absPath(p){ return this.call('ws_abs', { p }); }
+  reveal(p){ return this.call('ws_reveal', { p }); }
   watch(cb){                                                     // the Rust side polls the folder and emits "ws-changed"
     let off = null, stopped = false;
     window.__TAURI__.event.listen('ws-changed', () => cb()).then(u => { if (stopped) u(); else off = u; });

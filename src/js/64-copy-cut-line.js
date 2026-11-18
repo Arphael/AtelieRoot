@@ -3,7 +3,9 @@
 // Sin selección, Ctrl+C copia y Ctrl+X corta la «línea» donde está el cursor (la misma que borra Shift+Supr).
 // Al pegar esa línea con el cursor sin seleccionar, entra ENCIMA de la línea actual, igual que en VS Code.
 let lineClip = null;
-function lineUnit(){
+// strip: a copy (Ctrl+C) leaves out text marked «do not copy» (87-no-copy.js); cut keeps it
+function lineUnit(strip){
+  const nc = h => strip ? stripNoCopy(h) : h;
   const s = getSelection();
   if (!s.rangeCount || !ed.contains(s.anchorNode)) return null;
   const r = s.getRangeAt(0);
@@ -22,21 +24,21 @@ function lineUnit(){
     if (list.tagName === 'OL') setOlStart(wrap, (Number.isFinite(list.start) ? list.start : 1) + items.indexOf(li));
     if (list.hasAttribute('data-task')) wrap.setAttribute('data-task', '');
     wrap.appendChild(li.cloneNode(true));
-    const host = document.createElement('div'); host.appendChild(wrap);
+    const host = document.createElement('div'); host.appendChild(wrap); nc(host);
     const liMd = tidyMd(mdFromDom(host)).trim(); forOutsideHtml(host);
     return { kind: 'li', md: liMd, html: host.innerHTML };
   }
   const cell = closestFrom(r.startContainer, 'td,th');
   if (cell){
     const tr = cell.closest('tr');
-    return { kind: 'row', md: '| ' + [...tr.children].map(c => inlineMd(c).trim().replace(/\s*\n\s*/g, '<br>').replace(/\|/g, '\\|')).join(' | ') + ' |' };
+    return { kind: 'row', md: '| ' + [...tr.children].map(c => inlineMd(nc(c.cloneNode(true))).trim().replace(/\s*\n\s*/g, '<br>').replace(/\|/g, '\\|')).join(' | ') + ' |' };
   }
   const b = currentBlock(); if (!b) return null;
   if (b.tagName === 'P'){
     const info = paraInfo(b);
     if (info.lines.length > 1){
       const i = lineAt(b, r.startContainer, r.startOffset, info);
-      const host = document.createElement('div'); info.lines[i].forEach(n => host.appendChild(n.cloneNode(true)));
+      const host = document.createElement('div'); info.lines[i].forEach(n => host.appendChild(n.cloneNode(true))); nc(host);
       const lnMd = inlineMd(host).trim(); forOutsideHtml(host);
       return { kind: 'line', md: lnMd, html: host.innerHTML };
     }
@@ -44,13 +46,13 @@ function lineUnit(){
   const host = document.createElement('div');
   withSections([b]).forEach(x => host.appendChild(x.cloneNode(true)));
   host.querySelectorAll('.cb-head,.cb-hl').forEach(h => h.remove());
-  host.querySelectorAll('[data-hid]').forEach(h => h.removeAttribute('data-hid'));
+  host.querySelectorAll('[data-hid]').forEach(h => h.removeAttribute('data-hid')); nc(host);
   const md = tidyMd(mdFromDom(host)).trim();
   forOutsideHtml(host);
   return { kind: 'block', md, html: host.innerHTML };
 }
-function setLineClipboard(e){
-  const u = lineUnit(); if (!u) return false;
+function setLineClipboard(e, strip){
+  const u = lineUnit(strip); if (!u) return false;
   const body = u.kind === 'code' ? u.raw : (u.kind === 'row' ? u.md : withFills(u.md));
   const text = body + '\n';                                          // como VS Code: la línea completa, con su salto
   e.clipboardData.setData('text/plain', text);

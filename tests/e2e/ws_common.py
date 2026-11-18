@@ -207,6 +207,12 @@ async def run_core(t, pg, disk, kind, reopen):
     fl = await disk.files(True)
     t.check('al restaurar la carpeta, vuelven sus documentos...', 'Proy/Plan.md' in fl and 'Proy/Sub/Deep.md' in fl and 'Proy/a-b-c (2).md' in fl, fl)
     t.check('...y también lo que no era Markdown (la imagen)', (await disk.read('Proy/imagen.png')) == 'no soy markdown', fl)
+    # v2.1: restoring while a save is running (the save had looked at the tree before the restore): nothing is lost
+    await pg.evaluate("n => moveToTrash(findNode(n))", await nid(pg, 'Proy'))
+    await until(lambda: _gone_dir(disk, 'Proy'), 6); await pg.evaluate("wsSaveNow()")
+    await pg.evaluate("""() => { const sy = wsSyncTree; wsSyncTree = async () => { const p = sy(); restoreTrash(state.trash[0]); wsSyncTree = sy; return p; }; wsSchedule(true); }""")
+    await until(lambda: disk.exists('Proy/Plan.md'), 8); await asyncio.sleep(1.5); await pg.evaluate("wsSaveNow()"); await until(lambda: _no_trash(disk), 6)
+    t.check('...también si se restaura en medio de un guardado (la imagen no se pierde)', (await disk.read('Proy/imagen.png')) == 'no soy markdown', await disk.files(True))
     await pg.evaluate("n => moveToTrash(findNode(n))", await nid(pg, 'Vacía'))
     await until(lambda: _gone_dir(disk, 'Vacía'), 6)
     await pg.evaluate("t => { purgeDocs(t.docIds); state.trash = state.trash.filter(x => x !== t); updateTrashN(); save(true); }", await pg.evaluate("state.trash[0]"))
@@ -320,6 +326,8 @@ async def run_core(t, pg, disk, kind, reopen):
     await until(lambda: pg.evaluate("(() => { let n = 0; walk(state.tree, x => { if (x.type === 'doc') n++; }); return n >= 300; })()"), 30)
     dt = time.time() - t0
     t.check(f'300 documentos más se cargan en un tiempo razonable ({dt:.1f} s)', dt < 25, dt)
+    # WebKit reports the requests cut off by a page reload as "... due to access control checks": not an app error
+    errs = [e for e in errs if 'due to access control checks' not in e]
     t.check('...y no hubo errores de JavaScript', not errs, errs)
     return pg
 

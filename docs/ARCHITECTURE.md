@@ -145,14 +145,26 @@ by `src/index.html`:
 | `79-multi-edit.js`             | Multi-edit: `Ctrl+D`, `Ctrl+Shift+L`, `Shift+Alt+I` (places painted with the Highlight API) |
 | `80-enter-pushdown.js`         | Enter at the start of a format pushes it down                          |
 | `81-ws-backends.js`            | Working folder: backends (HTTP, File System Access, Tauri)             |
+| `81-ws-multi.js`               | Several folders at once: `MultiBackend` (joins them, one `.atelieroot/` each) |
 | `82-ws-core.js`                | Working folder: load, sync, save, outside changes, journal             |
 | `83-ws-ui.js`                  | Working folder: screens and boot                                       |
 | `84-tools-panel.js`            | Tools panel for small screens                                          |
 | `85-about.js`                  | Version (`APP_SEMVER` = package.json, checked) and «About» with the project links |
 | `86-comments.js`               | Comments: `<span data-cmt>` anchors in the internal HTML, panel, orphans |
+| `87-no-copy.js`                | «Do not copy» marks: `<span data-nocopy>`, left out of copies (`stripNoCopy`), kept in `state.json` |
+| `88-reading.js`                | Reading mode: read only, word guide (CSS Highlight API, words per minute), floating panel |
+| `89-multi-ui.js`               | Several folders: tree rules (open folders stay on top, folders stay in their folder) |
+| `90-images.js`                 | Images: `assets/` next to the document, `data-md-src` + blob URL in the editor, copies carry the image |
 | `99-boot.js`                   | Boot                                                                   |
 
-CSS lives in `src/css/01-base.css` ... `23-comments-keys.css`, same ordering rule.
+CSS lives in `src/css/01-base.css` ... `24-reading-images.css`, same ordering rule.
+
+**Images** (v2.1): the Markdown keeps a relative path (`assets/x.png`, from the document's folder). In the
+editor the `<img>` keeps it in `data-md-src` and shows a `blob:` URL (`mdFromDom` writes `data-md-src`;
+`stash()` stores only the path); `forOutsideHtml` puts the image itself (`data:`) in copies and exports.
+
+**Undo** (v2.1) keeps one history per document in memory (`History.park/resume`, up to 30 documents);
+`refreshEditorsFor` (a change from outside or another tab) drops it.
 
 **Comments** never reach Markdown: `mdFromDom` ignores the anchor spans, `forOutsideHtml` removes them from
 copies and exports, and `wsCapture`/`wsApply` store them per document in `.atelieroot/state.json`
@@ -186,7 +198,7 @@ browser settings (`00-base.js`, before anything reads them).
 
 | File                        | Role                                                                                                                                                                                                                            |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/main.rs`               | Window, commands `ws_root`, `ws_pick`, `ws_clear`, `ws_list`, `ws_read`, `ws_read_many`, `ws_write`, `ws_mkdir`, `ws_move`, `ws_remove`, `open_link` (only `https://github.com/Arphael/` and `https://arphael.github.io/`, opened in the system browser); remembered folder in the app config dir (`settings.json`); change poller (1.2 s) emitting `ws-changed` |
+| `src/main.rs`               | Window, commands `ws_root`, `ws_roots`, `ws_pick`, `ws_add`, `ws_drop`, `ws_clear`, `ws_list`, `ws_read`, `ws_read_many`, `ws_read_bin`, `ws_write_bin`, `ws_abs`, `ws_reveal`, `ws_write`, `ws_mkdir`, `ws_move`, `ws_remove` (each takes `r`, the open folder; several can be open), `open_link` (only `https://github.com/Arphael/` and `https://arphael.github.io/`, opened in the system browser); remembered folder in the app config dir (`settings.json`); change poller (1.2 s) emitting `ws-changed` |
 | `src/fsops.rs`              | The contract rules in Rust (path validation, writable rules, atomic write, `expect` conflict, trash restore) and their unit tests                                                                                               |
 | `tauri.conf.json`           | Frontend = `dist/` (built by `beforeBuildCommand`), strict CSP, no bundling for the portable build                                                                                                                              |
 | `capabilities/default.json` | Only `core:default`: the page gets no generic filesystem, shell or network permission                                                                                                                                           |

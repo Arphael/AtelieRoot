@@ -180,16 +180,29 @@ addEventListener('mousemove', e => {
   bandUpdate(); bandAuto();
 });
 scroll.addEventListener('scroll', () => { if (bandStart && bandStart.moved) bandUpdate(); });
+// clic bajo el último bloque (como Notion): si no es un párrafo vacío, aparece uno y el cursor va ahí
+function clickBelowEnd(y){
+  const last = ed.lastElementChild;
+  if (!last || y <= last.getBoundingClientRect().bottom || document.body.classList.contains('reading')) return false;
+  const empty = last.tagName === 'P' && !last.textContent.replace(/​/g, '').trim() && !last.querySelector('img,[data-cmt]');
+  if (!empty){ const p = document.createElement('p'); p.innerHTML = '<br>'; ed.appendChild(p); }
+  ed.focus({ preventScroll: true });
+  caretInto(ed.lastElementChild, true);
+  return true;
+}
 function bandEnd(){
   if (!bandStart) return;
-  const moved = bandStart.moved;
+  const moved = bandStart.moved, y = bandStart.y;
   bandStart = null; band.style.display = 'none'; cancelAnimationFrame(bandRaf); bandRaf = 0;
   if (moved && B.sel.size) setBlockSel(selOrdered());
-  else if (!moved){ clearBlockSel(); }
+  else if (!moved){ clearBlockSel(); clickBelowEnd(y); }
 }
 addEventListener('mouseup', bandEnd);
 addEventListener('blur', bandEnd);
-ed.addEventListener('mousedown', () => { if (B.sel.size) clearBlockSel(); });
+ed.addEventListener('mousedown', e => {
+  if (B.sel.size) clearBlockSel();
+  if (e.button === 0 && e.target === ed && clickBelowEnd(e.clientY)) e.preventDefault();
+});
 // asa ⋮⋮: aparece junto al bloque bajo el ratón
 const handle = $('#bhandle'), bline = $('#bline');
 let hBlock = null, drag = null;

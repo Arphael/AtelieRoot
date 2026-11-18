@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -48,6 +48,8 @@ SCEN = [
  ('celda de tabla al inicio', '<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>texto</td></tr></tbody></table>', at('td', 0), ['Enter'], None),
  ('con texto seleccionado', '<h1>Título</h1>', "(()=>{ const t=ed.firstElementChild.firstChild; const r=document.createRange(); r.setStart(t,0); r.setEnd(t,3); getSelection().removeAllRanges(); getSelection().addRange(r) })()", ['Enter'], None),
 ]
+HL = re.compile(r'<pre class="cb-hl[^>]*><code[^>]*>[\s\S]*?</code></pre>')
+
 async def main():
   async with async_playwright() as p:
     b = await engine(p).launch(**LAUNCH)
@@ -58,7 +60,8 @@ async def main():
       await pg.evaluate("h=>{ ed.innerHTML=h; ensureBlocks(); History.init(); ed.focus({preventScroll:true}) }", html); await pg.evaluate(caret)
       for k in keys: (await kb.press(k)) if k == 'Enter' else (await kb.type(k))
       await pg.wait_for_timeout(30)
-      out[name] = await pg.evaluate("ed.innerHTML.replace(/\\u200b/g,'')")
+      # the colour layer of code blocks is painted asynchronously and is not content (stash() drops it too)
+      out[name] = await pg.evaluate("ed.innerHTML.replace(/\\u200b/g,'').replace(/<pre class=\"cb-hl[^>]*><code[^>]*>[\\s\\S]*?<\\/code><\\/pre>/g, '<pre class=\"cb-hl\"><code></code></pre>')")
     golden = None
     if os.path.exists(GOLDEN) and not os.environ.get('UPDATE_GOLDEN'): golden = json.load(open(GOLDEN, encoding='utf-8'))
     else:
@@ -68,7 +71,7 @@ async def main():
       if e is not None: check(name, out[name] == e, out[name])
     print('=== Lo que NO debe cambiar (valores de referencia) ===')
     for name, _, _, _, e in SCEN:
-      if e is None: check(name, out[name] == golden.get(name), [out[name], golden.get(name)])
+      if e is None: check(name, out[name] == HL.sub('<pre class="cb-hl"><code></code></pre>', golden.get(name) or ''), [out[name], golden.get(name)])
     # teclado de móvil, deshacer, Markdown, vista
     new = lambda h: pg.evaluate("h=>{ ed.innerHTML=h; ensureBlocks(); History.init(); ed.focus({preventScroll:true}) }", h)
     snap = lambda: pg.evaluate("ed.innerHTML.replace(/\\u200b/g,'')")

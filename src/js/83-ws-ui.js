@@ -21,7 +21,7 @@ function wsGoLive(){
 async function wsBoot(){
   const W = Workspace; Ui.read();
   if (wsTauri()){                                            // desktop app: the folder chosen last time, if it still exists
-    try { const f = await wsTauri().invoke('ws_root'); if (f){ const be = new TauriBackend(f.name); wsInitUi(); await wsLoad(be); wsGoLive(); return true; } }
+    try { const list = await wsTauri().invoke('ws_roots'); if (list && list.length){ const be = wsTauriBe(list); wsInitUi(); await wsLoad(be); wsGoLive(); return true; } }
     catch(e){ console.error(e); setTimeout(() => toast(T('msg.open-failed', { why: e.message || e })), 600); }
     return false;
   }
@@ -32,10 +32,11 @@ async function wsBoot(){
   }
   if (wsCanPick()){
     try {
-      const h = await WsHandles.get('last');
+      const all = await wsRememberedHandles(), h = all[0];
       if (h){
-        if (await wsPermission(h, false)){ const be = new FsBackend(h); wsInitUi(); await wsLoad(be); wsGoLive(); return true; }
-        W.remembered = h;                                      // hay carpeta recordada, pero hace falta un clic para que el navegador vuelva a dar permiso
+        let ok = true; for (const x of all) if (!(await wsPermission(x, false))) ok = false;
+        if (ok){ const be = wsFsBe(all); wsInitUi(); await wsLoad(be); wsGoLive(); return true; }
+        W.remembered = h; W.rememberedAll = all;                                      // hay carpeta recordada, pero hace falta un clic para que el navegador vuelva a dar permiso
       }
     } catch(e){ console.warn('carpeta recordada:', e); }
   }
@@ -83,7 +84,7 @@ async function wsPickFolder(){
     let f; try { f = await wsTauri().invoke('ws_pick'); } catch(e){ toast(T('msg.open-failed', { why: e.message || e })); return; }
     if (!f) return;                                            // cancelling the dialog is not an error
     Ui.read(); Ui.data.noWelcome = false; Ui.write();
-    try { await wsOpenFlow(new TauriBackend(f.name)); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
+    try { await wsOpenFlow(new TauriBackend(f.name, 0, f.path)); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
     return;
   }
   let h;
@@ -94,21 +95,22 @@ async function wsPickFolder(){
     return;
   }
   if (!(await wsPermission(h, true))){ toast(T('msg.no-write-permission')); return; }
-  try { await WsHandles.put('last', h); } catch(_){}
+  try { await WsHandles.put('last', h); await WsHandles.del('roots'); } catch(_){}
   Ui.read(); Ui.data.noWelcome = false; Ui.write();
   try { await wsOpenFlow(new FsBackend(h)); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
 }
 async function wsContinueRemembered(){
   const h = Workspace.remembered; if (!h) return wsPickFolder();
-  if (!(await wsPermission(h, true))){ toast(T('msg.no-permission-folder')); return; }
-  try { await wsOpenFlow(new FsBackend(h)); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
+  const all = Workspace.rememberedAll || [h];
+  for (const x of all) if (!(await wsPermission(x, true))){ toast(T('msg.no-permission-folder')); return; }
+  try { await wsOpenFlow(wsFsBe(all)); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
 }
 function wsReloadFromDisk(){ const W = Workspace; if (!W.active) return; W.q = W.q.then(() => wsRefreshOnce()).then(() => toast(T('msg.reloaded'))).catch(wsFail); }
 async function wsLeaveFolder(){                             // vuelve al modo temporal
   const W = Workspace; if (!W.active) return;
   stash(); await wsSchedule(true);
   if (wsTauri()) { try { await wsTauri().invoke('ws_clear'); } catch(_){} }
-  else { try { await WsHandles.del('last'); } catch(_){} }
+  else { try { await WsHandles.del('last'); await WsHandles.del('roots'); } catch(_){} }
   Ui.read(); Ui.data.noWelcome = true; Ui.write(); location.reload();
 }
 
@@ -139,7 +141,7 @@ function openWsDialog(){
   if (denied) add(T('wsd.regrant'), async () => { if (await wsPermission(W.be.root, true)){ veil.classList.remove('show'); wsSchedule(true); toast(T('msg.permission-back')); } else toast(T('ws.denied')); }, true);
   add(T('wsd.save-now'), () => { veil.classList.remove('show'); wsSaveNow().then(() => toast(T(W.status === 'ok' ? 'msg.saved' : 'ws.save-failed'))); }, !denied);
   add(T('wsd.reload'), () => { veil.classList.remove('show'); wsReloadFromDisk(); });
-  if (!server && wsCanPick()){ add(T('wsd.change'), () => { veil.classList.remove('show'); wsPickFolder(); }); add(T('wsd.close-folder'), () => { veil.classList.remove('show'); wsLeaveFolder(); }); }
+  if (!server && wsCanPick()){ add(T('wsd.add'), () => { veil.classList.remove('show'); wsAddFolder(); }); add(T('wsd.change'), () => { veil.classList.remove('show'); wsPickFolder(); }); add(T('wsd.close-folder'), () => { veil.classList.remove('show'); wsLeaveFolder(); }); }
   add(T('btn.close'), () => veil.classList.remove('show'));
   veil.classList.add('show');
 }
@@ -152,6 +154,43 @@ function wsWelcomeIfNeeded(){
 COMMANDS.push(
   { g:'pal.g.folder', t:'pal.folder-options', run: () => wsChipClick() },
   { g:'pal.g.folder', t:'pal.folder-open', when: () => !wsServerToken(), run: () => wsPickFolder() },
+  { g:'pal.g.folder', t:'pal.folder-add', when: () => Workspace.active && !wsServerToken() && wsCanPick(), run: () => wsAddFolder() },
   { g:'pal.g.folder', t:'pal.folder-save', when: () => Workspace.active, run: () => wsSchedule(true).then(() => toast(T('msg.saved'))) },
   { g:'pal.g.folder', t:'pal.folder-reload', when: () => Workspace.active, run: () => wsReloadFromDisk() },
 );
+
+/* ---- several folders at once (81-ws-multi.js) ---- */
+const wsFsBe = hs => hs.length > 1 ? new MultiBackend(hs.map(h => new FsBackend(h))) : new FsBackend(hs[0]);
+const wsTauriBe = list => list.length > 1 ? new MultiBackend(list.map((f, i) => new TauriBackend(f.name, i, f.path))) : new TauriBackend(list[0].name, 0, list[0].path);
+async function wsRememberedHandles(){ const all = await WsHandles.get('roots'); if (Array.isArray(all) && all.length) return all; const h = await WsHandles.get('last'); return h ? [h] : []; }
+const wsOpenHandles = () => { const be = Workspace.be; return be.multi ? be.parts.map(x => x.be.root) : [be.root]; };
+async function wsAddFolder(){
+  const W = Workspace; if (!W.active) return wsPickFolder();
+  if (wsTauri()){
+    let f; try { f = await wsTauri().invoke('ws_add'); } catch(e){ toast(T('msg.open-failed', { why: e.message || e })); return; }
+    if (!f) return;
+    try { await wsOpenFlow(wsTauriBe(await wsTauri().invoke('ws_roots'))); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
+    return;
+  }
+  let h;
+  try { h = await window.showDirectoryPicker({ id: 'atelieroot', mode: 'readwrite' }); }
+  catch(e){ if (e && e.name === 'AbortError') return; toast(T('msg.picker-refused', { why: (e && e.name) || e })); return; }
+  const cur = wsOpenHandles();
+  for (const x of cur){ try { if (await x.isSameEntry(h)){ toast(T('msg.folder-already-open')); return; } } catch(_){} }
+  if (!(await wsPermission(h, true))){ toast(T('msg.no-write-permission')); return; }
+  const all = cur.concat(h);
+  try { await WsHandles.put('roots', all); await WsHandles.put('last', all[0]); } catch(_){}
+  try { await wsOpenFlow(wsFsBe(all)); } catch(e){ console.error(e); toast(T('msg.open-failed', { why: e.message || e })); }
+}
+// stop showing one of the open folders (nothing on disk changes)
+async function wsDropRoot(n){
+  const be = Workspace.be; if (!be || !be.multi) return;
+  const i = be.partOf(n.path); if (i < 0) return;
+  confirmBox(T('dlg.remove-folder', { name: n.name }), T('dlg.remove-folder-body'), async () => {
+    stash(); await wsSchedule(true);
+    if (wsTauri()){ try { await wsTauri().invoke('ws_drop', { r: i }); await wsOpenFlow(wsTauriBe(await wsTauri().invoke('ws_roots'))); } catch(e){ toast(T('msg.open-failed', { why: e.message || e })); } return; }
+    const all = wsOpenHandles().filter((_, k) => k !== i);
+    try { if (all.length > 1) await WsHandles.put('roots', all); else await WsHandles.del('roots'); await WsHandles.put('last', all[0]); } catch(_){}
+    try { await wsOpenFlow(wsFsBe(all)); } catch(e){ toast(T('msg.open-failed', { why: e.message || e })); }
+  });
+}

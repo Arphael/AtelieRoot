@@ -5,6 +5,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-17
+
+### Added
+- **Several folders at once.** «Add another folder» (folder options, command palette, or the menu of an open folder) shows each folder as a top-level folder of the sidebar. Search, `[[links]]` and moving documents work across them; folders stay in their own open folder. Each folder keeps its own `.atelieroot/` (order, folds, comments, trash), so it is the same when opened alone later. «Remove from the workspace» stops showing one; nothing on disk changes. The open folders are remembered (desktop app and browser).
+- **Reading mode** (`Ctrl+Shift+V` or `Ctrl+K R`, toolbar button, command palette). The document cannot be edited and the panels hide; it uses the editor's own scroll, so it starts where you are and you stay where you stopped. A **word guide** marks one word after another at the speed you choose (200 words per minute unless you change it, 60-600) and the page follows it slowly; `Space` starts and pauses it, and scrolling by hand moves it to the word at the reading height. The floating panel also has whole document or one paragraph at a time, text size and column width, and progress with the time left. `Esc` leaves.
+- **Images.** Paste a screenshot, drop an image or use the image button: it is saved as a file in `assets/` next to the document and written as `![](assets/name.png)` (PNG, JPG, GIF, WebP, up to 10 MB). Copies and exports carry the image itself, so a chat such as Claude or Codex receives it; right click on an image: «Copy image».
+- **Text that is not copied.** Select text and mark it «Do not copy» (`Ctrl+K N`, right click or the command palette; the same again removes the mark). It stays in the document and in the `.md`, shown with a soft dashed underline, but copies leave it out: `Ctrl+C` (with or without a selection), «Copy Markdown», «Copy formatted» and the live Markdown's copy button. Cut and exports keep it. With a folder open the marks are kept in `.atelieroot/state.json`.
+- Right click on a document or folder: «Show in Explorer» (desktop app and dev server), «Copy path» and «Copy relative path».
+- The full name and place of each document and folder show as a tooltip in the sidebar.
+- Clicking below the end of a document (under a table, a code block or a list) adds an empty paragraph to write in, like Notion.
+
+### Changed
+- Undo is per document: after switching documents, `Ctrl+Z` still undoes what you did in the one you come back to (a change made outside clears that history).
+- The outline follows the scroll: it marks the section on screen and scrolls itself to keep it visible.
+- The logo has no dark background (tab icon and desktop app icons).
+
+### Fixed
+- Restoring a folder from the trash while a save was running could delete the trash copy with the files AtelieRoot does not show (images, PDF...) inside, instead of bringing them back. Seen in Safari's engine, where saves are slower; present since v1.0.
+- Turning one item of a nested list into a task no longer takes the bullets away from the items around it, and new items keep their own kind. In Markdown such a task keeps its bullet (`- [ ] x`), so other readers do not join it to the line above.
+
+### Tests
+- Browser tests for all of the above, including two real browser folders open at once; Node and Rust tests for images, «Show in Explorer» and the absolute path.
+
 ## [2.0.0] - 2026-11-11
 
 ### Changed

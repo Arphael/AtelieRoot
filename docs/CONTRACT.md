@@ -19,7 +19,16 @@ mkdir(p)                     -> {}
 move(from, to)               -> {}
 remove(p, recursive?)        -> {}
 watch(onChange)              -> unsubscribe
+readBin(p) / writeBin(p, bytes) -> Uint8Array / { m, s }   images only (v2.1, see rule 4b)
+absPath(p), reveal(p)        -> absolute path / opens the file manager   optional (desktop app, dev server)
 ```
+
+**Several folders** (v2.1, `src/js/81-ws-multi.js`): `MultiBackend` joins open folders behind the same
+interface. Paths start with the folder's label (`notas/ideas.md`). Reading `.atelieroot/state.json` joins the
+state of every folder (paths get the label in front); writing it splits it again into each folder's own
+`.atelieroot/state.json`, so a folder opened alone keeps its order, folds, comments and trash. Things deleted
+go to the trash of their own folder. Documents (and images) move between folders by copy + remove; folders
+do not. In the desktop app every command takes `r`, the index of the folder (0 if missing).
 
 Errors are `WsError` with `code`:
 
@@ -40,7 +49,7 @@ random per server start and injected only into the served `index.html` as
 
 | Method + route     | Params / body                              | Success                                                                      | Errors                      |
 | ------------------ | ------------------------------------------ | ---------------------------------------------------------------------------- | --------------------------- |
-| `GET /api/ping`    | -                                          | `{ name, version, server: true }`                                            |                             |
+| `GET /api/ping`    | -                                          | `{ name, path, version, server: true }` (`path`: absolute, for «Copy path»)  |                             |
 | `GET /api/events`  | -                                          | SSE stream; an event is sent when the listing signature changes (poll 1.2 s) |                             |
 | `GET /api/list`    | `hidden=1` includes `.atelieroot/`        | `{ entries: [{p,t,s,m}] }` (max 50 000)                                      |                             |
 | `GET /api/file`    | `p`, `optional=1`                          | `{ text, m, s }` or `{ missing: true }`                                      | 400, 403, 404               |
@@ -49,6 +58,9 @@ random per server start and injected only into the served `index.html` as
 | `DELETE /api/file` | `p`, `recursive=1`                         | `{}`                                                                         | 403                         |
 | `POST /api/mkdir`  | `p`                                        | `{}`                                                                         | 400, 403                    |
 | `POST /api/move`   | body `{ from, to }`                        | `{}`                                                                         | 400, 403, 404, 409 exists   |
+| `GET /api/bin`     | `p` (an image)                             | the bytes, `Content-Type: image/...`                                         | 403, 404                    |
+| `PUT /api/bin`     | `p` (an image); raw body (max 25 MB)       | `{ m, s }`                                                                   | 403, 413                    |
+| `POST /api/reveal` | `p`                                        | `{ path }`; opens the system file manager with the item selected             | 400, 403, 404               |
 
 Errors are JSON `{ error: "<message>" }`.
 
@@ -60,6 +72,8 @@ Errors are JSON `{ error: "<message>" }`.
    segments > 255 chars, and anything whose real path (symlinks resolved) leaves the root.
 4. Writable: `*.md`, `*.markdown` outside hidden folders, and anything inside `.atelieroot/`.
    Nothing else is ever written or deleted.
+4b. Images (v2.1): `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp` outside hidden folders may be read and
+   written as bytes (`/api/bin`, `ws_read_bin` / `ws_write_bin`); never deleted by these routes.
 5. Restoring from `.atelieroot/trash/` may also move back common document/media files
    (images, PDF, office, text, audio/video); never scripts or executables.
 6. Writes are atomic: temp file in the same folder, then rename.

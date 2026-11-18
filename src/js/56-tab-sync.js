@@ -166,6 +166,7 @@ function purgeDocs(ids){ (ids || []).forEach(id => { delete state.docs[id]; Dirt
 function refreshEditorsFor(id){
   const html = state.docs[id] || '<p><br></p>';
   const targets = [];
+  History.forget(id);
   if (state.current === id) targets.push({ el: ed, sc: scroll, act: true });
   if (split && panes[1 - active] && panes[1 - active].doc === id){ const p = panes[1 - active]; targets.push({ el: p.ed, sc: p.scroll, act: false }); }
   targets.forEach(t => {

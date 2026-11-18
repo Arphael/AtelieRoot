@@ -10,6 +10,7 @@ function makeFmtEl(tag){
 function forOutsideHtml(host){
   host.querySelectorAll('.cb-head,.cb-hl').forEach(h => h.remove());
   host.querySelectorAll('span[data-cmt]').forEach(sp => sp.replaceWith(...sp.childNodes));   // comments stay in the app
+  host.querySelectorAll('span[data-nocopy]').forEach(sp => sp.replaceWith(...sp.childNodes)); // exports keep the text, not the mark
   host.querySelectorAll('p[data-quote]').forEach(q => { const b = document.createElement('blockquote'); b.innerHTML = q.innerHTML; q.replaceWith(b); });
   host.querySelectorAll('span[data-code]').forEach(sp => { const c = document.createElement('code'); c.innerHTML = sp.innerHTML; sp.replaceWith(c); });
   return host;

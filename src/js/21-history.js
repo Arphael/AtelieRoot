@@ -36,6 +36,22 @@ const History = {
   },
   mark(){ Dirty.add(state.current); this.caretBefore = this.caret(); },
   init(){ this.last = ed.innerHTML; this.past.length = 0; this.future.length = 0; this.caretBefore = null; },
+  // one history per document (in memory): leaving a document keeps its steps, coming back resumes them
+  byDoc: new Map(),
+  park(id){
+    if (!id) return;
+    clearTimeout(this.t);
+    if (ed.innerHTML !== this.last){ this.past.push({ html: this.last, caret: this.caretBefore }); if (this.past.length > 120) this.past.shift(); }
+    this.byDoc.delete(id);
+    if (this.past.length || this.future.length) this.byDoc.set(id, { past: this.past.slice(), future: this.future.slice() });
+    while (this.byDoc.size > 30) this.byDoc.delete(this.byDoc.keys().next().value);
+  },
+  resume(id){
+    this.init();
+    const h = this.byDoc.get(id); if (!h) return;
+    this.past.push(...h.past); this.future.push(...h.future);
+  },
+  forget(id){ this.byDoc.delete(id); },          // the document changed outside: old steps would bring back a stale version
   snap(immediate){
     clearTimeout(this.t);
     const go = () => {

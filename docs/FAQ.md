@@ -34,6 +34,23 @@ hidden state; use the v2 downloads.
 Notes on selected text (`Ctrl+/`), visible only in AtelieRoot. They are stored in `.atelieroot/state.json`
 (or in the browser in temporary mode), never in the `.md`, copies or exports. Another editor will not show them.
 
+**Do images work in other editors?**
+Yes. An image is a normal file in `assets/` next to the document, linked as `![](assets/name.png)`; VS Code,
+GitHub and Obsidian show it. Moving a document to another folder does not move its images: move `assets/`
+with it, or the link breaks.
+
+**Pasted text into a chat and the image did not come?**
+The copy carries the image inside the formatted text. Some chats only take images as files: right click on
+the image -> "Copy image" and paste that.
+
+**What does "Do not copy" protect?**
+Marked text is left out of copies made in AtelieRoot (`Ctrl+C`, the copy buttons). It is still in the `.md`, a
+plain file any other program can open; cut, exports and screenshots are not affected.
+
+**I opened two folders. Where is the state of each?**
+In each folder's own `.atelieroot/`. Opening one of them alone later shows the same order, folds, comments
+and trash.
+
 ## Desktop app
 
 **Windows says "Windows protected your PC" (SmartScreen).**

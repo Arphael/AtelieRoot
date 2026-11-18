@@ -20,7 +20,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
 const MAX_MANY = 500;                        // rutas por POST /api/files
 const MAX_ENTRIES = 50000;
@@ -28,6 +28,8 @@ const RESTORE_EXT = /\.(?:png|jpe?g|gif|webp|bmp|ico|svg|pdf|txt|csv|tsv|json|ya
 // The page may only talk to this server; remote images in a document stay allowed (http/https), scripts never.
 // 'unsafe-inline' is needed because the build inlines all scripts and the editor sets inline styles; escaping (esc/urlAllowed) is the XSS barrier.
 const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
+const IMAGE_EXT = /\.(?:png|jpe?g|gif|webp)$/i;      // GET/PUT /api/bin (same list as fsops.rs)
+const IMAGE_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
 const POLL_MS = 1200;                       // cada cuánto se mira si algo cambió fuera (para avisar a la página)
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json' };
@@ -103,6 +105,8 @@ function createServer(opts) {
     return last.endsWith('.md') || last.endsWith('.markdown');
   };
   const writableDir = parts => parts[0] === '.atelieroot' ? parts.length > 1 : !parts.some(p => p.startsWith('.'));
+  // images of the documents (pasted or dropped): only these types, never in hidden folders
+  const imageOk = parts => !parts.some(p => p.startsWith('.')) && IMAGE_EXT.test(parts[parts.length - 1]);
 
   async function listAll(includeHidden) {
     const out = [];
@@ -161,7 +165,30 @@ function createServer(opts) {
   async function api(req, res, url) {
     const q = k => url.searchParams.get(k);
     const route = url.pathname.slice(5);                 // sin «/api/»
-    if (route === 'ping') return json(res, 200, { name: path.basename(root), version: VERSION, server: true });
+    if (route === 'ping') return json(res, 200, { name: path.basename(root), path: root, version: VERSION, server: true });
+    if (route === 'bin') {                                      // images: raw bytes in and out
+      const parts = safeRel(q('p')); if (!parts || !imageOk(parts)) return fail(res, 403, 'solo imágenes png, jpg, gif o webp');
+      const abs = absOf(parts);
+      if (!insideRoot(abs) || !(await realInside(abs))) return fail(res, 403, 'fuera de la carpeta');
+      if (req.method === 'GET') {
+        try { const data = await fsp.readFile(abs); return send(res, 200, data, { 'Content-Type': IMAGE_MIME[path.extname(abs).slice(1).toLowerCase()] }); }
+        catch (e) { return fail(res, e.code === 'ENOENT' ? 404 : 500, e.code === 'ENOENT' ? 'no existe' : e.message); }
+      }
+      if (req.method === 'PUT') {
+        const data = await readBody(req);
+        await fsp.mkdir(path.dirname(abs), { recursive: true });
+        const tmp = path.join(path.dirname(abs), `.atelieroot-tmp-${process.pid}-${Date.now()}`);
+        await fsp.writeFile(tmp, data); await fsp.rename(tmp, abs);
+        const st = await fsp.stat(abs); return json(res, 200, { m: Math.round(st.mtimeMs), s: st.size });
+      }
+    }
+    if (route === 'reveal' && req.method === 'POST') {          // «Show in Explorer» (dev server: the folder is on this machine)
+      const parts = safeRel(q('p')); if (!parts || parts.some(x => x.startsWith('.'))) return fail(res, 400, 'ruta no válida');
+      const abs = absOf(parts); if (!insideRoot(abs) || !(await realInside(abs))) return fail(res, 403, 'fuera de la carpeta');
+      try { await fsp.access(abs); } catch { return fail(res, 404, 'no existe'); }
+      if (!opts.noReveal && !process.env.ATELIEROOT_NO_REVEAL) revealInExplorer(abs);   // tests set it: no window opens
+      return json(res, 200, { path: abs });
+    }
     if (route === 'events') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
       res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
@@ -269,6 +296,11 @@ function createServer(opts) {
     listen: () => new Promise(resolve => server.listen(port, '127.0.0.1', () => { port = server.address().port; startPolling(); resolve(port); })),
     close: () => new Promise(resolve => { clearInterval(pollTimer); for (const c of sseClients) c.end(); server.close(() => resolve()); server.closeAllConnections && server.closeAllConnections(); }),
   };
+}
+
+function revealInExplorer(abs) {
+  const cmd = process.platform === 'win32' ? ['explorer', ['/select,' + abs]] : process.platform === 'darwin' ? ['open', ['-R', abs]] : ['xdg-open', [path.dirname(abs)]];
+  try { spawn(cmd[0], cmd[1], { stdio: 'ignore', detached: true }).unref(); } catch { /* no file manager */ }
 }
 
 function openBrowser(url) {

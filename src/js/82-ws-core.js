@@ -75,13 +75,32 @@ function wsApplyCmts(root, list){
     host.appendChild(sp);
   });
 }
+// «do not copy» marks (87-no-copy.js): block index, offset and the text; if the text is gone the mark goes too
+function wsCaptureNoCopy(root){
+  const blocks = [...root.children];
+  return [...root.querySelectorAll('span[data-nocopy]')].map(sp => {
+    let b = sp; while (b.parentNode && b.parentNode !== root) b = b.parentNode;
+    const r = root.ownerDocument.createRange(); r.setStart(b, 0); r.setEndBefore(sp);
+    return { b: blocks.indexOf(b), s: r.toString().length, q: sp.textContent };
+  }).filter(x => x.q);
+}
+function wsApplyNoCopy(root, list){
+  const blocks = [...root.children];
+  list.forEach(c => {
+    let r = null; const b = blocks[c.b];
+    if (b && b.textContent.substr(c.s, c.q.length) === c.q) r = wsRangeAt(b, c.s, c.s + c.q.length);
+    if (!r) for (const x of blocks){ const i = x.textContent.indexOf(c.q); if (i >= 0){ r = wsRangeAt(x, i, i + c.q.length); if (r) break; } }
+    if (!r) return;
+    try { const sp = root.ownerDocument.createElement('span'); sp.setAttribute('data-nocopy', ''); sp.appendChild(r.extractContents()); r.insertNode(sp); } catch(_){}
+  });
+}
 function wsCapture(html){
-  if (!/data-cw|data-fold|data-cmt/.test(html || '')) return null;
+  if (!/data-cw|data-fold|data-cmt|data-nocopy/.test(html || '')) return null;
   const t = document.createElement('template'); t.innerHTML = html; const root = t.content;
   const tw = [...root.querySelectorAll('table')].map(tb => tb.hasAttribute('data-cw') && tb.rows[0] ? [...tb.rows[0].children].map(c => parseFloat(c.getAttribute('data-w')) || 0) : null);
   const folds = [...root.children].filter(wsIsHead).map((h, i) => h.hasAttribute('data-fold') ? i : -1).filter(i => i >= 0);
-  const hasTw = tw.some(Boolean), cmts = wsCaptureCmts(root);
-  return hasTw || folds.length || cmts.length ? Object.assign({}, hasTw ? { tw } : {}, folds.length ? { folds } : {}, cmts.length ? { cmts } : {}) : null;
+  const hasTw = tw.some(Boolean), cmts = wsCaptureCmts(root), nc = wsCaptureNoCopy(root);
+  return hasTw || folds.length || cmts.length || nc.length ? Object.assign({}, hasTw ? { tw } : {}, folds.length ? { folds } : {}, cmts.length ? { cmts } : {}, nc.length ? { nocopy: nc } : {}) : null;
 }
 function wsApply(html, ex){
   if (!ex) return html;
@@ -96,6 +115,7 @@ function wsApply(html, ex){
   }
   if (ex.folds){ const heads = [...root.children].filter(wsIsHead); ex.folds.forEach(i => { if (heads[i]) heads[i].setAttribute('data-fold', ''); }); }
   if (ex.cmts) wsApplyCmts(root, ex.cmts);
+  if (ex.nocopy) wsApplyNoCopy(root, ex.nocopy);
   const d = document.createElement('div'); d.appendChild(root); return d.innerHTML;
 }
 
@@ -263,7 +283,7 @@ function wsRebase(from, to, node){
 
 /* ---- sincronización del árbol con el disco ---- */
 async function wsSyncTree(){
-  const W = Workspace, be = W.be, cur = new Map(); walk(state.tree, n => cur.set(n.id, n)); const cur2 = id => cur.get(id) || null;
+  const W = Workspace, be = W.be, cur = new Map(); walk(state.tree, n => cur.set(n.id, n));
   // 1) lo que desapareció del árbol (eliminado) pasa a .atelieroot/trash: así nada se borra de verdad
   const gone = [...W.nodes].filter(([id]) => !cur.has(id)), goneSet = new Set(gone.map(g => g[0]));
   for (const [id, rec] of gone){ if (rec.parentId && goneSet.has(rec.parentId)) continue; await wsTrashOnDisk(id, rec); }
@@ -272,12 +292,15 @@ async function wsSyncTree(){
   await wsPlace(state.tree, '');
   if (W.renamed){ renderTree(); setPath(); W.renamed = false; }
   // 3) copias de la papelera que ya no hacen falta (restauradas o borradas para siempre)
-  const live = new Set((state.trash || []).map(t => t.id));
+  // Decided with the state of NOW, not the snapshot taken when this pass started: an entry restored while this
+  // pass was running is out of state.trash but not yet in that snapshot, and taking it for "deleted for good"
+  // would delete the copy with the files AtelieRoot does not show (images, PDF...) inside.
   for (const id of [...W.trashIds]){
-    if (live.has(id)) continue;
-    const info = W.trashInfo.get(id), back = info && info.type === 'folder' ? cur2(info.nodeId) : null;
+    if ((state.trash || []).some(t => t.id === id)) continue;
+    const info = W.trashInfo.get(id), back = info ? findNode(info.nodeId) : null;
+    if (back && !back.path) continue;                                                  // restored but not on disk yet: the next pass brings its files back
     let keep = false;
-    if (back && back.path) keep = !(await wsRestoreExtras(id, info.base, back.path));       // restaurada: lo que AtelieRoot no muestra (imágenes, PDF…) vuelve con ella
+    if (back && info.type === 'folder') keep = !(await wsRestoreExtras(id, info.base, back.path));   // restaurada: lo que AtelieRoot no muestra (imágenes, PDF…) vuelve con ella
     if (keep) continue;
     try { await be.remove(WS_TRASH + '/' + id, true); } catch(e){ if (e.code !== 'missing') throw e; }
     W.trashIds.delete(id); W.trashInfo.delete(id);

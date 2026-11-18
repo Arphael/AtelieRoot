@@ -17,11 +17,14 @@
 .ed ul,.ed ol{padding-left:26px;margin:0 0 13px}
 .ed li{margin:3px 0}
 .ed li>ul,.ed li>ol{margin:3px 0 0}
-.ed ul[data-task]{list-style:none;padding-left:2px}
+/* each item keeps its own kind: in a list that mixes tasks and bullets the bullets stay and the box sits where the bullet goes */
+.ed ul[data-task]:not(:has(>li:not([data-task]))){padding-left:2px}
+.ed :is(ul,ol):has(>li:not([data-task]))>li[data-task]{margin-left:-24px}
 .ed li[data-task]{position:relative;padding-left:26px;list-style:none}
 .ed li[data-task]::before{content:"";position:absolute;left:0;top:2px;width:17px;height:17px;border:1.5px solid var(--line-soft);border-radius:3px;cursor:pointer}
 .ed li[data-task="1"]::before{border-color:var(--accent);background:var(--accent)}
 .ed li[data-task="1"]{color:var(--ink-faint);text-decoration:line-through}
+.ed li[data-task="1"]>:is(ul,ol){display:inline-block;width:100%;vertical-align:top;color:var(--ink);text-decoration:none}
 .ed p[data-quote],.ed blockquote{margin:0 0 13px;padding-left:16px;border-left:2px solid var(--accent-line);font-family:var(--serif);font-style:italic;color:var(--ink-dim)}
 .ed span[data-code]{font-family:var(--mono);font-size:14px;background:var(--bg-hi);padding:1px 5px;border-radius:2px;color:var(--accent)}
 .ed hr{border:none;border-top:1px solid var(--line);margin:20px 0}

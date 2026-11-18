@@ -12,6 +12,7 @@ Sprints from cleanup to a public, multi-platform release. Each sprint ends with
 | S4     | Multi-platform releases                         | Medium | Skipped     |
 | S5     | Quality and browser coverage                    | Heavy  | Done        |
 | S7     | VS Code shortcuts, comments, rename (v2.0.0)    | Heavy  | Done        |
+| S8     | Reading mode, images, several folders (v2.1.0)  | Heavy  | Done        |
 | S6     | New features                                    | Medium | Backlog     |
 
 ## S0 - Cleanup and documentation (done)
@@ -104,11 +105,18 @@ builds need code signing to open without warnings, and an update checker would b
 - [x] Comments only in the app (anchors in the internal HTML, panel with replies, edit, resolve, delete; stored in `.atelieroot/state.json`). Audited by tests: Markdown, copies, exports and the live Markdown never contain them; reloads, outside edits, deleted text (orphan) and undo keep them.
 - [x] Renamed AtelierRoot -> AtelieRoot: code, downloads, docs, repository and web address; `.atelierroot/` and browser settings migrated by themselves. Kept on purpose: IndexedDB names and the desktop app identifier (renaming them would lose data).
 
+## S8 - Reading mode, images, several folders, copy protection (done, v2.1.0)
+
+- [x] Several folders at once: `MultiBackend` (`81-ws-multi.js`) joins the open folders with the same interface, so the save core did not change; each folder keeps its own `.atelieroot/` (joined on read, split on write), deleted things go to the trash of their own folder. Desktop app: commands take the folder index `r`; `ws_roots`, `ws_add`, `ws_drop`.
+- [x] Reading mode (`Ctrl+Shift+V` / `Ctrl+K R`): read only, panels hidden, same scroll as the editor; word guide in words per minute that the page follows slowly (scrolling by hand moves it); by paragraph, text size and width, progress and time left.
+- [x] Images as files in `assets/` next to the `.md` (the backlog item): paste, drop, button; `GET/PUT /api/bin`, `ws_read_bin`/`ws_write_bin` (raw bytes), only PNG/JPG/GIF/WebP and never in hidden folders; copies and exports carry the image.
+- [x] «Do not copy» marks on selected text (copies leave it out; cut and exports keep it); «Show in Explorer», «Copy path», «Copy relative path»; full names as tooltips; click below the end adds a paragraph; undo per document; the outline follows the scroll; logo without background.
+- [x] Fix: a task among nested bullets took the bullet away from the others; such a task is written `- [ ] x`.
+
 ## S6 - New features (backlog, by priority)
 
 | Feature                                       | Complexity | Notes                                    |
 | --------------------------------------------- | ---------- | ---------------------------------------- |
-| Images as files (`assets/` next to the `.md`) | Medium     | New, reviewed write permission           |
 | Backlinks                                     | Low        | `[[name]]` already exists                |
 | Export to PDF                                 | Low        | `window.print()` with a print stylesheet |
 | PWA installable / offline                     | Low        | `manifest` + service worker over `dist/` |

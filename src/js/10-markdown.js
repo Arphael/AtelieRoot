@@ -12,7 +12,7 @@ function inlineMd(node){
     else if (t === 'EM' || t === 'I') out += inner.trim() ? '*' + inner.trim() + '*' : inner;
     else if (t === 'S' || t === 'DEL' || t === 'STRIKE') out += inner.trim() ? '~~' + inner.trim() + '~~' : inner;
     else if (t === 'A'){ const hr = n.getAttribute('href') || '', tx = n.textContent.replace(/\u200b/g, ''); out += (isUrl(tx) && hrefOf(tx) === hr) ? tx : '[' + inner + '](' + hr + ')'; }   // una dirección que se muestra a sí misma va sin corchetes
-    else if (t === 'IMG') out += '![' + (n.getAttribute('alt')||'') + '](' + (n.getAttribute('src')||'') + ')';
+    else if (t === 'IMG') out += '![' + (n.getAttribute('alt')||'') + '](' + (n.getAttribute('data-md-src') || n.getAttribute('src') || '') + ')';   // data-md-src: a local image shown from a blob: URL (90-images.js)
     else out += inner;
   });
   return out;
@@ -20,6 +20,8 @@ function inlineMd(node){
 function listMd(list, depth){
   const ordered = list.tagName === 'OL', pad = '  '.repeat(depth), lines = [];
   let i = ordered && Number.isFinite(list.start) ? list.start : 1;
+  // a task among bullets keeps the bullet ("- [ ] x"): without it, other Markdown readers join it to the line above
+  const mixed = [...list.children].some(li => li.tagName === 'LI' && !li.hasAttribute('data-task'));
   [...list.children].forEach(li => {
     if (li.tagName !== 'LI') return;
     const subs = [...li.children].filter(c => c.tagName === 'UL' || c.tagName === 'OL');
@@ -27,7 +29,7 @@ function listMd(list, depth){
     [...clone.children].forEach(c => { if (c.tagName==='UL'||c.tagName==='OL') c.remove(); });
     const body = inlineMd(clone).trim();
     let marker;
-    if (li.hasAttribute('data-task')) marker = (li.getAttribute('data-task') === '1' ? '[x] ' : '[ ] ');
+    if (li.hasAttribute('data-task')) marker = (mixed && !ordered ? '- ' : '') + (li.getAttribute('data-task') === '1' ? '[x] ' : '[ ] ');
     else marker = ordered ? olMarker(olLevelOf(list), i++) + ' ' : '- ';
     lines.push(pad + marker + body.split('\n').join('\n' + pad + ' '.repeat(marker.length)));
     subs.forEach(k => lines.push(listMd(k, depth + 1)));
@@ -201,14 +203,18 @@ function domFromMd(md){
       const tag = ordered ? 'ol' : 'ul';
       const startNum = ordered ? parseInt(li[2], 10) : 1;
       while (stack.length > depth + 1) html.push('</li></' + stack.pop().tag + '>');
+      // a task written with its bullet ("- [ ] x") shares the list with the bullets around it (v2.1); "[ ] x" alone
+      // still starts a task list of its own, as before
+      const dashTask = task && !!li[2] && /^[-*+]$/.test(li[2]);
       if (stack.length === depth + 1){
-        if (stack[depth].tag !== tag || stack[depth].task !== task) html.push('</li></' + stack.pop().tag + '>');
-        else html.push('</li>');
+        const cur = stack[depth], join = cur.tag === tag && (cur.task === task || dashTask || (!task && cur.mixed));
+        if (!join) html.push('</li></' + stack.pop().tag + '>');
+        else { html.push('</li>'); if (cur.task !== task) cur.mixed = true; }
       }
       while (stack.length < depth + 1){
         const leaf = stack.length === depth;                   // solo la lista que recibe el elemento lleva el número inicial
         html.push('<' + tag + (task ? ' data-task=""' : '') + (leaf && ordered && startNum !== 1 ? ' start="' + startNum + '"' : '') + '>');
-        stack.push({ tag, task, ind });
+        stack.push({ tag, task, ind, mixed: leaf && dashTask });
       }
       html.push(task
         ? '<li data-task="' + (/x/i.test(li[3]) ? '1' : '0') + '">' + inlineHtml(li[4])

@@ -25,6 +25,7 @@ const KEYS = [
   { g: 'kb.g.comments', k: 'Ctrl+/', t: 'kb.cmt-toggle' },
   { g: 'kb.g.comments', k: 'Ctrl+K Ctrl+C', t: 'kb.cmt-add' },
   { g: 'kb.g.comments', k: 'Ctrl+K Ctrl+U', t: 'kb.cmt-remove' },
+  { g: 'kb.g.edit', k: 'Ctrl+K N', t: 'kb.no-copy' },
   { g: 'kb.g.search', k: 'Ctrl+F', t: 'kb.find' },
   { g: 'kb.g.search', k: 'Ctrl+H', t: 'kb.replace' },
   { g: 'kb.g.search', k: 'Ctrl+Shift+F', t: 'kb.search-all' },
@@ -32,6 +33,8 @@ const KEYS = [
   { g: 'kb.g.nav', k: 'Ctrl+P', t: 'kb.goto' },
   { g: 'kb.g.nav', k: 'Ctrl+Shift+P', t: 'kb.palette' },
   { g: 'kb.g.nav', k: 'Ctrl+K Z', t: 'kb.focus' },
+  { g: 'kb.g.nav', k: 'Ctrl+Shift+V · Ctrl+K R', t: 'kb.reading' },
+  { g: 'kb.g.nav', k: 'Espacio', t: 'kb.reading-play' },
   { g: 'kb.g.nav', k: 'Ctrl+Shift+8', t: 'kb.breaks' },
   { g: 'kb.g.nav', k: 'Ctrl+K Ctrl+S', t: 'kb.keys' },
   { g: 'kb.g.nav', k: 'Esc', t: 'kb.escape' },
@@ -203,6 +206,8 @@ function endChord(k){
   if (k === 'c') return addComment();
   if (k === 'u') return removeComment();
   if (k === 'z') return toggleFocus();
+  if (k === 'r') return toggleReading();
+  if (k === 'n') return toggleNoCopyRange();
   if (k === 's') return openKeys();
   if (k === 'k'){ $('#linkBtn').click(); return; }
 }
@@ -215,7 +220,7 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); e.stopImmediatePropagation(); endChord(k); return;
   }
   const inEd = document.activeElement === ed || ed.contains(document.activeElement);
-  if (mod && !e.altKey && !e.shiftKey && k === 'k' && inEd){ e.preventDefault(); e.stopImmediatePropagation(); startChord(); return; }
+  if (mod && !e.altKey && !e.shiftKey && k === 'k' && (inEd || document.body.classList.contains('reading'))){ e.preventDefault(); e.stopImmediatePropagation(); startChord(); return; }
   if (mod && e.shiftKey && !e.altKey && k === 'f'){ e.preventDefault(); e.stopImmediatePropagation(); openSearchAll(); return; }
   if (e.key === 'F2' && !mod && !e.altKey){ e.preventDefault(); renameAtCaret(); return; }
   if (!inEd) return;

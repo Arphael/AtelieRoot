@@ -248,7 +248,7 @@ function indent(li){
   let sub = [...prev.children].find(c => c.tagName === 'UL' || c.tagName === 'OL');
   if (!sub){
     sub = document.createElement(list.tagName.toLowerCase());
-    if (list.hasAttribute('data-task')) sub.setAttribute('data-task','');
+    if (li.hasAttribute('data-task')) sub.setAttribute('data-task','');
     prev.appendChild(sub);
   }
   sub.appendChild(li); caretInto(li, true);
