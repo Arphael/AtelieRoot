@@ -137,6 +137,7 @@ async def run_core(t, pg, disk, kind, reopen):
     await open_doc(pg, 'Intro')
     h = await pg.evaluate("ed.innerHTML")
     t.check('el contenido del .md se ve como documento (negrita, código, lista)', '<strong>negrita</strong>' in h and 'data-code' in h and '<li>uno</li>' in h, h[:200])
+    await until(lambda: pg.evaluate("Workspace.status === 'ok'"))      # the first save (state.json) may still be running on a slow machine
     t.check('el indicador dice que el documento está en la carpeta', 'ok' == await pg.evaluate("Workspace.status") and '📁' in await pg.evaluate("document.getElementById('wsState').textContent"), await pg.evaluate("document.getElementById('wsState').textContent"))
     m0 = {p: await disk.mtime(p) for p in SAMPLE}; txt0 = {p: await disk.read(p) for p in SAMPLE}
     await asyncio.sleep(2.0)
