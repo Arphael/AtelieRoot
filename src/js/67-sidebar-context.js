@@ -8,6 +8,7 @@ function ctxItems(n){
     ? [['newdoc', T('ctx.newdoc-here')], ['newfolder', T('ctx.newfolder-here')]]
     : [['open', T('ctx.open')], ['side', T('msg.open-beside')], ['newdoc', T('ctx.newdoc-beside')], ['newfolder', T('ctx.newfolder-beside')]];
   const W = Workspace, place = [];
+  if (W.active && n.type === 'doc' && n.path && W.be.openFile) place.push(['openfile', T('ctx.open-file')]);
   if (W.active && n.path && W.be.reveal) place.push(['reveal', T('ctx.reveal')]);
   if (W.active && n.path && W.be.absPath) place.push(['copypath', T('ctx.copy-path')]);
   place.push(['copyrel', T('ctx.copy-rel')]);
@@ -24,6 +25,7 @@ async function placeAction(act, n){
   if (act === 'copyrel') return copyPlain(relPathOf(n), T('msg.path-copied'));
   if (act === 'copypath'){ try { copyPlain(await W.be.absPath(n.path), T('msg.path-copied')); } catch(e){ toast(e.message || String(e)); } return; }
   if (act === 'reveal'){ try { await W.be.reveal(n.path); } catch(e){ toast(T('msg.reveal-failed', { why: e.message || e })); } return; }
+  if (act === 'openfile'){ try { await W.be.openFile(n.path); } catch(e){ toast(T('msg.open-failed', { why: e.message || e })); } return; }
 }
 function closeCtx(){ ctxMenu.classList.remove('show'); }
 function openCtxMenu(x, y, n, row){
@@ -74,7 +76,7 @@ function rowAction(act, n){
     renderTree(); save(true); return;
   }
   if (act === 'move') return moveToDialog(n);
-  if (/^(copyrel|copypath|reveal)$/.test(act)) return placeAction(act, n);
+  if (/^(copyrel|copypath|reveal|openfile)$/.test(act)) return placeAction(act, n);
   if (act === 'del') return moveToTrash(n);
 }
 $('#side').addEventListener('contextmenu', e => {

@@ -87,8 +87,13 @@ pub fn writable_dir(parts: &[String]) -> bool {
     if parts[0] == ".atelieroot" { parts.len() > 1 } else { !parts.iter().any(|p| p.starts_with('.')) }
 }
 
+/// .atelieroot/assets/... : where the images of the documents live (v2.2)
+pub fn in_assets(parts: &[String]) -> bool {
+    parts.len() > 2 && parts[0] == ".atelieroot" && parts[1] == "assets" && !parts[2..].iter().any(|p| p.starts_with('.'))
+}
+
 pub fn image_ok(parts: &[String]) -> bool {
-    if parts.iter().any(|p| p.starts_with('.')) { return false; }
+    if !in_assets(parts) && parts.iter().any(|p| p.starts_with('.')) { return false; }
     let l = parts.last().unwrap().to_lowercase();
     [".png", ".jpg", ".jpeg", ".gif", ".webp"].iter().any(|e| l.ends_with(e))
 }
@@ -213,8 +218,13 @@ impl Root {
         let parts = Self::parts(rel)?;
         // Same rule as the Node server: only .md files and things inside .atelieroot/ are ever deleted.
         // Visible folders reach the trash by being moved, never by being deleted.
+        let abs0 = self.abs(&parts)?;
+        // an assets/ folder left empty after its images moved to .atelieroot/assets/ (remove_dir fails if anything is inside)
+        if !recursive && parts.last().map(|s| s == "assets").unwrap_or(false) && writable_dir(&parts) && abs0.is_dir() {
+            return fs::remove_dir(&abs0).map_err(|_| OpError::new(Code::Conflict, "no está vacía"));
+        }
         if !writable(&parts) { return Err(OpError::new(Code::Denied, "solo se borran .md y .atelieroot/")); }
-        let abs = self.abs(&parts)?;
+        let abs = abs0;
         let r = match fs::symlink_metadata(&abs) {
             Ok(m) if m.is_dir() => if recursive { fs::remove_dir_all(&abs) } else { fs::remove_dir(&abs) },
             Ok(_) => fs::remove_file(&abs),
@@ -265,7 +275,8 @@ impl Root {
         let from_trash = a[0] == ".atelieroot" && a.get(1).map(|s| s == "trash").unwrap_or(false);
         let safe_dest = !b.iter().any(|x| x.starts_with('.')) && b[0] != ".atelieroot";
         let restorable = from_trash && safe_dest && !is_dir && restorable_ext(b.last().unwrap());
-        let ok = if is_dir { writable_dir(&a) && writable_dir(&b) } else { (writable(&a) && writable(&b)) || restorable };
+        let to_assets = !is_dir && image_ok(&a) && a[0] != ".atelieroot" && in_assets(&b) && image_ok(&b);
+        let ok = if is_dir { writable_dir(&a) && writable_dir(&b) } else { (writable(&a) && writable(&b)) || restorable || to_assets };
         if !ok { return Err(OpError::new(Code::Denied, "movimiento no permitido")); }
         if bb.exists() { return Err(OpError::new(Code::Exists, "el destino ya existe")); }
         if let Some(p) = bb.parent() { fs::create_dir_all(p)?; }
@@ -304,6 +315,26 @@ mod tests {
         assert!(r.existing("docs/assets/foto 1.png").unwrap().ends_with("foto 1.png"));
         assert_eq!(r.existing("nada.md").unwrap_err().code_str(), "missing");
         assert_eq!(r.existing(".atelieroot").unwrap_err().code_str(), "denied");
+    }
+    #[test]
+    fn images_live_in_atelieroot_assets() {
+        let (d, r) = setup();
+        let png: &[u8] = &[0x89, b'P', b'N', b'G', 9];
+        r.write_bin(".atelieroot/assets/docs/a.png", png).unwrap();
+        assert_eq!(r.read_bin(".atelieroot/assets/docs/a.png").unwrap(), png);
+        for bad in [".atelieroot/trash/a.png", ".atelieroot/assets/.x/a.png", ".atelieroot/assets/a.svg"] { assert!(r.write_bin(bad, png).is_err(), "{bad}"); }
+        // an image moves from a visible assets/ into .atelieroot/assets/, then the empty folder goes
+        r.write_bin("docs/assets/b.png", png).unwrap();
+        r.mv("docs/assets/b.png", ".atelieroot/assets/docs/b.png").unwrap();
+        assert!(d.path().join("notas/.atelieroot/assets/docs/b.png").is_file());
+        assert!(r.mv(".atelieroot/assets/docs/b.png", "docs/b.png").is_err());
+        assert!(r.mv("docs/x.txt", ".atelieroot/assets/x.txt").is_err());
+        r.write_bin("docs/assets/c.png", png).unwrap();
+        assert!(r.remove("docs/assets", false).is_err());          // not empty: stays
+        std::fs::remove_file(d.path().join("notas/docs/assets/c.png")).unwrap();
+        r.remove("docs/assets", false).unwrap();
+        assert!(!d.path().join("notas/docs/assets").exists());
+        assert!(r.remove("docs", false).is_err());                 // other visible folders are never deleted
     }
     fn setup() -> (tempfile::TempDir, Root) {
         let d = tempfile::tempdir().unwrap();

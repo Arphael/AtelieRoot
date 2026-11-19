@@ -129,8 +129,8 @@ async def main():
       const dt = new DataTransfer(); dt.items.add(new File([u], 's.png', { type: 'image/png' })); ed.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }""", PNG)
     await until(lambda: pg.evaluate("!!ed.querySelector('img[data-md-src]')"))
     await pg.evaluate("wsSaveNow()"); await asyncio.sleep(0.4)
-    fa = await pg.evaluate("__disk.files('wsA')"); imgs = [f for f in fa if f.startswith('assets/') and f.endswith('.png')]
-    check('a pasted image is saved as wsA/assets/<name>.png', len(imgs) == 1 and await pg.evaluate("p => __disk.size(p)", 'wsA/' + imgs[0]) > 50, fa)
+    fa = await pg.evaluate("__disk.files('wsA')"); imgs = [f for f in fa if f.startswith('.atelieroot/assets/') and f.endswith('.png')]
+    check('a pasted image is saved in wsA/.atelieroot/assets/ (its own folder)', len(imgs) == 1 and await pg.evaluate("p => __disk.size(p)", 'wsA/' + imgs[0]) > 50, fa)
     md = await pg.evaluate("__disk.read('wsA/a.md')")
     check('   ...and a.md links it with a relative path', imgs and f'![]({imgs[0]})' in md, md)
 
@@ -144,7 +144,7 @@ async def main():
     check('   ...and the image shows from the folder', ok, await pg.evaluate("ed.innerHTML"))
     await pg.evaluate("wsDropRoot(state.tree[1])"); await pg.click('#card [data-yes]')
     await until(lambda: pg.evaluate("Workspace.active && !(Workspace.be && Workspace.be.multi) && !state.tree.some(n => n.name === 'wsB')"))
-    check('«Remove from the workspace»: only A is left (as one folder; assets/ holds the image)', sorted(await names()) == ['a', 'assets'], await names())
+    check('«Remove from the workspace»: only A is left (as one folder)', sorted(await names()) == ['a'], await names())
     check('   ...and nothing in B changed', 'b.md' in await pg.evaluate("__disk.files('wsB')") and 'a2.md' in await pg.evaluate("__disk.files('wsB')"))
     check('no page errors', not errs, errs)
     await b.close()

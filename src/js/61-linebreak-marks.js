@@ -89,7 +89,5 @@ function setBreaks(on){
   toast(T(state.breaks ? 'msg.breaks-on' : 'msg.breaks-off'));
 }
 $('#nlBtn').onclick = () => setBreaks(!state.breaks);
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && (e.code === 'Digit8' || e.key === '*')){ e.preventDefault(); setBreaks(!state.breaks); }
-}, true);
+// Ctrl+Shift+8: 91-keymap.js
 

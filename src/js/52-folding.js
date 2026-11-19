@@ -98,11 +98,5 @@ ed.addEventListener('click', e => {
   const h = gutterHeading(e);
   if (h){ e.preventDefault(); History.mark(); toggleFold(h); }
 });
-ed.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === '.'){
-    e.preventDefault();
-    const b = currentBlock();
-    toggleFold(b && sectionHeadOf(b));
-  }
-});
+// Ctrl+.: 91-keymap.js
 

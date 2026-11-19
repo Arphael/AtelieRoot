@@ -20,6 +20,7 @@ class MultiBackend {
     this.trashPart = new Map(); this.metaCache = []; this.metaText = [];
     if (bes.every(b => b.absPath)) this.absPath = p => { const r = this.route(p); return r.part.be.absPath(r.p); };
     if (bes.every(b => b.reveal)) this.reveal = p => { const r = this.route(p); return r.part.be.reveal(r.p); };
+    if (bes.every(b => b.openFile)) this.openFile = p => { const r = this.route(p); return r.part.be.openFile(r.p); };
   }
   partOf(label){ return this.parts.findIndex(x => x.label === label); }
   // a path of the joined tree -> { i, part, p } (p: path inside that folder, '' for the folder itself)

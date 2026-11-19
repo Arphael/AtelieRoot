@@ -57,9 +57,7 @@ document.addEventListener('keydown', e => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && !e.altKey){
     const k = e.key.toLowerCase();
-    if (k === 'p' && !e.shiftKey){ e.preventDefault(); openSwitcher(); return; }
-    if (k === 'f' && !e.shiftKey){ e.preventDefault(); openFind(false); return; }   // Ctrl+Shift+F: search all documents (78-shortcuts.js)
-    if (k === 'h'){ e.preventDefault(); openFind(true); return; }
+    // Ctrl+P, Ctrl+F, Ctrl+H...: 91-keymap.js (they can be changed)
     // deshacer fuera del editor (por ejemplo, con bloques seleccionados)
     const ae = document.activeElement;
     const inField = ae && (ae === ed || ed.contains(ae) || /^(INPUT|TEXTAREA)$/.test(ae.tagName));

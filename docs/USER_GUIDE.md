@@ -46,11 +46,22 @@ Type Markdown and it turns into formatting as you write:
 Other blocks from the toolbar: tables, images, links.
 
 **Images**: paste a screenshot (`Ctrl+V`), drop an image file, or use the image button (from the
-computer or from an address). The image is saved as a file in `assets/` next to the document and written
-as `![](assets/name.png)`, so other editors show it too (PNG, JPG, GIF, WebP, up to 10 MB). Copying the
-text carries the image itself, so pasting into a chat (Claude, Codex) or an email attaches it; right click
-on an image -> **"Copy image"** copies only the image. If you move the document to another folder, move its
-`assets/` images with it.
+computer or from an address). The image is saved as a file in `.atelieroot/assets/`, in the same folders
+as the document (`notas/ideas.md` -> `.atelieroot/assets/notas/`), and written as
+`![](../.atelieroot/assets/notas/name.png)`, so other editors show it too (PNG, JPG, GIF, WebP, up to 10 MB).
+With a folder open, «Copy Markdown» and `Ctrl+C` write each image with its full path on the disk, so
+pasting the text into Claude Code (VS Code or terminal) lets Claude open the images itself; the copy is
+text only (a chat that gets text and an image together keeps only the image). Right click on an image ->
+**"Copy image"** copies only the image, to paste it on its own.
+
+**Change an image**: click it. The bar above has size (25/50/75/100 %, or drag the corner), align left,
+centre or right, rotate 90°, flip and crop (drag over the part to keep, then «Crop» or `Enter`). Size and
+alignment are written as `<img src="…" width="…" align="…">`; rotate, flip and crop save a new image file.
+`Ctrl+Z` undoes any of them.
+
+Images that no document uses any more (you deleted them, or older versions after rotate or crop) move to
+`.atelieroot/trash/images/` a few seconds after saving, and are deleted after the trash days (30 unless
+changed). While you are still in that document `Ctrl+Z` keeps them; undoing later brings the file back.
 
 Spelling and grammar: the browser's spell check is on. Writing assistant extensions work when
 AtelieRoot is opened from `https` (<https://arphael.github.io/AtelieRoot/>); see the [FAQ](FAQ.md).
@@ -59,6 +70,12 @@ AtelieRoot is opened from `https` (<https://arphael.github.io/AtelieRoot/>); see
 
 On macOS use `Cmd` instead of `Ctrl`. The keyboard button in the toolbar (or `Ctrl+K Ctrl+S`, or
 "Keyboard shortcuts" in the command palette) lists every shortcut, with a filter.
+
+**Change a shortcut:** in that list, «Change» next to a command, then press the new keys (`Ctrl+K` and
+another key works too; `Esc` cancels). «Reset» brings back the original one and «Reset all» every one.
+Keys of Windows or the browser (`Ctrl+Shift+V` paste as plain text, `Ctrl+W`, `Ctrl+T`, `Alt+F4`, `F5`,
+`Ctrl+Alt`, which is AltGr on many keyboards...), basic editing (copy, paste, undo, bold, arrows) and keys
+another command uses are refused, and the list says why.
 
 Like VS Code, `Ctrl+K` starts a two-key shortcut: `Ctrl+K` then `C` / `U` / `Z` / `S`. Pressed alone it
 inserts a link after a short moment.
@@ -125,18 +142,20 @@ system language.
 | `Ctrl+Shift+P` | Command palette (every action, searchable) |
 | `Ctrl+.`       | Fold / unfold the current section          |
 | `Ctrl+K Z`     | Focus mode                                 |
-| `Ctrl+Shift+V` / `Ctrl+K R` | Reading mode (`Space` starts or stops scrolling, `Esc` leaves) |
+| `Ctrl+K R`     | Reading mode (`Space` starts or stops the word guide, `Esc` leaves) |
 | `Ctrl+Shift+8` | Show line-break marks                      |
 
 ### Reading mode
 
-`Ctrl+Shift+V` (like VS Code's preview), `Ctrl+K R`, the book button in the toolbar or "Reading mode" in
-the palette. The document cannot be edited (the file is not touched) and the panels hide. It uses the same
-scroll as the editor: it starts where you are, and when you leave you stay where you stopped. Move the mouse
-to the bottom of the window for its panel:
+`Ctrl+K R` (or the key you choose), the book button in the toolbar or "Reading mode" in the palette. The
+document cannot be edited (the file is not touched) and the panels hide. It uses the same scroll as the
+editor: it starts where you are, and when you leave you stay where you stopped. What you read stays in the
+middle of the screen (focus mode does the same with the line you write). Move the mouse to the bottom of the
+window for its panel:
 
 | Tool                     | What it does                                                                          |
 | ------------------------ | ------------------------------------------------------------------------------------- |
+| Guide                    | Turns the word guide on or off (off: no word is marked), remembered                    |
 | Play / pause (`Space`)   | The word guide: one word after another, and the page follows it slowly. Scrolling by hand moves the guide to the word at the reading height |
 | Speed                    | Words per minute (200 unless you change it, 60-600), remembered                       |
 | Whole / By paragraph     | By paragraph dims everything except the paragraph of the guide word                  |
@@ -155,7 +174,7 @@ to the bottom of the window for its panel:
 
 ## 4. Organizing
 
-- **Sidebar**: folders and documents of your folder; hover a row to see its full name. Drag to reorder or move; right click for rename, duplicate, move to, delete, **Show in Explorer** (desktop app), **Copy path** and **Copy relative path**.
+- **Sidebar**: folders and documents of your folder; hover a row to see its full name. Drag to reorder or move; right click for rename, duplicate, move to, delete, **Open with its program** (desktop app and dev server), **Show in Explorer**, **Copy path** (the full path, plain text) and **Copy relative path**. In the browser the first «Copy path» asks you to paste the folder's path once (the browser does not tell it), and «Show in Explorer» copies the folder's path to paste in the Explorer.
 - **Click below the end** of a document (under a table, a code block or a list) to get an empty paragraph to write in.
 - **Search** (sidebar box): filters documents by name.
 - **Links between documents**: `[[name]]`. Click to open; missing targets look dotted.
@@ -192,8 +211,8 @@ to the bottom of the window for its panel:
 My notes/
 |-- Intro.md
 |-- Projects/Plan.md
-|-- assets/                <- images of the documents
 `-- .atelieroot/            <- order, open folders, folds, comments, «do not copy» marks, placeholder values, trash
+    `-- assets/            <- images of the documents (same folders as the documents)
 ```
 
 Non-Markdown files in the folder are ignored and never touched. See [FAQ](FAQ.md) for common problems.

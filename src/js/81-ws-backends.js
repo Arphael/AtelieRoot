@@ -45,8 +45,9 @@ class HttpBackend {
     if (!r.ok) throw new WsError(r.status === 403 ? 'denied' : 'io', j.error || ('HTTP ' + r.status));
     return j;
   }
-  absPath(p){ const win = /^[A-Za-z]:\\/.test(this.path); return Promise.resolve(this.path + (win ? '\\' + p.split('/').join('\\') : '/' + p)); }
+  absPath(p){ const win = /^[A-Za-z]:\\/.test(this.path); return Promise.resolve(!p ? this.path : this.path + (win ? '\\' + p.split('/').join('\\') : '/' + p)); }
   reveal(p){ return this.api('POST', 'reveal?p=' + encodeURIComponent(p)); }
+  openFile(p){ return this.api('POST', 'open?p=' + encodeURIComponent(p)); }
   watch(cb){                                                   // el servidor avisa por eventos; si se corta, el navegador reconecta solo
     let es = null; try { es = new EventSource('/api/events?token=' + encodeURIComponent(this.token)); es.onmessage = () => cb(); } catch(_){}
     return () => { if (es) es.close(); };
@@ -63,6 +64,28 @@ const fsErr = e => {
 
 class FsBackend {
   constructor(root){ this.kind = 'fs'; this.root = root; this.name = root.name; }
+  // The browser never tells a page where a folder is on the disk: the person pastes it once and it is kept in its own
+  // key (atelieroot.fsbase), so nothing that rewrites the other settings can lose it. The path of the folder, of a
+  // document or of a folder inside it all work: it is cut at the folder's name. Quotes (Windows' «Copy as path») go.
+  async base(){
+    const read = () => { try { return JSON.parse(localStorage.getItem('atelieroot.fsbase') || '{}') || {}; } catch(_){ return {}; } };
+    const known = read()[this.name] || ((Ui.read(), Ui.data.fsBase) || {})[this.name];        // v2.2.0 drafts kept it in the settings
+    if (known) return known;
+    const v = await new Promise(res => dialog(T('fsbase.title', { name: this.name }), [{ id: 'p', label: T('fsbase.label', { name: this.name }), value: '' }], x => res(x.p)));
+    const parts = String(v || '').trim().replace(/^["']+|["']+$/g, '').replace(/[\\/]+$/, '').split(/[\\/]/), sep = String(v || '').includes('\\') ? '\\' : '/';
+    const i = parts.map(x => x.toLowerCase()).lastIndexOf(String(this.name).toLowerCase());
+    if (i < 1) throw new WsError('io', T('fsbase.wrong', { name: this.name }));
+    const b = parts.slice(0, i + 1).join(sep);
+    try { localStorage.setItem('atelieroot.fsbase', JSON.stringify(Object.assign(read(), { [this.name]: b }))); } catch(_){}
+    return b;
+  }
+  async absPath(p){ const b = await this.base(), win = b.includes('\\'); return p ? b + (win ? '\\' + p.split('/').join('\\') : '/' + p) : b; }
+  // «Show in Explorer»: a page cannot open it, so the folder of the item is copied to paste in the Explorer's address bar
+  async reveal(p){
+    const dir = /\.md$/i.test(p) ? p.split('/').slice(0, -1).join('/') : p;
+    const abs = await this.absPath(dir);
+    copyText(abs); toast(T('msg.folder-copied', { path: abs }));
+  }
   // v2.0 renamed the hidden folder: .atelierroot/ (v1) is copied to .atelieroot/ and then removed
   async migrateHidden(){
     let old; try { old = await this.root.getDirectoryHandle('.atelierroot'); } catch(_){ return; }
@@ -169,6 +192,7 @@ class TauriBackend {
   writeBin(p, bytes){ return this.call('ws_write_bin', bytes, { headers: { r: String(this.r), p: encodeURIComponent(p) } }); }
   absPath(p){ return this.call('ws_abs', { p }); }
   reveal(p){ return this.call('ws_reveal', { p }); }
+  openFile(p){ return this.call('ws_open', { p }); }
   watch(cb){                                                     // the Rust side polls the folder and emits "ws-changed"
     let off = null, stopped = false;
     window.__TAURI__.event.listen('ws-changed', () => cb()).then(u => { if (stopped) u(); else off = u; });

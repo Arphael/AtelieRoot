@@ -5,6 +5,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-18
+
+### Added
+- **Change the shortcuts.** In the shortcut list (keyboard button, `Ctrl+K Ctrl+S` or the command palette) each command of the app has «Change» (press the new keys; `Ctrl+K` and another key works too) and «Reset»; «Reset all» brings every original back. A key that Windows or the browser uses (`Ctrl+Shift+V`, `Ctrl+W`, `Ctrl+T`, `Alt+F4`, `F5`, `Ctrl+Alt`, which is AltGr on many keyboards...), one of basic editing (copy, paste, undo, bold...) or one another command already uses is refused and the list says why. Changes are remembered.
+- Reading mode: the **Guide** button shows or hides the marked word; the page still scrolls by itself with it hidden (`Space`, speed). Remembered.
+- **Image tools.** Click an image: size (25/50/75/100 % or drag the corner), align left, centre or right, rotate 90°, flip and crop. Size and alignment are written as `<img src="…" width="…" align="…">` (GitHub and VS Code show them); rotate, flip and crop write a new image file, so the change is seen everywhere, and `Ctrl+Z` brings the previous one back.
+- With a folder open, «Copy Markdown», `Ctrl+C` and the live Markdown's copy button write each image with its full path on the disk (`![](<C:\…\.atelieroot\assets\notas\x.png>)`), so pasting the text into Claude Code lets Claude open every image itself; the copy stays text only, because a chat keeps only the image when the clipboard has both. The document keeps its relative links. In the browser the folder's place is asked once, as for «Copy path».
+- Right click on a document: «Open with its program» opens the `.md` in the program Windows uses for it (desktop app and dev server).
+- In the browser, «Copy path» gives the full path too: the browser never tells a page where a folder is, so the first time it asks you to paste the folder's path (it must end in that folder's name) and remembers it. «Show in Explorer» in the browser copies the folder of the item to paste in the Explorer's address bar.
+
+### Changed
+- Reading mode leaves `Ctrl+Shift+V` to the system (paste as plain text); it is `Ctrl+K R`, or the key you choose.
+- Reading and focus mode keep what you read or write in the middle of the screen; only in these modes there is half a screen of blank page above and below, so the first and last lines get there too.
+- «Copy path» and «Copy relative path» copy the path as plain text, without quotes, for documents and folders.
+- **Images live in `.atelieroot/assets/`**, in the same folders as their document (`notas/ideas.md` -> `.atelieroot/assets/notas/`), linked as `![](../.atelieroot/assets/notas/name.png)`. Images of v2.1 in an `assets/` folder next to the documents move there the first time the folder is opened; only their links change in the `.md`, and an `assets/` folder left empty is removed (one with other files stays).
+- The shortcut list is wider: key, command and buttons in their own columns.
+- **Images nobody uses are cleaned up.** A few seconds after a save, an image in `.atelieroot/assets/` that no document uses any more (in any open folder, nor in the undo steps of the document being edited) moves to `.atelieroot/trash/images/`, and it is deleted after the trash days (30 unless changed). Undoing the deletion later brings the file back from there. This includes the older versions left by rotate, flip and crop. Nothing outside `.atelieroot/assets/` is touched; in temporary mode (no folder) nothing changes.
+
+### Fixed
+- In the browser, «Copy path» asked for the folder's place again after other settings were saved; it is now kept apart and never asked twice. The path of a file inside the folder is also accepted.
+
+### Tests
+- Browser tests for changing, refusing, resetting and remembering shortcuts, the word guide switch, the text in the middle and the paths in the browser; a test fails if a default shortcut is one of Windows or the browser. Node test for «Open with its program» (only `.md` inside the folder).
+
 ## [2.1.0] - 2026-11-17
 
 ### Added

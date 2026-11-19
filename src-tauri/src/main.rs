@@ -203,6 +203,16 @@ fn ws_reveal(app: tauri::AppHandle, state: State<App>, r: Option<usize>, p: Stri
     app.opener().reveal_item_in_dir(abs).map_err(|e| format!("io:{}", e))
 }
 
+/// «Open with its program»: a document (.md) of the folder opens in the system's default program.
+#[tauri::command]
+fn ws_open(app: tauri::AppHandle, state: State<App>, r: Option<usize>, p: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    if !p.to_ascii_lowercase().ends_with(".md") { return Err("denied:solo documentos".into()); }
+    let abs = current(&state, r)?.existing(&p).map_err(|e| e.wire())?;
+    if !abs.is_file() { return Err("denied:no es un documento".into()); }
+    app.opener().open_path(abs.to_string_lossy().into_owned(), None::<&str>).map_err(|e| format!("io:{}", e))
+}
+
 /// Links of the "About" dialog open in the system browser; only the project's own pages are allowed.
 const LINK_PREFIXES: [&str; 2] = ["https://github.com/Arphael/", "https://arphael.github.io/"];
 fn link_allowed(url: &str) -> bool {
@@ -241,7 +251,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(App::default())
-        .invoke_handler(tauri::generate_handler![ws_root, ws_roots, ws_pick, ws_add, ws_drop, ws_clear, ws_list, ws_read, ws_read_many, ws_read_bin, ws_write_bin, ws_abs, ws_reveal, ws_write, open_link, ws_mkdir, ws_move, ws_remove])
+        .invoke_handler(tauri::generate_handler![ws_root, ws_roots, ws_pick, ws_add, ws_drop, ws_clear, ws_list, ws_read, ws_read_many, ws_read_bin, ws_write_bin, ws_abs, ws_reveal, ws_open, ws_write, open_link, ws_mkdir, ws_move, ws_remove])
         .run(tauri::generate_context!())
         .expect("error while running AtelieRoot");
 }

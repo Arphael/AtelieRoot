@@ -1,7 +1,9 @@
 "use strict";
 /* ====== 90. Imágenes ====== */
-// Pasting, dropping or choosing an image saves it as a file in assets/ next to the document and writes
-// ![](assets/name.png): the Markdown stays standard and other editors show it too. In temporary mode the image
+// Pasting, dropping or choosing an image saves it as a file in .atelieroot/assets/ (in the same folders as the
+// document: notas/ideas.md -> .atelieroot/assets/notas/) and writes ![](../.atelieroot/assets/notas/name.png): the
+// Markdown stays standard and other editors show it too. Images of v2.1 (assets/ next to the document) move there
+// when the folder is opened. In temporary mode the image
 // lives in this browser (IndexedDB). In the editor the <img> keeps that path in data-md-src and shows a blob: URL;
 // copies and exports carry the image itself (a data: URL), so a chat such as Claude or Codex receives it.
 const IMG_MAX = 10 * 1024 * 1024;
@@ -77,6 +79,15 @@ forOutsideHtml = host => {
 const imgStash = stash;
 stash = () => { imgStash(); const id = state.current; if (id && state.docs[id] !== undefined && Dirty.has(id)){ const h = imgUnresolve(state.docs[id]); if (h !== state.docs[id]) state.docs[id] = h; } };
 
+// where the images of a document go: { full: path in the folder, rel: the same seen from the document }
+// (with several folders open the first part of a path is the folder's label: each folder has its own .atelieroot/)
+function imgAssetsOf(docPath, be){
+  let label = '', p = docPath || '';
+  if (p && be && be.multi){ const i = p.indexOf('/'); label = p.slice(0, i); p = p.slice(i + 1); }
+  const dir = p ? wsDir(p) : '', sub = dir ? dir + '/' : '';
+  return { full: (label ? label + '/' : '') + '.atelieroot/assets/' + sub, rel: '../'.repeat(dir ? dir.split('/').length : 0) + '.atelieroot/assets/' + sub };
+}
+
 /* ---- adding images ---- */
 const imgSlug = s => (String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'imagen').slice(0, 40);
 const imgStamp = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()); };
@@ -88,8 +99,8 @@ async function imgSave(file){
   let n = findNode(state.current); if (!n) return null;
   if (W.active && !n.path){ stash(); await wsSchedule(true); n = findNode(state.current); if (!n || !n.path){ toast(T('ws.save-failed')); return null; } }
   if (W.active && !W.be.writeBin){ toast(T('msg.img-no-backend')); return null; }
-  const rel = 'assets/' + imgSlug(n.name) + '-' + imgStamp() + '-' + Math.random().toString(36).slice(2, 5) + '.' + ext;
-  const full = imgFullPath(rel, n.id), blob = file.slice(0, file.size, file.type);
+  const name = imgSlug(n.name) + '-' + imgStamp() + '-' + Math.random().toString(36).slice(2, 5) + '.' + ext, at = imgAssetsOf(W.active ? n.path : '', W.be);
+  const rel = at.rel + name, full = at.full + name, blob = file.slice(0, file.size, file.type);
   try {
     if (W.active) await W.be.writeBin(full, new Uint8Array(await blob.arrayBuffer()));
     else await ImgStore.put(full, blob);
@@ -147,30 +158,154 @@ $('#imgBtn').onclick = () => {
   card.querySelector('[data-no]').onclick = () => veil.classList.remove('show');
   veil.classList.add('show');
 };
+// the clipboard only takes PNG
+async function imgPng(blob){
+  if (blob.type === 'image/png') return blob;
+  const bmp = await createImageBitmap(blob), c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+  c.getContext('2d').drawImage(bmp, 0, 0); return new Promise(r => c.toBlob(r, 'image/png'));
+}
+async function imgBlobOf(src, docId){
+  const full = imgIsLocal(src) ? imgFullPath(src, docId) : null;
+  if (full){ const v = Img.cache.get(full) || await imgLoad(full).catch(() => null); if (v) return v.blob; }
+  return null;
+}
 // right click on an image: copy the image itself (a chat receives it as an attachment)
 async function copyImage(im){
-  let blob = null; const full = im.getAttribute('data-md-src') ? imgFullPath(im.getAttribute('data-md-src'), state.current) : null;
-  if (full && Img.cache.has(full)) blob = Img.cache.get(full).blob;
   try {
-    if (!blob) blob = await (await fetch(im.src)).blob();
-    if (blob.type !== 'image/png'){                                          // the clipboard only takes PNG
-      const bmp = await createImageBitmap(blob), c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
-      c.getContext('2d').drawImage(bmp, 0, 0); blob = await new Promise(r => c.toBlob(r, 'image/png'));
-    }
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    const blob = (im.getAttribute('data-md-src') && await imgBlobOf(im.getAttribute('data-md-src'), state.current)) || await (await fetch(im.src)).blob();
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': await imgPng(blob) })]);
     toast(T('msg.img-copied'));
   } catch(e){ toast(T('msg.copy-failed')); }
 }
-let imgCtx = null;
-[ed1, ed2].forEach(h => h.addEventListener('contextmenu', e => {
-  const im = e.target.closest && e.target.closest('img'); if (!im) return;
-  e.preventDefault(); imgCtx = im;
-  document.querySelectorAll('.menu.show').forEach(m => m.classList.remove('show'));
-  ctxTarget = null;
-  ctxMenu.innerHTML = '<button data-r="copyimg">' + esc(T('img.copy')) + '</button>';
-  ctxMenu.classList.add('show');
-  ctxMenu.style.left = Math.max(8, Math.min(innerWidth - ctxMenu.offsetWidth - 8, e.clientX)) + 'px';
-  ctxMenu.style.top = Math.max(8, Math.min(innerHeight - ctxMenu.offsetHeight - 8, e.clientY)) + 'px';
+// A copy of Markdown stays text only (a chat such as Claude in VS Code keeps only the image when the clipboard has
+// both). With a folder open each local image gets its full path on the disk instead, so Claude Code opens the
+// images itself: ![](<C:\\...\\.atelieroot\\assets\\notas\\x.png>). The document keeps its relative links.
+const IMG_REF = /(!\[[^\]]*\]\()([^)\s]+)(\))|(<img\b[^>]*?\ssrc=")([^"]+)(")/g;
+async function imgAbsText(text){
+  const W = Workspace; if (!W.active || !W.be.absPath || !/!\[|<img\b/.test(text)) return text;
+  const abs = new Map(); let out = '', last = 0, m;
+  const re = new RegExp(IMG_REF.source, 'g');
+  while ((m = re.exec(text))){
+    const src = m[2] || m[5], full = imgIsLocal(src) ? imgFullPath(src, state.current) : null;
+    let a = null;
+    if (full){ if (!abs.has(full)) abs.set(full, await W.be.absPath(full)); a = abs.get(full); }
+    out += text.slice(last, m.index) + (!a ? m[0] : m[2] ? m[1] + '<' + a + '>' + m[3] : m[4] + a + m[6]); last = re.lastIndex;
+  }
+  return out + text.slice(last);
+}
+const imgCopyText = copyText;
+copyText = t => { if (!Workspace.active || !/!\[|<img\b/.test(t)) return imgCopyText(t); imgAbsText(t).then(x => imgCopyText(x), () => imgCopyText(t)); };
+// Ctrl+C: 35-copy-sort-md.js fills the clipboard; its Markdown text is written again with the full paths
+[ed1, ed2].forEach(h => h.addEventListener('copy', e => {
+  if (!e.defaultPrevented || !e.clipboardData || !Workspace.active) return;
+  const t = e.clipboardData.getData('text/plain'), html = e.clipboardData.getData('text/html');
+  if (!t || !/!\[|<img\b/.test(t)) return;
+  imgAbsText(t).then(x => {
+    if (x === t || !navigator.clipboard || !window.ClipboardItem) return;
+    const item = { 'text/plain': new Blob([x], { type: 'text/plain' }) };
+    if (html) item['text/html'] = new Blob(['<meta charset="utf-8">' + html], { type: 'text/html' });
+    return navigator.clipboard.write([new ClipboardItem(item)]);
+  }).catch(() => {});
 }));
-const imgRowAction = rowAction;
-rowAction = (act, n) => { if (act === 'copyimg'){ if (imgCtx) copyImage(imgCtx); imgCtx = null; return; } return imgRowAction(act, n); };
+
+/* ---- v2.1 -> v2.2: assets/ next to the documents moves to .atelieroot/assets/ ---- */
+// Only the documents in a folder that has an assets/ folder are read; each local image they show from assets/ moves
+// (never copied twice, never deleted) and its link is rewritten; the text of the document does not change. An
+// assets/ folder left empty is removed (with anything else inside it stays).
+async function imgMigrate(be){
+  if (!be.readBin || !be.move) return;
+  const list = await be.list(false);
+  const assetDirs = list.filter(e => e.t === 'd' && e.p.split('/').pop() === 'assets');
+  if (!assetDirs.length) return;
+  const dirs = new Set(assetDirs.map(e => wsDir(e.p))), moved = new Map();
+  for (const f of list.filter(e => e.t === 'f' && wsIsMd(e.p) && dirs.has(wsDir(e.p)))){
+    let r; try { r = await be.read(f.p); } catch(_){ continue; }
+    const dir = wsDir(f.p), at = imgAssetsOf(f.p, be);
+    const fix = async src => {
+      const clean = src.replace(/^\.\//, '');
+      if (!/^assets\//.test(clean)) return src;
+      const rest = decodeURIComponent(clean.slice(7)), from = (dir ? dir + '/' : '') + 'assets/' + rest;
+      if (!moved.has(from)){
+        try { await be.move(from, at.full + rest); moved.set(from, true); }
+        catch(e){ if (e && e.code === 'exists') moved.set(from, true); else { moved.set(from, false); } }
+      }
+      return moved.get(from) ? at.rel + clean.slice(7) : src;
+    };
+    let text = r.text, out = '', last = 0;
+    const re = /(!\[[^\]]*\]\()([^)\s]+)(\))|(<img\b[^>]*?\ssrc=")([^"]+)(")/g; let m;
+    while ((m = re.exec(text))){
+      const src = m[2] || m[5], nsrc = await fix(src);
+      out += text.slice(last, m.index) + (m[2] ? m[1] + nsrc + m[3] : m[4] + nsrc + m[6]); last = re.lastIndex;
+    }
+    out += text.slice(last);
+    if (out !== text){ try { await be.write(f.p, out, r.m); } catch(e){ console.warn('images: could not update', f.p, e); } }
+  }
+  for (const d of assetDirs){ try { await be.remove(d.p, false); } catch(_){ /* not empty: stays */ } }
+}
+const imgWsLoad = wsLoad;
+wsLoad = async be => {
+  if (be.migrateHidden){ try { await be.migrateHidden(); } catch(_){} }       // .atelierroot/ (v1) first, as wsLoad does
+  try { await imgMigrate(be); } catch(e){ console.warn('images: migration', e); }
+  return imgWsLoad(be);
+};
+
+/* ---- images no document uses go to the trash ---- */
+// A few seconds after a save, every file in .atelieroot/assets/ that no document uses (in any open folder, in the
+// open editors or in the undo steps of the document being edited) moves to .atelieroot/trash/images/ as
+// name~<time>.ext; after the trash days (30 unless changed) it is deleted. Nothing outside .atelieroot/assets/
+// is ever touched. If Ctrl+Z brings an image back later, it comes back from the trash.
+const IMG_TRASH = '.atelieroot/trash/images/';
+const imgIsImage = p => /\.(png|jpe?g|gif|webp)$/i.test(p);
+// '.atelieroot/assets/notas/x.png' (or 'Label/.atelieroot/assets/...') -> [prefix, 'notas/x.png']
+function imgAssetSplit(full){ const i = full.indexOf('.atelieroot/assets/'); return i < 0 ? null : [full.slice(0, i), full.slice(i + 19)]; }
+function imgUsed(){
+  const W = Workspace, used = new Set();
+  const scan = (html, docId) => { const re = new RegExp(IMG_REF.source, 'g'); let m; while ((m = re.exec(html))){ const src = m[2] || m[5]; if (imgIsLocal(src)){ const f = imgFullPath(src, docId); if (f) used.add(f); } } };
+  const htmlScan = (html, docId) => { const re = /<img\b[^>]*?\s(?:data-md-src|src)="([^"]+)"/g; let m; while ((m = re.exec(html))) if (imgIsLocal(m[1])){ const f = imgFullPath(m[1], docId); if (f) used.add(f); } };
+  for (const id of Object.keys(state.docs)){ const h = state.docs[id]; if (typeof h === 'string'){ htmlScan(h, id); scan(h, id); } }
+  htmlScan(ed1.innerHTML, imgDocOf(ed1)); htmlScan(ed2.innerHTML, imgDocOf(ed2));
+  try { htmlScan(JSON.stringify([History.past, History.future]).replace(/\\"/g, '"'), state.current); } catch(_){}
+  void W;
+  return used;
+}
+async function imgSweep(){
+  const W = Workspace; if (!W.active || !W.be.move || (W.lazy && W.lazy.size)) return;    // not while documents are still loading
+  const list = await W.be.list(true), used = imgUsed(), now = Date.now(), days = trashDaysPlan();
+  for (const e of list){
+    if (e.t !== 'f' || !imgIsImage(e.p)) continue;
+    const sp = imgAssetSplit(e.p);
+    if (sp && !used.has(e.p)){
+      const name = sp[1].replace(/(\.\w+)$/, '~' + now + '$1');
+      try { await W.be.move(e.p, sp[0] + IMG_TRASH + name); Img.cache.delete(e.p); if (typeof imgTrashed !== 'undefined') imgTrashed.add(e.p); } catch(err){ console.warn('images: could not move to the trash', e.p, err); }
+      continue;
+    }
+    const t = e.p.indexOf(IMG_TRASH), ts = t >= 0 ? +(e.p.match(/~(\d{10,})\.\w+$/) || [])[1] : 0;
+    if (ts && days && now - ts >= days * 86400000){ try { await W.be.remove(e.p, false); } catch(_){} }
+  }
+}
+let imgSweepT = 0;
+const imgPersist = wsPersist;
+wsPersist = async () => { await imgPersist(); clearTimeout(imgSweepT); imgSweepT = setTimeout(() => { Workspace.q = Workspace.q.then(imgSweep).catch(e => console.warn('images: sweep', e)); }, 4000); };
+// an image that is missing (Ctrl+Z after it went to the trash): the newest copy in the trash comes back
+async function imgFromTrash(full){
+  const W = Workspace, sp = imgAssetSplit(full); if (!W.active || !sp || !W.be.move) return false;
+  const base = sp[0] + IMG_TRASH + sp[1].replace(/(\.\w+)$/, ''), ext = (full.match(/\.\w+$/) || [''])[0];
+  const hits = (await W.be.list(true)).filter(e => e.t === 'f' && e.p.startsWith(base + '~') && e.p.endsWith(ext) && /^~\d+$/.test(e.p.slice(base.length, e.p.length - ext.length)));
+  if (!hits.length) return false;
+  hits.sort((a, b) => b.p.localeCompare(a.p));
+  try { await W.be.move(hits[0].p, full); return true; } catch(_){ return false; }
+}
+const imgLoad0 = imgLoad;
+imgLoad = async full => {
+  try { const v = await imgLoad0(full); if (v) return v; } catch(e){ if (!(await imgFromTrash(full))) throw e; return imgLoad0(full); }
+  return (await imgFromTrash(full)) ? imgLoad0(full) : null;
+};
+// Ctrl+Z puts back an <img> whose file went to the trash in this session: the file comes back too
+const imgTrashed = new Set();
+[ed1, ed2].forEach(host => new MutationObserver(() => {
+  if (!imgTrashed.size) return;
+  host.querySelectorAll('img[data-md-src]').forEach(im => {
+    const full = imgFullPath(im.getAttribute('data-md-src'), imgDocOf(host));
+    if (full && imgTrashed.has(full)){ imgTrashed.delete(full); imgFromTrash(full).catch(() => {}); }
+  });
+}).observe(host, { childList: true, subtree: true }));

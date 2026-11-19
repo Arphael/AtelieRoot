@@ -33,7 +33,7 @@ const KEYS = [
   { g: 'kb.g.nav', k: 'Ctrl+P', t: 'kb.goto' },
   { g: 'kb.g.nav', k: 'Ctrl+Shift+P', t: 'kb.palette' },
   { g: 'kb.g.nav', k: 'Ctrl+K Z', t: 'kb.focus' },
-  { g: 'kb.g.nav', k: 'Ctrl+Shift+V · Ctrl+K R', t: 'kb.reading' },
+  { g: 'kb.g.nav', k: 'Ctrl+K R', t: 'kb.reading' },
   { g: 'kb.g.nav', k: 'Espacio', t: 'kb.reading-play' },
   { g: 'kb.g.nav', k: 'Ctrl+Shift+8', t: 'kb.breaks' },
   { g: 'kb.g.nav', k: 'Ctrl+K Ctrl+S', t: 'kb.keys' },
@@ -42,26 +42,33 @@ const KEYS = [
 
 /* ---- dialog with every shortcut ---- */
 function openKeys(){
-  card.innerHTML = '<h2>' + esc(T('kb.title')) + '</h2><input id="kbq" autocomplete="off" placeholder="' + esc(T('kb.ph')) + '" aria-label="' + esc(T('kb.ph')) + '"><div class="sw-list kb-list" id="kbl"></div>';
+  card.innerHTML = '<div id="kbWrap"><h2>' + esc(T('kb.title')) + '</h2><input id="kbq" autocomplete="off" placeholder="' + esc(T('kb.ph')) + '" aria-label="' + esc(T('kb.ph')) + '"><p class="kb-hint">' + esc(T('kb.hint')) + '</p><div id="kbMsg" role="status"></div><div class="sw-list kb-list" id="kbl"></div><div class="btns"><button class="btn" id="kbResetAll">' + esc(T('kb.reset-all')) + '</button></div></div>';
   card.classList.add('wide');
   veil.classList.add('show');
   const q = card.querySelector('#kbq'), l = card.querySelector('#kbl');
   const paint = () => {
     const words = norm(q.value).split(/\s+/).filter(Boolean);
     l.innerHTML = ''; let g = '';
-    KEYS.filter(x => words.every(w => norm(T(x.g) + ' ' + x.k + ' ' + T(x.t)).includes(w))).forEach(x => {
+    const act = x => KM_ACTIONS.find(a => a.t === x.t), keyOf = x => act(x) ? (kmBind(act(x)) || T('kb.none')) : x.k;
+    KEYS.filter(x => words.every(w => norm(T(x.g) + ' ' + keyOf(x) + ' ' + T(x.t)).includes(w))).forEach(x => {
       if (x.g !== g){ g = x.g; const h = document.createElement('div'); h.className = 'kb-g'; h.textContent = T(g); l.appendChild(h); }
-      const r = document.createElement('div'); r.className = 'kb-row';
+      const r = document.createElement('div'), a = act(x); r.className = 'kb-row';
       r.innerHTML = '<kbd></kbd><span></span>';
-      r.firstChild.textContent = x.k; r.lastChild.textContent = T(x.t);
+      r.firstChild.textContent = keyOf(x); r.children[1].textContent = T(x.t);
+      if (a){                                                      // a command of the app: its key can be changed (91-keymap.js)
+        r.dataset.km = a.id;
+        r.insertAdjacentHTML('beforeend', '<button class="btn kb-b" data-km-set>' + esc(T('kb.change')) + '</button><button class="btn kb-b" data-km-reset>' + esc(T('kb.reset')) + '</button>');
+      }
       l.appendChild(r);
     });
+    kmPaintRows();
     if (!l.children.length) l.innerHTML = '<div class="ol-empty">' + esc(T('pal.empty')) + '</div>';
   };
   q.oninput = paint;
-  q.onkeydown = e => { if (e.key === 'Escape'){ closeCard(); } };
   paint(); q.focus();
 }
+// Esc closes the list wherever the focus is (WebKit does not focus a clicked button)
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !KM.rec && veil.classList.contains('show') && card.querySelector('#kbWrap')) closeCard(); });
 function closeCard(){ veil.classList.remove('show'); card.classList.remove('wide'); ed.focus({ preventScroll: true }); }
 $('#kbBtn').addEventListener('mousedown', e => e.preventDefault());
 $('#kbBtn').onclick = openKeys;
@@ -201,32 +208,13 @@ function startChord(){
   Chord.t = setTimeout(() => { if (!Chord.on) return; Chord.on = false; restoreChordSel(); $('#linkBtn').click(); }, 900);
 }
 function restoreChordSel(){ if (Chord.range){ const s = getSelection(); s.removeAllRanges(); s.addRange(Chord.range); } }
-function endChord(k){
-  Chord.on = false; clearTimeout(Chord.t); restoreChordSel();
-  if (k === 'c') return addComment();
-  if (k === 'u') return removeComment();
-  if (k === 'z') return toggleFocus();
-  if (k === 'r') return toggleReading();
-  if (k === 'n') return toggleNoCopyRange();
-  if (k === 's') return openKeys();
-  if (k === 'k'){ $('#linkBtn').click(); return; }
-}
-
+// the app's commands (Ctrl+K chords, F2, Ctrl+L, Alt+Z...) run from 91-keymap.js, where they can be changed
 document.addEventListener('keydown', e => {
   if (veil.classList.contains('show')) return;
-  const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
-  if (Chord.on){
-    if (['control', 'meta', 'shift', 'alt'].includes(k)) return;
-    e.preventDefault(); e.stopImmediatePropagation(); endChord(k); return;
-  }
+  const mod = e.ctrlKey || e.metaKey;
   const inEd = document.activeElement === ed || ed.contains(document.activeElement);
-  if (mod && !e.altKey && !e.shiftKey && k === 'k' && (inEd || document.body.classList.contains('reading'))){ e.preventDefault(); e.stopImmediatePropagation(); startChord(); return; }
-  if (mod && e.shiftKey && !e.altKey && k === 'f'){ e.preventDefault(); e.stopImmediatePropagation(); openSearchAll(); return; }
-  if (e.key === 'F2' && !mod && !e.altKey){ e.preventDefault(); renameAtCaret(); return; }
   if (!inEd) return;
   const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
-  if (mod && !e.altKey && !e.shiftKey && k === 'l'){ stop(); selectLineUnit(); return; }
-  if (mod && e.shiftKey && !e.altKey && k === 'k'){ stop(); deleteCaretUnit(); return; }
-  if (e.altKey && e.shiftKey && !mod && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){ e.preventDefault(); e.stopImmediatePropagation(); duplicateUnit(e.key === 'ArrowUp' ? -1 : 1); return; }
-  if (e.altKey && !e.shiftKey && !mod && (k === 'z' || e.code === 'KeyZ')){ stop(); const on = !codeWrapOn(); setCodeWrap(on); toast(T(on ? 'msg.wrap-on' : 'msg.wrap-off')); return; }
+  if (mod && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'k'){ stop(); deleteCaretUnit(); return; }
+  if (e.altKey && e.shiftKey && !mod && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){ stop(); duplicateUnit(e.key === 'ArrowUp' ? -1 : 1); return; }
 }, true);

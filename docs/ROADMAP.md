@@ -105,10 +105,18 @@ builds need code signing to open without warnings, and an update checker would b
 - [x] Comments only in the app (anchors in the internal HTML, panel with replies, edit, resolve, delete; stored in `.atelieroot/state.json`). Audited by tests: Markdown, copies, exports and the live Markdown never contain them; reloads, outside edits, deleted text (orphan) and undo keep them.
 - [x] Renamed AtelierRoot -> AtelieRoot: code, downloads, docs, repository and web address; `.atelierroot/` and browser settings migrated by themselves. Kept on purpose: IndexedDB names and the desktop app identifier (renaming them would lose data).
 
+## S9 - Shortcuts that can be changed, text in the middle, full paths (done, v2.2.0)
+
+- [x] One dispatcher for the app's commands (`91-keymap.js`): defaults plus the person's changes (`Ui.data.keys`), changed from the shortcut list; system and browser shortcuts (`KM_RESERVED`) and basic editing are refused, and a test checks no default uses a reserved one.
+- [x] Reading mode leaves `Ctrl+Shift+V` (paste as plain text) to the system; the word guide can be turned off.
+- [x] Reading and focus mode keep the text in the middle, with half a screen of blank page above and below only in these modes.
+- [x] Full path without quotes also in the browser (the folder's place is asked once); «Open with its program» (`/api/open`, `ws_open`, only `.md`); «Show in Explorer» in the browser copies the folder's path.
+- [x] Fix round: the guide only hides the mark; the folder's place in the browser kept apart (`atelieroot.fsbase`); wider shortcut list; copies give each image its full path (text only: a chat keeps only the image when it gets both); image tools (`92-image-tools.js`); images in `.atelieroot/assets/` with the v2.1 `assets/` migration; unused images go to `.atelieroot/trash/images/` (`imgSweep`) and come back if an undo needs them.
+
 ## S8 - Reading mode, images, several folders, copy protection (done, v2.1.0)
 
 - [x] Several folders at once: `MultiBackend` (`81-ws-multi.js`) joins the open folders with the same interface, so the save core did not change; each folder keeps its own `.atelieroot/` (joined on read, split on write), deleted things go to the trash of their own folder. Desktop app: commands take the folder index `r`; `ws_roots`, `ws_add`, `ws_drop`.
-- [x] Reading mode (`Ctrl+Shift+V` / `Ctrl+K R`): read only, panels hidden, same scroll as the editor; word guide in words per minute that the page follows slowly (scrolling by hand moves it); by paragraph, text size and width, progress and time left.
+- [x] Reading mode (`Ctrl+K R`; `Ctrl+Shift+V` until v2.2.0): read only, panels hidden, same scroll as the editor; word guide in words per minute that the page follows slowly (scrolling by hand moves it); by paragraph, text size and width, progress and time left.
 - [x] Images as files in `assets/` next to the `.md` (the backlog item): paste, drop, button; `GET/PUT /api/bin`, `ws_read_bin`/`ws_write_bin` (raw bytes), only PNG/JPG/GIF/WebP and never in hidden folders; copies and exports carry the image.
 - [x] «Do not copy» marks on selected text (copies leave it out; cut and exports keep it); «Show in Explorer», «Copy path», «Copy relative path»; full names as tooltips; click below the end adds a paragraph; undo per document; the outline follows the scroll; logo without background.
 - [x] Fix: a task among nested bullets took the bullet away from the others; such a task is written `- [ ] x`.

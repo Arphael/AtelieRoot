@@ -20,7 +20,7 @@ move(from, to)               -> {}
 remove(p, recursive?)        -> {}
 watch(onChange)              -> unsubscribe
 readBin(p) / writeBin(p, bytes) -> Uint8Array / { m, s }   images only (v2.1, see rule 4b)
-absPath(p), reveal(p)        -> absolute path / opens the file manager   optional (desktop app, dev server)
+absPath(p), reveal(p), openFile(p) -> absolute path / file manager / default program   optional (browser: absPath and reveal only)
 ```
 
 **Several folders** (v2.1, `src/js/81-ws-multi.js`): `MultiBackend` joins open folders behind the same
@@ -61,6 +61,7 @@ random per server start and injected only into the served `index.html` as
 | `GET /api/bin`     | `p` (an image)                             | the bytes, `Content-Type: image/...`                                         | 403, 404                    |
 | `PUT /api/bin`     | `p` (an image); raw body (max 25 MB)       | `{ m, s }`                                                                   | 403, 413                    |
 | `POST /api/reveal` | `p`                                        | `{ path }`; opens the system file manager with the item selected             | 400, 403, 404               |
+| `POST /api/open`   | `p` (a `.md` document)                     | `{ path }`; opens it with the system's default program                       | 400, 403, 404               |
 
 Errors are JSON `{ error: "<message>" }`.
 
@@ -74,6 +75,9 @@ Errors are JSON `{ error: "<message>" }`.
    Nothing else is ever written or deleted.
 4b. Images (v2.1): `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp` outside hidden folders may be read and
    written as bytes (`/api/bin`, `ws_read_bin` / `ws_write_bin`); never deleted by these routes.
+   v2.2: also inside `.atelieroot/assets/` (no hidden folder below it). An image may be moved from a visible
+   folder into `.atelieroot/assets/` (never out of it), and a visible folder named `assets` may be removed
+   only when it is empty (non-recursive; otherwise 409 / `conflict`).
 5. Restoring from `.atelieroot/trash/` may also move back common document/media files
    (images, PDF, office, text, audio/video); never scripts or executables.
 6. Writes are atomic: temp file in the same folder, then rename.

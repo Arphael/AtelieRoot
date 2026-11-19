@@ -35,9 +35,14 @@ Notes on selected text (`Ctrl+/`), visible only in AtelieRoot. They are stored i
 (or in the browser in temporary mode), never in the `.md`, copies or exports. Another editor will not show them.
 
 **Do images work in other editors?**
-Yes. An image is a normal file in `assets/` next to the document, linked as `![](assets/name.png)`; VS Code,
-GitHub and Obsidian show it. Moving a document to another folder does not move its images: move `assets/`
-with it, or the link breaks.
+Yes. An image is a normal file in `.atelieroot/assets/` (same folders as the document), linked with a
+relative path such as `![](../.atelieroot/assets/notas/name.png)`; VS Code, GitHub and Obsidian show it.
+Size and alignment are plain HTML (`<img width align>`). If a document moves to a folder of another depth,
+AtelieRoot still finds its images, but other editors need the link fixed.
+
+**Why does «Copy path» ask for the folder in the browser?**
+For security, Chrome and Edge never tell a web page where a folder is on the disk. Paste its path (or the
+path of any file inside it) once and it is remembered. The desktop app and `npm start` know it by themselves.
 
 **Pasted text into a chat and the image did not come?**
 The copy carries the image inside the formatted text. Some chats only take images as files: right click on

@@ -12,7 +12,12 @@ function inlineMd(node){
     else if (t === 'EM' || t === 'I') out += inner.trim() ? '*' + inner.trim() + '*' : inner;
     else if (t === 'S' || t === 'DEL' || t === 'STRIKE') out += inner.trim() ? '~~' + inner.trim() + '~~' : inner;
     else if (t === 'A'){ const hr = n.getAttribute('href') || '', tx = n.textContent.replace(/\u200b/g, ''); out += (isUrl(tx) && hrefOf(tx) === hr) ? tx : '[' + inner + '](' + hr + ')'; }   // una dirección que se muestra a sí misma va sin corchetes
-    else if (t === 'IMG') out += '![' + (n.getAttribute('alt')||'') + '](' + (n.getAttribute('data-md-src') || n.getAttribute('src') || '') + ')';   // data-md-src: a local image shown from a blob: URL (90-images.js)
+    else if (t === 'IMG'){                                   // data-md-src: a local image shown from a blob: URL (90-images.js)
+      const src = n.getAttribute('data-md-src') || n.getAttribute('src') || '', alt = n.getAttribute('alt') || '', w = n.getAttribute('width'), al = n.getAttribute('align');
+      const q = v => String(v).replace(/"/g, '&quot;');
+      // a size or an alignment needs HTML (GitHub and VS Code show it too); otherwise plain ![]()
+      out += (w || al) ? '<img src="' + q(src) + '" alt="' + q(alt) + '"' + (w ? ' width="' + q(w) + '"' : '') + (al ? ' align="' + q(al) + '"' : '') + '>' : '![' + alt + '](' + src + ')';
+    }
     else out += inner;
   });
   return out;
@@ -103,6 +108,13 @@ function urlAllowed(u, isImg){
 function inlineHtml(src){
   const codes = [];
   let s = esc(src).replace(/&lt;br\s*\/?&gt;/gi, '\u0002').replace(/`([^`]+)`/g, (m,c) => { codes.push(c); return '\u0001' + (codes.length-1) + '\u0001'; });
+  // <img src alt width align> written by the image tools (only these attributes, the same URL rules as ![]())
+  s = s.replace(/&lt;img\b((?:\s+[a-z]+="[^"]*")*)\s*\/?&gt;/gi, (m, attrs) => {
+    const g = k => (attrs.match(new RegExp('\\s' + k + '="([^"]*)"', 'i')) || [])[1];
+    const u = g('src'), w = g('width'), al = g('align');
+    if (!u || !urlAllowed(u, true)) return m;
+    return '<img alt="' + (g('alt') || '') + '" src="' + u + '"' + (w && /^\d{1,5}$/.test(w) ? ' width="' + w + '"' : '') + (al && /^(left|center|right)$/.test(al) ? ' align="' + al + '"' : '') + '>';
+  });
   s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m,a,u) => !urlAllowed(u, true) ? a : '<img alt="'+a.replace(/"/g,'&quot;')+'" src="'+u.replace(/"/g,'&quot;')+'">');
   s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m,t,u) => !urlAllowed(u) ? t : '<a href="'+u.replace(/"/g,'&quot;')+'">'+t+'</a>');
   s = s.replace(/&lt;(https?:\/\/[^\s]*?)&gt;/gi, (m, u) => '<a href="' + u + '">' + u + '</a>');        // <https://…>

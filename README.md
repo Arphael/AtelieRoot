@@ -21,7 +21,7 @@ A **local-first** Markdown editor: **every document is a `.md` file in a folder 
 | **Autosave**                | Changes are written automatically; unsaved work survives a crash or closed window                      |
 | **Safe with outside edits** | Changes made in other programs are reloaded; on a conflict both versions are kept                      |
 | **Organize**                | Folders, drag and drop, `[[name]]` links between documents, outline, split view, trash                 |
-| **Write faster**            | Command palette, VS Code shortcuts (multi-edit with `Ctrl+D`, move/duplicate lines), search in all documents, focus mode, section folding, `[UPPERCASE]` placeholders |
+| **Write faster**            | Command palette, VS Code shortcuts (multi-edit with `Ctrl+D`, move/duplicate lines), shortcuts you can change, search in all documents, focus mode, section folding, `[UPPERCASE]` placeholders |
 | **Read and see**            | Reading mode with a word guide that sets the pace, paragraph focus; images pasted or dropped are saved next to the document |
 | **Several folders**         | Open several folders at once in one sidebar; each keeps its own state |
 | **Comments**                | Comment any text like in Word or Notion; comments stay in the app and never touch your `.md`          |

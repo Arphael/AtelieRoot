@@ -123,8 +123,6 @@ function openPalette(){
 }
 $('#palBtn').addEventListener('mousedown', e => e.preventDefault());
 $('#palBtn').onclick = openPalette;
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p'){ e.preventDefault(); e.stopPropagation(); openPalette(); }
-}, true);
+// Ctrl+Shift+P: 91-keymap.js
 
 

@@ -33,11 +33,21 @@ function markCur(){
 }
 function toggleFocus(force){
   const on = force === undefined ? !document.body.classList.contains('focus') : force;
-  document.body.classList.toggle('focus', on);
-  if (on){ markCur(); toast(T('msg.focus-on')); }
+  rdKeepPlace(() => document.body.classList.toggle('focus', on));        // the blank page above changes: the same text stays in view
+  if (on){ markCur(); toast(T('msg.focus-on')); requestAnimationFrame(focusCenter); }
   else ed.querySelectorAll('[data-cur]').forEach(x => x.removeAttribute('data-cur'));
   ed.focus({ preventScroll: true });
 }
+// focus mode keeps the line being written in the middle of the screen (the CSS adds half a screen of blank page above
+// and below, so the first and last lines get there too)
+function focusCenter(){
+  if (!document.body.classList.contains('focus')) return;
+  const s = getSelection(); if (!s.rangeCount || !ed.contains(s.anchorNode)) return;
+  const rg = s.getRangeAt(0), rr = rg.getClientRects()[0] || (rg.startContainer.nodeType === 1 ? rg.startContainer : rg.startContainer.parentElement).getBoundingClientRect();
+  const sr = scroll.getBoundingClientRect(), d = (rr.top + rr.height / 2) - (sr.top + sr.height / 2);
+  if (Math.abs(d) > 4) scroll.scrollTop += d;
+}
+document.addEventListener('selectionchange', () => { if (document.body.classList.contains('focus')) requestAnimationFrame(focusCenter); });
 $('#focusBtn').onclick = () => toggleFocus(true);
 $('#focusExit').onclick = () => toggleFocus(false);
 

@@ -30,6 +30,7 @@ MOCK = r"""
     ws_pick: () => ({ name: 'Mis notas', path: 'C:\\Users\\x\\Mis notas' }),
     ws_abs: ({ p }) => 'C:\\Users\\x\\Mis notas\\' + p.split('/').join('\\'),
     ws_reveal: () => null,
+    ws_open: () => null,
     ws_clear: () => null,
     ws_list: ({ hidden }) => [
       ...[...dirs].filter(d => hidden || !d.startsWith('.')).map(p => ({ p, t: 'd', s: 0, m: 0 })),
@@ -74,6 +75,8 @@ async def main():
         check('v2.1: every command says which open folder (r)', await pg.evaluate("__mock.calls.filter(c => c[0] === 'ws_list').every(c => c[1].r === 0)"))
         await pg.evaluate("(() => { const n = state.tree.find(x => x.name === 'Intro'); placeAction('reveal', n); })()"); await pg.wait_for_timeout(100)
         check('v2.1: «Show in Explorer» asks the desktop app (ws_reveal) for that document', await pg.evaluate("__mock.calls.some(c => c[0] === 'ws_reveal' && c[1].p === 'Intro.md' && c[1].r === 0)"))
+        await pg.evaluate("(() => { const n = state.tree.find(x => x.name === 'Intro'); placeAction('openfile', n); })()"); await pg.wait_for_timeout(100)
+        check('v2.2: «Open with its program» asks the desktop app (ws_open) for that document, and is in its menu', await pg.evaluate("__mock.calls.some(c => c[0] === 'ws_open' && c[1].p === 'Intro.md' && c[1].r === 0) && ctxItems(state.tree.find(x => x.name === 'Intro')).some(i => i[0] === 'openfile')"))
         path = await pg.evaluate("Workspace.be.absPath('Intro.md')")
         check('v2.1: «Copy path» gives the absolute path', path == 'C:\\Users\\x\\Mis notas\\Intro.md', path)
         check('documents from disk appear in the tree', await until(pg, "document.querySelector('#tree').textContent.includes('Intro')"), await pg.evaluate("document.querySelector('#tree').textContent"))

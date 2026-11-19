@@ -154,12 +154,14 @@ by `src/index.html`:
 | `87-no-copy.js`                | «Do not copy» marks: `<span data-nocopy>`, left out of copies (`stripNoCopy`), kept in `state.json` |
 | `88-reading.js`                | Reading mode: read only, word guide (CSS Highlight API, words per minute), floating panel |
 | `89-multi-ui.js`               | Several folders: tree rules (open folders stay on top, folders stay in their folder) |
-| `90-images.js`                 | Images: `assets/` next to the document, `data-md-src` + blob URL in the editor, copies carry the image |
+| `90-images.js`                 | Images: `.atelieroot/assets/<document folders>/`, `data-md-src` + blob URL in the editor, copies give images their full path on the disk (`imgAbsText`), v2.1 `assets/` migration, unused images to `.atelieroot/trash/images/` after a save (`imgSweep`) |
+| `91-keymap.js`                 | One dispatcher for the app's commands; shortcuts the person changes (`Ui.data.keys`), reserved system keys |
+| `92-image-tools.js`            | Image bar: size and alignment (`<img width align>` in the Markdown), rotate / flip / crop (a new file) |
 | `99-boot.js`                   | Boot                                                                   |
 
 CSS lives in `src/css/01-base.css` ... `24-reading-images.css`, same ordering rule.
 
-**Images** (v2.1): the Markdown keeps a relative path (`assets/x.png`, from the document's folder). In the
+**Images** (v2.2): files in `.atelieroot/assets/` mirroring the document's folders; the Markdown keeps a relative path from the document (`../.atelieroot/assets/notas/x.png`). A `wsLoad` wrapper moves v2.1 `assets/` images there first (the backends allow only that move and removing an empty `assets/`). In the
 editor the `<img>` keeps it in `data-md-src` and shows a `blob:` URL (`mdFromDom` writes `data-md-src`;
 `stash()` stores only the path); `forOutsideHtml` puts the image itself (`data:`) in copies and exports.
 

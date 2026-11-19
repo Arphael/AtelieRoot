@@ -162,3 +162,28 @@ test('v2.1: ping da la ruta de la carpeta y «Mostrar en el Explorador» valida 
   assert.equal((await call('POST', '/api/reveal?p=' + encodeURIComponent('../fuera/secreto.md'))).status, 400);
   assert.equal((await call('POST', '/api/reveal?p=.git')).status, 400);
 });
+test('v2.2: «Abrir con su programa» solo abre documentos .md de la carpeta', async () => {
+  process.env.ATELIEROOT_NO_REVEAL = '1';
+  const r = await call('POST', '/api/open?p=' + encodeURIComponent('Carpeta/b.md')); assert.equal(r.status, 200);
+  assert.equal((await r.json()).path, path.join(srv.root, 'Carpeta', 'b.md'));
+  assert.equal((await call('POST', '/api/open?p=Carpeta')).status, 400);
+  assert.equal((await call('POST', '/api/open?p=no.md')).status, 404);
+  assert.equal((await call('POST', '/api/open?p=' + encodeURIComponent('../fuera/secreto.md'))).status, 400);
+  assert.equal((await call('POST', '/api/open?p=' + encodeURIComponent('.atelieroot/state.md'))).status, 400);
+  assert.equal((await fetch(base + '/api/open?p=a.md', { method: 'POST' })).status, 401);
+});test('v2.2: las imágenes viven en .atelieroot/assets/; las de assets/ se mueven allí y la carpeta vacía se quita', async () => {
+  assert.equal((await bin('PUT', '.atelieroot/assets/Carpeta/n.png', PNG)).status, 200);
+  assert.ok(fs.existsSync(path.join(srv.root, '.atelieroot', 'assets', 'Carpeta', 'n.png')));
+  for (const p of ['.atelieroot/trash/x.png', '.atelieroot/assets/.x/y.png', '.atelieroot/assets/x.svg']) assert.equal((await bin('PUT', p, PNG)).status, 403, p);
+  assert.equal((await bin('PUT', 'Galeria/assets/v.png', PNG)).status, 200);
+  assert.equal((await bin('PUT', 'Galeria/assets/w.png', PNG)).status, 200);
+  const mv = (from, to) => call('POST', '/api/move', { from, to });
+  assert.equal((await mv('Galeria/assets/v.png', '.atelieroot/assets/Galeria/v.png')).status, 200);
+  assert.ok(fs.existsSync(path.join(srv.root, '.atelieroot', 'assets', 'Galeria', 'v.png')));
+  assert.equal((await mv('.atelieroot/assets/Galeria/v.png', 'Galeria/v.png')).status, 403);          // only into assets
+  assert.equal((await call('DELETE', '/api/file?p=' + encodeURIComponent('Galeria/assets'))).status, 409); // w.png is still there
+  assert.equal((await mv('Galeria/assets/w.png', '.atelieroot/assets/Galeria/w.png')).status, 200);
+  assert.equal((await call('DELETE', '/api/file?p=' + encodeURIComponent('Galeria/assets'))).status, 200);
+  assert.ok(!fs.existsSync(path.join(srv.root, 'Galeria', 'assets')));
+  assert.equal((await call('DELETE', '/api/file?p=Carpeta')).status, 403);                                // other folders never
+});

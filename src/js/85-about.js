@@ -2,7 +2,7 @@
 /* ====== 85. Versión y «Acerca de» ====== */
 // APP_SEMVER must match package.json (npm run check verifies it). The status bar shows it next to «Saved»;
 // the version and the app name in the sidebar open «About», which links to the repository.
-const APP_SEMVER = '2.1.0';
+const APP_SEMVER = '2.2.0';
 const APP_NAME = 'AtelieRoot';
 const APP_LINKS = {
   repo: 'https://github.com/Arphael/AtelieRoot',

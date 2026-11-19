@@ -20,7 +20,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
 const MAX_MANY = 500;                        // rutas por POST /api/files
 const MAX_ENTRIES = 50000;
@@ -105,8 +105,9 @@ function createServer(opts) {
     return last.endsWith('.md') || last.endsWith('.markdown');
   };
   const writableDir = parts => parts[0] === '.atelieroot' ? parts.length > 1 : !parts.some(p => p.startsWith('.'));
-  // images of the documents (pasted or dropped): only these types, never in hidden folders
-  const imageOk = parts => !parts.some(p => p.startsWith('.')) && IMAGE_EXT.test(parts[parts.length - 1]);
+  // images of the documents (pasted or dropped): only these types, never in hidden folders except .atelieroot/assets/ (v2.2)
+  const inAssets = parts => parts[0] === '.atelieroot' && parts[1] === 'assets' && parts.length > 2 && !parts.slice(2).some(p => p.startsWith('.'));
+  const imageOk = parts => (inAssets(parts) || !parts.some(p => p.startsWith('.'))) && IMAGE_EXT.test(parts[parts.length - 1]);
 
   async function listAll(includeHidden) {
     const out = [];
@@ -189,6 +190,13 @@ function createServer(opts) {
       if (!opts.noReveal && !process.env.ATELIEROOT_NO_REVEAL) revealInExplorer(abs);   // tests set it: no window opens
       return json(res, 200, { path: abs });
     }
+    if (route === 'open' && req.method === 'POST') {            // «Open with its program»: only documents (.md) of the folder
+      const parts = safeRel(q('p')); if (!parts || parts.some(x => x.startsWith('.')) || !/\.md$/i.test(parts[parts.length - 1])) return fail(res, 400, 'ruta no válida');
+      const abs = absOf(parts); if (!insideRoot(abs) || !(await realInside(abs))) return fail(res, 403, 'fuera de la carpeta');
+      try { if (!(await fsp.stat(abs)).isFile()) return fail(res, 400, 'no es un documento'); } catch { return fail(res, 404, 'no existe'); }
+      if (!opts.noReveal && !process.env.ATELIEROOT_NO_REVEAL) openWithSystem(abs);
+      return json(res, 200, { path: abs });
+    }
     if (route === 'events') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
       res.write('retry: 2000\n\n'); sseClients.add(res); req.on('close', () => sseClients.delete(res)); return;
@@ -230,6 +238,10 @@ function createServer(opts) {
         const st = await fsp.stat(abs); return json(res, 200, { m: Math.round(st.mtimeMs), s: st.size });
       }
       if (req.method === 'DELETE') {
+        // an assets/ folder left empty after its images moved to .atelieroot/assets/ (rmdir fails if anything is inside)
+        if (parts[parts.length - 1] === 'assets' && writableDir(parts) && q('recursive') !== '1') {
+          try { if ((await fsp.stat(abs)).isDirectory()) { await fsp.rmdir(abs); return json(res, 200, {}); } } catch (e) { return fail(res, e.code === 'ENOTEMPTY' ? 409 : 500, e.code === 'ENOTEMPTY' ? 'no está vacía' : e.message); }
+        }
         if (!writable(parts)) return fail(res, 403, 'solo se borran .md y .atelieroot/');
         try { await fsp.rm(abs, { force: true, recursive: q('recursive') === '1' }); return json(res, 200, {}); } catch (e) { return fail(res, 500, e.message); }
       }
@@ -247,7 +259,8 @@ function createServer(opts) {
       let isDir = false; try { isDir = (await fsp.stat(aa)).isDirectory(); } catch { return fail(res, 404, 'no existe'); }
       const fromTrash = a[0] === '.atelieroot' && a[1] === 'trash', safeDest = !b.some(x => x.startsWith('.')) && b[0] !== '.atelieroot';
       const restorable = fromTrash && safeDest && !isDir && RESTORE_EXT.test(b[b.length - 1]);          // devolver de la papelera una imagen, un PDF… (nunca scripts ni ejecutables)
-      if (isDir ? !(writableDir(a) && writableDir(b)) : !((writable(a) && writable(b)) || restorable)) return fail(res, 403, 'movimiento no permitido');
+      const toAssets = !isDir && imageOk(a) && a[0] !== '.atelieroot' && inAssets(b) && imageOk(b);         // v2.2: images move into .atelieroot/assets/
+      if (isDir ? !(writableDir(a) && writableDir(b)) : !((writable(a) && writable(b)) || restorable || toAssets)) return fail(res, 403, 'movimiento no permitido');
       try { await fsp.access(bb); return fail(res, 409, 'el destino ya existe'); } catch { /* libre */ }
       await fsp.mkdir(path.dirname(bb), { recursive: true }); await fsp.rename(aa, bb); return json(res, 200, {});
     }
@@ -301,6 +314,12 @@ function createServer(opts) {
 function revealInExplorer(abs) {
   const cmd = process.platform === 'win32' ? ['explorer', ['/select,' + abs]] : process.platform === 'darwin' ? ['open', ['-R', abs]] : ['xdg-open', [path.dirname(abs)]];
   try { spawn(cmd[0], cmd[1], { stdio: 'ignore', detached: true }).unref(); } catch { /* no file manager */ }
+}
+
+// the file goes as one argument (no shell): explorer.exe / open / xdg-open open it with its default program
+function openWithSystem(abs) {
+  const cmd = process.platform === 'win32' ? ['explorer.exe', [abs]] : process.platform === 'darwin' ? ['open', [abs]] : ['xdg-open', [abs]];
+  try { spawn(cmd[0], cmd[1], { stdio: 'ignore', detached: true }).unref(); } catch { /* no program */ }
 }
 
 function openBrowser(url) {

@@ -189,14 +189,7 @@ ed.addEventListener('click', e => {
   if (sp && getSelection().isCollapsed) openComments(sp.getAttribute('data-cmt'));
 });
 ed.addEventListener('input', () => { cmReconcile(); cmRender(); });
-document.addEventListener('keydown', e => {
-  if (veil.classList.contains('show')) return;
-  const mod = e.ctrlKey || e.metaKey;
-  if (mod && !e.altKey && !e.shiftKey && (e.key === '/' || e.code === 'Slash' || e.code === 'NumpadDivide')){
-    if (!(document.activeElement === ed || ed.contains(document.activeElement))) return;
-    e.preventDefault(); e.stopImmediatePropagation(); addComment();
-  }
-}, true);
+// Ctrl+/: 91-keymap.js
 document.addEventListener('langchange', () => cmRender());
 // after opening a document and after undo/redo the comments are checked again
 const cmOpenDoc0 = openDoc;
