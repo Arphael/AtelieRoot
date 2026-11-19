@@ -64,8 +64,9 @@ async def main():
         await pg.context.grant_permissions(['clipboard-read', 'clipboard-write'])
         await pg.evaluate("document.getElementById('copyMd').click()"); await pg.wait_for_timeout(800)
         clip = await pg.evaluate("navigator.clipboard.readText()")
-        full = str(work / '.atelieroot' / 'assets' / 'notas' / 'a.png')
-        check('«Copy Markdown» gives the text with the full path of each image (Claude Code opens them itself)', '# Ideas' in clip and ('](<' + full + '>)') in clip and ('<' + str(work / '.atelieroot' / 'assets' / 'notas' / new[0].name) + '>') in clip and 'src="<' not in clip, clip)
+        real = Path(await pg.evaluate('Workspace.be.path'))   # the server's own name for the folder (CI: short 8.3 names on Windows, /private/var on macOS)
+        full = str(real / '.atelieroot' / 'assets' / 'notas' / 'a.png')
+        check('«Copy Markdown» gives the text with the full path of each image (Claude Code opens them itself)', '# Ideas' in clip and ('](<' + full + '>)') in clip and ('<' + str(real / '.atelieroot' / 'assets' / 'notas' / new[0].name) + '>') in clip and 'src="<' not in clip, clip)
         check('   ...the document itself still keeps relative links', '../.atelieroot/assets/notas/a.png' in (work / 'notas' / 'ideas.md').read_text(encoding='utf-8'))
       print('=== images no document uses go to the trash ===')
       newimg = work / '.atelieroot' / 'assets' / 'notas' / new[0].name
