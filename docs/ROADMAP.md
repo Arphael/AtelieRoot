@@ -121,6 +121,13 @@ builds need code signing to open without warnings, and an update checker would b
 - [x] «Do not copy» marks on selected text (copies leave it out; cut and exports keep it); «Show in Explorer», «Copy path», «Copy relative path»; full names as tooltips; click below the end adds a paragraph; undo per document; the outline follows the scroll; logo without background.
 - [x] Fix: a task among nested bullets took the bullet away from the others; such a task is written `- [ ] x`.
 
+## S10 - Security review (done, v2.2.1)
+
+- [x] Whole-project review: server, desktop commands, Markdown rendering, paste, CI, dependencies and git history (no secrets; only the first commit carries an email).
+- [x] Fix: pasted HTML ran `<img onerror>`; quotes in addresses and code block languages added event attributes.
+- [x] Names Windows cannot handle (trailing space or dot, `CON`, `NUL`...) refused by the server and the desktop app.
+- [x] Dependabot updates (Tauri, ESLint, Tauri CLI, CodeQL v4, Scorecard).
+
 ## S6 - New features (backlog, by priority)
 
 | Feature                                       | Complexity | Notes                                    |

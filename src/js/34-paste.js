@@ -29,8 +29,7 @@ ed.addEventListener('paste', e => {
   else if (html){
     const doc = new DOMParser().parseFromString(html, 'text/html');
     doc.querySelectorAll('script,style,meta,link,title,noscript').forEach(n => n.remove());
-    const host = document.createElement('div');
-    host.innerHTML = doc.body.innerHTML;
+    const host = doc.body;                     // stays in the inert parsed document: in a div of this page, <img onerror> would run
     normalizeForeign(host);
     md = mdFromDom(host);
   } else md = text || '';
@@ -73,6 +72,7 @@ ed.addEventListener('paste', e => {
   after(); History.snap(true);
 });
 function normalizeForeign(host){
+  const document = host.ownerDocument;         // new nodes are made in the host's (inert) document too
   host.querySelectorAll('span[data-code]').forEach(sp => { const c = document.createElement('code'); c.innerHTML = sp.innerHTML; sp.replaceWith(c); });
   host.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')));
   host.querySelectorAll('*').forEach(el => {

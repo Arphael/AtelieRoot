@@ -117,12 +117,12 @@ function inlineHtml(src){
   });
   s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m,a,u) => !urlAllowed(u, true) ? a : '<img alt="'+a.replace(/"/g,'&quot;')+'" src="'+u.replace(/"/g,'&quot;')+'">');
   s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m,t,u) => !urlAllowed(u) ? t : '<a href="'+u.replace(/"/g,'&quot;')+'">'+t+'</a>');
-  s = s.replace(/&lt;(https?:\/\/[^\s]*?)&gt;/gi, (m, u) => '<a href="' + u + '">' + u + '</a>');        // <https://…>
+  s = s.replace(/&lt;(https?:\/\/[^\s]*?)&gt;/gi, (m, u) => '<a href="' + u.replace(/"/g, '&quot;') + '">' + u + '</a>');        // <https://…>
   const urlLinks = [];                                                                                  // direcciones sueltas → enlaces (protegidas del resto de formatos)
   s = s.split(/(<a\b[^>]*>[\s\S]*?<\/a>|<[^>]+>)/g).map((part, i) => i % 2 ? part : part.replace(/(^|[\s(\[«"'“‘¿¡])((?:https?:\/\/|www\.)[^\s<]+)/gi, (m, pre, u0) => {
     const u = u0.replace(/(?:&quot;|&#39;|&gt;|&lt;)+$/, ''), t = trimUrl(u);
     if (!isUrl(t)) return m;
-    urlLinks.push('<a href="' + hrefOf(t) + '">' + t + '</a>');
+    urlLinks.push('<a href="' + hrefOf(t).replace(/"/g, '&quot;') + '">' + t + '</a>');
     return pre + '\u0003' + (urlLinks.length - 1) + '\u0003' + u0.slice(t.length);
   })).join('');
   s = s.replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>');
@@ -140,7 +140,7 @@ const isSepRow = l => !!l && /\|/.test(l) && /^[\s|:-]+$/.test(l.trim()) && /-/.
 const isBlockStart = l => /^\s*(#{1,6}\s|>|```|([-*+•●◦▪‣∙\uF0B7]|\d+[.)])\s|\[[ xX]\]\s)/.test(l) || /^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(l) || /\|/.test(l);
 
 function codeBlockHtml(lang, body){
-  return '<div class="cb" contenteditable="false" data-lang="'+esc(lang)+'">' +
+  return '<div class="cb" contenteditable="false" data-lang="'+escQ(lang)+'">' +
     '<div class="cb-head"><button class="cb-lang">'+ (esc(lang) || 'texto') +
     '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>' +
     '<span style="flex:1"></span>' +

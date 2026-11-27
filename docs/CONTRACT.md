@@ -71,6 +71,8 @@ Errors are JSON `{ error: "<message>" }`.
 2. Reject requests whose `Host` is not `localhost|127.0.0.1|[::1]:<port>` (DNS rebinding).
 3. Paths: relative, `/` separated; reject `..`, `.`, `\`, NUL, absolute or drive paths,
    segments > 255 chars, and anything whose real path (symlinks resolved) leaves the root.
+   v2.2.1: also segments with `:` (NTFS streams), a trailing space or dot, or a Windows device name
+   (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`) before the first dot, on every system.
 4. Writable: `*.md`, `*.markdown` outside hidden folders, and anything inside `.atelieroot/`.
    Nothing else is ever written or deleted.
 4b. Images (v2.1): `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp` outside hidden folders may be read and
@@ -86,6 +88,8 @@ Errors are JSON `{ error: "<message>" }`.
 8. The app makes no internet requests (`npm run check` fails on network URLs).
 9. Markdown is untrusted input: raw HTML renders as text; links/images allow only
    `http(s)`, `mailto`, `tel`, `data:image` and relative paths.
+   v2.2.1: a `"` inside any attribute value is always written as `&quot;`, and pasted HTML is
+   read in an inert document (`DOMParser`), never in a node of the page, so no handler in it runs.
 
 ## 4. On-disk format
 

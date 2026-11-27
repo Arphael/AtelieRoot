@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-11-27
+
+### Security
+- **Pasting from a web page could run its code.** HTML copied from a page with a hidden `<img onerror=...>` ran that code in AtelieRoot while being pasted, and that code could then read and change the documents of the open folder. Pasted HTML is now read without ever being shown, so nothing in it runs.
+- **A document could hide code in an address.** In a `.md` (one downloaded or from a cloned repository, for example) an address with quotes (`https://x.com/"onmouseover="...`, also as `<https://...>`) or a code block language with quotes added code that ran when the mouse passed over it. Quotes are now always kept inside the link.
+- Names Windows cannot open or delete from the Explorer are refused by the dev server and the desktop app: a name ending in a space or a dot, or a device name before the first dot (`CON`, `NUL`, `COM1`...). When you create or rename, AtelieRoot already fixes the name for you (`nul.notas` -> `nul_.notas`).
+
+### Changed
+- Dependencies: Tauri 2.12.7, tauri-build 2.7.6, Tauri CLI 2.12.6, ESLint 10.15.0; CI: CodeQL action v4, Scorecard action 2.6.0.
+
+### Tests
+- A browser test tries to run code from a document (addresses, links, images, `<img>`, code blocks, tables, lists) and from pasted HTML (`<img onerror>`, `<svg onload>`, `<iframe srcdoc>`), and checks no event attribute ever reaches the page. Node and Rust tests for the refused Windows names.
+
 ## [2.2.0] - 2026-11-18
 
 ### Added

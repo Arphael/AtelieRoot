@@ -53,6 +53,8 @@ test('wsSafeName: valid on Windows, macOS and Linux', () => {
   assert.equal(wsSafeName('a:b*c?', true), 'a-b-c-');
   assert.equal(wsSafeName('  ..hidden. ', true), 'hidden');
   assert.equal(wsSafeName('CON', true), 'CON_');
+  assert.equal(wsSafeName('nul.notas', true), 'nul_.notas');       // Windows looks at the part before the first dot (the server refuses «nul.notas.md»)
+  assert.equal(wsSafeName('console', true), 'console');
   assert.equal(wsSafeName('a/b\\c', false), 'a-b-c');
   assert.equal(wsSafeName('x'.repeat(200), true).length, 120);
   assert.ok(wsSafeName('', true).length > 0);

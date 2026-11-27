@@ -22,7 +22,7 @@ const wsClock = () => { const d = new Date(); return String(d.getHours()).padSta
 function wsSafeName(name, isDoc){
   let n = String(name == null ? '' : name).replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-').replace(/\s+/g, ' ').trim().replace(/^\.+/, '').replace(/[. ]+$/, '');
   if (!n) n = T(isDoc ? 'name.untitled' : 'name.folder');
-  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(n)) n += '_';
+  n = n.replace(/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?=\.|$)/i, '$1_');     // also «con.x»: Windows looks at the part before the first dot
   return n.slice(0, 120);
 }
 async function wsPool(items, n, fn){ let i = 0; await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length){ const k = i++; await fn(items[k], k); } })); }

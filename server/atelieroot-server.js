@@ -20,7 +20,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const VERSION = '2.2.0';
+const VERSION = '2.2.1';
 const MAX_BODY = 25 * 1024 * 1024;           // 25 MB por escritura
 const MAX_MANY = 500;                        // rutas por POST /api/files
 const MAX_ENTRIES = 50000;
@@ -33,6 +33,10 @@ const IMAGE_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gi
 const POLL_MS = 1200;                       // cada cuánto se mira si algo cambió fuera (para avisar a la página)
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json' };
+
+// names Windows cannot open or delete from Explorer: a trailing space or dot, or a device name (CON, NUL, COM1...) before
+// the first dot. Refused on every system so a folder stays usable everywhere (same rule as fsops.rs)
+const winBad = p => /[ .]$/.test(p) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(p.split('.')[0]);
 
 function parseArgs(argv) {
   const o = { dir: './notas', port: 4321, app: null, open: false };
@@ -85,6 +89,7 @@ function createServer(opts) {
     const parts = rel.split('/').filter(Boolean);
     if (!parts.length || parts.some(p => p === '..' || p === '.')) return null;
     if (parts.some(p => p.length > 255 || p.includes(':'))) return null;   // «a:b» would be a hidden NTFS stream on Windows (same rule as fsops.rs)
+    if (parts.some(winBad)) return null;
     return parts;
   };
   const absOf = parts => path.join(root, ...parts);

@@ -69,8 +69,17 @@ pub fn safe_rel(rel: &str) -> Option<Vec<String>> {
     let b = rel.as_bytes();
     if b.len() >= 2 && b[1] == b':' && b[0].is_ascii_alphabetic() { return None; }
     let parts: Vec<String> = rel.split('/').filter(|p| !p.is_empty()).map(String::from).collect();
-    if parts.is_empty() || parts.iter().any(|p| p == ".." || p == "." || p.len() > 255 || p.contains(':')) { return None; }
+    if parts.is_empty() || parts.iter().any(|p| p == ".." || p == "." || p.len() > 255 || p.contains(':') || win_bad(p)) { return None; }
     Some(parts)
+}
+
+/// Names Windows cannot open or delete from Explorer: a trailing space or dot, or a device name (CON, NUL, COM1...)
+/// before the first dot. Refused on every system so a folder stays usable everywhere (same rule as the server).
+fn win_bad(p: &str) -> bool {
+    if p.ends_with(' ') || p.ends_with('.') { return true; }
+    let stem = p.split('.').next().unwrap_or("").to_ascii_lowercase();
+    matches!(stem.as_str(), "con" | "prn" | "aux" | "nul")
+        || (stem.len() == 4 && (stem.starts_with("com") || stem.starts_with("lpt")) && matches!(stem.as_bytes()[3], b'1'..=b'9'))
 }
 
 fn meta_dot_ok(p: &str) -> bool { !p.starts_with('.') || p == ".keep" || p == ".gitignore" }
@@ -349,6 +358,16 @@ mod tests {
             assert!(safe_rel(p).is_none(), "{p:?} should be rejected");
         }
         assert_eq!(safe_rel("a//b.md").unwrap(), vec!["a", "b.md"]);
+    }
+
+    #[test]
+    fn names_windows_cannot_handle_are_rejected() {
+        for p in ["a /x.md", "x. /y.md", "nota.md.", "CON.md", "con.md", "nul.md", "Aux/x.md", "com1.md", "LPT9.md", "prn.x.md", "a ", "x.", "con"] {
+            assert!(safe_rel(p).is_none(), "{p:?} should be rejected");
+        }
+        for p in ["console.md", "com10.md", "a.b/c.md", "nul-notas.md", ".atelieroot/state.json"] {
+            assert!(safe_rel(p).is_some(), "{p:?} should be allowed");
+        }
     }
 
     #[test]

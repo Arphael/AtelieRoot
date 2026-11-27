@@ -27,6 +27,7 @@ dualListen(scroll1, scroll2, () => scroll);
 const LANGS = ['typescript','javascript','jsx','tsx','python','bash','shell','sql','json','yaml','html','css','java','kotlin','swift','c','c++','c#','go','rust','php','ruby','dart','r','xml','diff','markdown','text'];
 const SRC = 'pre[contenteditable="true"]';
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escQ = s => esc(s).replace(/"/g, '&quot;');      // for a value inside attr="...": esc alone lets a " close it and add on...= attributes
 try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch(_){}
 const closestFrom = (node, sel) => {
   let n = node;

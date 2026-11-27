@@ -63,6 +63,14 @@ test('rutas peligrosas y archivos no permitidos se rechazan', async () => {
   for (const p of ['../fuera/secreto.md', '/etc/passwd', 'notas.txt', '.git/x.md']) { const r = await call('GET', '/api/file?p=' + p); assert.ok([400, 403, 404].includes(r.status), `GET ${p} → ${r.status}`); }
   assert.ok(!fs.existsSync(path.join(tmp, 'x.md')) && !fs.existsSync(path.join(work, 'x.txt')));
 });
+test('names Windows cannot handle are refused: trailing space or dot, reserved device names', async () => {
+  const bad = ['a /x.md', 'x. /y.md', 'nota.md.', 'CON.md', 'con.md', 'nul.md', 'Aux/x.md', 'com1.md', 'LPT9.md', 'prn.x.md'];
+  for (const p of bad) { const r = await call('PUT', '/api/file?p=' + encodeURIComponent(p).replace(/%2F/g, '/'), { text: 'x' }); assert.equal(r.status, 400, `PUT ${p} -> ${r.status}`); }
+  for (const p of ['a ', 'x.', 'con']) { const r = await call('POST', '/api/mkdir?p=' + encodeURIComponent(p)); assert.equal(r.status, 400, `mkdir ${p} -> ${r.status}`); }
+  for (const p of ['console.md', 'com10.md', 'a.b/c.md', 'nul-notas.md']) { const r = await call('PUT', '/api/file?p=' + encodeURIComponent(p).replace(/%2F/g, '/'), { text: 'x' }); assert.equal(r.status, 200, `PUT ${p} -> ${r.status}`); }
+  assert.ok(!fs.existsSync(path.join(work, 'a ')) && !fs.existsSync(path.join(work, 'CON.md')));
+});
+
 test('un enlace simbólico no puede sacar a escribir fuera de la carpeta', async t => {
   try { fs.symlinkSync(outside, path.join(work, 'enlace'), 'dir'); } catch { t.skip('este sistema no permite crear enlaces simbólicos'); return; }
   assert.equal((await call('PUT', '/api/file?p=enlace/nuevo.md', { text: 'x' })).status, 403);
